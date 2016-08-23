@@ -19,5 +19,5 @@ Foundation Library for Coherent, Multi-Layer Caching
 
     ```
     composer install
-    phpunit --
+    composer test
     ```
