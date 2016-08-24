@@ -99,7 +99,12 @@ class LCacheAPCuL1 extends LCacheL1
     {
         apcu_inc('lcache_status:' . $this->pool . ':hits', 1, $success);
         if (!$success) {
+            // @TODO: Remove this fallback when we drop APCu 4.x support.
+            // @codeCoverageIgnoreStart
+            // Ignore coverage because (1) it's tested with other code and
+            // (2) APCu 5.x does not use it.
             apcu_store('lcache_status:' . $this->pool . ':hits', 1);
+            // @codeCoverageIgnoreEnd
         }
     }
 
@@ -107,7 +112,12 @@ class LCacheAPCuL1 extends LCacheL1
     {
         apcu_inc('lcache_status:' . $this->pool . ':misses', 1, $success);
         if (!$success) {
+            // @TODO: Remove this fallback when we drop APCu 4.x support.
+            // @codeCoverageIgnoreStart
+            // Ignore coverage because (1) it's tested with other code and
+            // (2) APCu 5.x does not use it.
             apcu_store('lcache_status:' . $this->pool . ':misses', 1);
+            // @codeCoverageIgnoreEnd
         }
     }
 
