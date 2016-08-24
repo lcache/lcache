@@ -50,7 +50,7 @@ class LCacheAPCuL1 extends LCacheL1
         return apcu_exists($apcu_key);
     }
 
-  // @TODO: Remove APCIterator support once we only support PHP 7+
+    // @TODO: Remove APCIterator support once we only support PHP 7+
     protected function getIterator($prefix)
     {
         $pattern = '/^' . $prefix . '.*/';
