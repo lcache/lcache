@@ -508,6 +508,13 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase {
     $this->assertEquals($rehydrated->getKey(), $address->getKey());
     $this->assertEquals($rehydrated->getBin(), $address->getBin());
 
+    if (is_null($address->getBin())) {
+      $this->assertNull($rehydrated->getBin());
+    }
+    if (is_null($address->getKey())) {
+      $this->assertNull($rehydrated->getKey());
+    }
+
     // Same for non-native.
     $rehydrated = new LCacheAddress();
     $rehydrated->unserialize($address->serialize());

@@ -9,7 +9,6 @@ final class LCacheAddress implements \Serializable
     public function __construct($bin = null, $key = null)
     {
         assert(!is_null($bin) || is_null($key));
-        assert(strpos($bin, ':') === false);
         $this->bin = $bin;
         $this->key = $key;
     }
@@ -45,18 +44,22 @@ final class LCacheAddress implements \Serializable
         return true;
     }
 
-  // The serialized form must:
-  //  - Place the bin first
-  //  - Return a prefix matching all entries in a bin with a NULL key
-  //  - Return a prefix matching all entries with a NULL bin
+    // The serialized form must:
+    //  - Place the bin first
+    //  - Return a prefix matching all entries in a bin with a NULL key
+    //  - Return a prefix matching all entries with a NULL bin
     public function serialize()
     {
         if (is_null($this->bin)) {
             return '';
-        } elseif (is_null($this->key)) {
-            return $this->bin . ':';
         }
-        return $this->bin . ':' . $this->key;
+
+        $length_prefixed_bin = strlen($this->bin) . ':' . $this->bin;
+
+        if (is_null($this->key)) {
+            return $length_prefixed_bin . ':';
+        }
+        return $length_prefixed_bin . ':' . $this->key;
     }
 
     public function unserialize($serialized)
@@ -65,9 +68,14 @@ final class LCacheAddress implements \Serializable
         $this->bin = null;
         $this->key = null;
         if (count($entries) === 2) {
-            list($this->bin, $this->key) = $entries;
+            list($bin_length, $bin_and_key) = $entries;
+            $bin_length = intval($bin_length);
+            $this->bin = substr($bin_and_key, 0, $bin_length);
+            $this->key = substr($bin_and_key, $bin_length + 1);
         }
-        if ($this->key === '') {
+
+        // @TODO: Remove check against false for PHP 7+
+        if ($this->key === false || $this->key === '') {
             $this->key = null;
         }
     }
