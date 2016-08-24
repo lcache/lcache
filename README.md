@@ -1,7 +1,12 @@
 # LCache
 Foundation Library for Coherent, Multi-Layer Caching
 
-## Testing (on Fedora)
+## Testing
+
+[![Build Status](https://travis-ci.org/lcache/lcache.svg?branch=master)](https://travis-ci.org/lcache/lcache)
+[![Coverage Status](https://coveralls.io/repos/github/lcache/lcache/badge.svg?branch=master)](https://coveralls.io/github/lcache/lcache?branch=master)
+
+### On Fedora
 
  1. Install packages:
 
