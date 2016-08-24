@@ -19,7 +19,7 @@ class LCacheStaticL2 extends LCacheL2
         $this->tags = [];
     }
 
-  // Returns an LCacheEntry
+    // Returns an LCacheEntry
     public function getEntry(LCacheAddress $address)
     {
         $last_matching_entry = null;

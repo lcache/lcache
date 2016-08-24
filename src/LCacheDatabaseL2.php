@@ -63,7 +63,7 @@ class LCacheDatabaseL2 extends LCacheL2
         return $this->errors;
     }
 
-  // Returns an LCacheEntry
+    // Returns an LCacheEntry
     public function getEntry(LCacheAddress $address)
     {
         try {
@@ -110,7 +110,7 @@ class LCacheDatabaseL2 extends LCacheL2
         return ($result !== false && $result->value_not_null);
     }
 
-  /**
+    /**
    * @codeCoverageIgnore
    */
     public function debugDumpState()
