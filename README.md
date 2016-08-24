@@ -26,3 +26,7 @@ Foundation Library for Coherent, Multi-Layer Caching
     composer install
     composer test
     ```
+
+## Support
+
+LCache is maintained and sponsored by [Pantheon](https://pantheon.io/).
