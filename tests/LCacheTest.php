@@ -229,6 +229,13 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $pool2->synchronize();
         $this->assertNull($pool2->get($mybin1_mykey));
         $this->assertEquals('myvalue2', $pool2->get($mybin2_mykey));
+
+        // An L2 miss should place a tombstone into L1.
+        $dne = new Address('mypool', 'mykey-dne');
+        $this->assertNull($pool1->get($mybin1_mykey));
+        $tombstone = $pool1->getEntry($mybin1_mykey, true);
+        $this->assertNotNull($tombstone);
+        $this->assertNull($tombstone->value);
     }
 
     protected function performClearSynchronizationTest($central, $first_l1, $second_l1)
