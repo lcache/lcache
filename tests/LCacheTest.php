@@ -309,8 +309,17 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $pool1->set($myaddr, 'myvalue', null, ['mytag', 'mytag2']);
         $pool1->set($myaddr2, 'myvalue', null, ['mytag', 'mytag2']);
         $pool1->set($myaddr, 'myvalue', null, ['mytag']);
-        $found = $central->getAddressesForTag('mytag2');
-        $this->assertEquals([$myaddr2], $found);
+
+        $found_addresses = $central->getAddressesForTag('mytag2');
+        // getAddressesForTag() may return additional addresses, but it should
+        // always return at least the current tagged address.
+        $found = false;
+        foreach ($found_addresses as $found_address) {
+            if ($found_address->serialize() === $myaddr2->serialize()) {
+                $found = true;
+            }
+        }
+        $this->assertTrue($found);
     }
 
 
@@ -409,6 +418,12 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertTrue($l2->exists($myaddr));
         $l2->delete('mypool', $myaddr);
         $this->assertFalse($l2->exists($myaddr));
+    }
+
+    public function testEmptyCleanUpDatabaseL2()
+    {
+        $this->createSchema();
+        $l2 = new DatabaseL2($this->dbh);
     }
 
     public function testExistsAPCuL1()
