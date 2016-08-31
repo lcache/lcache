@@ -148,7 +148,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $applied = $pool1->synchronize();
         $this->assertEquals(null, $applied);
         $current_event_id = $pool1->getLastAppliedEventID();
-        $this->assertEquals(1, $current_event_id);
+        $this->assertEquals(0, $current_event_id);
 
         // Add a new entry to Pool 1. The last applied event should be our
         // change. However, because the event is from the same pool, applied
@@ -188,7 +188,9 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(0, $pool2->getMisses());
 
         // Initialize Pool 2 synchronization.
-        $pool2->synchronize();
+        $changes = $pool2->synchronize();
+        $this->assertNull($changes);
+        $this->assertEquals(1, $second_l1->getLastAppliedEventID());
 
         // Alter the item in Pool 1. Pool 2 should hit its L1 again
         // with the out-of-date item. Synchronizing should fix it.
@@ -338,7 +340,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertTrue($found);
     }
 
-
     public function testSynchronizationStatic()
     {
         $central = new StaticL2();
@@ -423,6 +424,15 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
         // Try applying events to an uninitialized L1.
         $this->assertNull($l2->applyEvents(new StaticL1()));
+    }
+
+    public function testDatabaseL2SyncWithNoWrites()
+    {
+        $this->createSchema();
+        $l2 = new DatabaseL2($this->dbh, '', true);
+        $l1 = new StaticL1('first');
+        $pool = new Integrated($l1, $l2);
+        $pool->synchronize();
     }
 
     public function testExistsDatabaseL2()
@@ -600,6 +610,43 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $entire_cache = new Address();
         $this->performSerializationTest($entire_cache);
         $this->assertEquals(strpos($entire_mybin->serialize(), $mybin_mykey->serialize()), 0);
+    }
+
+    public function performFailedUnserializationOnSyncTest($l2)
+    {
+        $l1 = new StaticL1();
+        $pool = new Integrated($l1, $l2);
+        $myaddr = new Address('mybin', 'mykey');
+
+        $invalid_object = 'O:10:"HelloWorl":0:{}';
+
+        // Set the L1's high water mark.
+        $pool->set($myaddr, 'valid');
+        $changes = $pool->synchronize();
+        $this->assertNull($changes);  // Just initialized event high water mark.
+        $this->assertEquals(1, $l1->getLastAppliedEventID());
+
+        // Put an invalid object into the L2 and synchronize again.
+        $l2->set('anotherpool', $myaddr, $invalid_object, null, [], true);
+        $changes = $pool->synchronize();
+        $this->assertEquals(1, $changes);
+        $this->assertEquals(2, $l1->getLastAppliedEventID());
+
+        // The sync should delete the item from the L1, causing it to miss.
+        $this->assertNull($l1->get($myaddr));
+        $this->assertEquals(0, $l1->getHits());
+        $this->assertEquals(1, $l1->getMisses());
+    }
+
+    public function testDatabaseL2FailedUnserializationOnSyncTest() {
+        $this->createSchema();
+        $l2 = new DatabaseL2($this->dbh);
+        $this->performFailedUnserializationOnSyncTest($l2);
+    }
+
+    public function testStaticL2FailedUnserializationOnSyncTest() {
+        $l2 = new StaticL2();
+        $this->performFailedUnserializationOnSyncTest($l2);
     }
 
     /**
