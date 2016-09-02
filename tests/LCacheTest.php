@@ -236,6 +236,15 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $tombstone = $pool1->getEntry($mybin1_mykey, true);
         $this->assertNotNull($tombstone);
         $this->assertNull($tombstone->value);
+
+        // The L1 should return the tombstone entry so the integrated cache
+        // can avoid rewriting it.
+        $tombstone = $first_l1->getEntry($mybin1_mykey);
+        $this->assertNotNull($tombstone);
+        $this->assertNull($tombstone->value);
+
+        // The tombstone should also count as non-existence.
+        $this->assertFalse($pool1->exists($mybin1_mykey));
     }
 
     protected function performClearSynchronizationTest($central, $first_l1, $second_l1)
