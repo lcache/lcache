@@ -424,6 +424,11 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
         // Try applying events to an uninitialized L1.
         $this->assertNull($l2->applyEvents(new StaticL1()));
+
+        // Try garbage collection routines.
+        $pool->collectGarbage();
+        $count = $l2->countGarbage();
+        $this->assertNull($count);
     }
 
     public function testDatabaseL2SyncWithNoWrites()
@@ -638,15 +643,52 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(1, $l1->getMisses());
     }
 
-    public function testDatabaseL2FailedUnserializationOnSyncTest() {
+    public function testDatabaseL2FailedUnserializationOnSync()
+    {
         $this->createSchema();
         $l2 = new DatabaseL2($this->dbh);
         $this->performFailedUnserializationOnSyncTest($l2);
     }
 
-    public function testStaticL2FailedUnserializationOnSyncTest() {
+    public function testStaticL2FailedUnserializationOnSync()
+    {
         $l2 = new StaticL2();
         $this->performFailedUnserializationOnSyncTest($l2);
+    }
+
+    public function performGarbageCollectionTest($l2)
+    {
+        $pool = new Integrated(new StaticL1(), $l2);
+        $myaddr = new Address('mybin', 'mykey');
+        $this->assertEquals(0, $l2->countGarbage());
+        $pool->set($myaddr, 'myvalue', -1);
+        $this->assertEquals(1, $l2->countGarbage());
+        $pool->collectGarbage();
+        $this->assertEquals(0, $l2->countGarbage());
+    }
+
+    public function testDatabaseL2GarbageCollection()
+    {
+        $this->createSchema();
+        $l2 = new DatabaseL2($this->dbh);
+        $this->performGarbageCollectionTest($l2);
+    }
+
+    public function testStaticL2GarbageCollection()
+    {
+        $l2 = new StaticL2();
+        $this->performGarbageCollectionTest($l2);
+
+        // Test item limits.
+        $pool = new Integrated(new StaticL1(), $l2);
+        $myaddr2 = new Address('mybin', 'mykey2');
+        $myaddr3 = new Address('mybin', 'mykey3');
+        $pool->collectGarbage();
+        $pool->set($myaddr2, 'myvalue', -1);
+        $pool->set($myaddr3, 'myvalue', -1);
+        $this->assertEquals(2, $l2->countGarbage());
+        $pool->collectGarbage(1);
+        $this->assertEquals(1, $l2->countGarbage());
     }
 
     /**
@@ -657,3 +699,4 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         return new \PHPUnit_Extensions_Database_DataSet_DefaultDataSet();
     }
 }
+
