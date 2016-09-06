@@ -202,14 +202,14 @@ class DatabaseL2 extends L2
     public function debugDumpState()
     {
         echo PHP_EOL . PHP_EOL . 'Events:' . PHP_EOL;
-        $sth = $this->dbh->prepare('SELECT * FROM lcache_events ORDER BY "event_id"');
+        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->prefixTable('lcache_events') . ' ORDER BY "event_id"');
         $sth->execute();
         while ($event = $sth->fetchObject()) {
             print_r($event);
         }
         echo PHP_EOL;
         echo 'Tags:' . PHP_EOL;
-        $sth = $this->dbh->prepare('SELECT * FROM lcache_tags ORDER BY "tag"');
+        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->prefixTable('lcache_tags') . ' ORDER BY "tag"');
         $sth->execute();
         $tags_found = false;
         while ($event = $sth->fetchObject()) {
