@@ -23,7 +23,7 @@ class StaticL2 extends L2
     {
         $garbage = 0;
         foreach ($this->events as $event_id => $entry) {
-            if ($entry->expiration < REQUEST_TIME) {
+            if ($entry->expiration < $_SERVER['REQUEST_TIME']) {
                 $garbage++;
             }
         }
@@ -34,7 +34,7 @@ class StaticL2 extends L2
     {
         $deleted = 0;
         foreach ($this->events as $event_id => $entry) {
-            if ($entry->expiration < REQUEST_TIME) {
+            if ($entry->expiration < $_SERVER['REQUEST_TIME']) {
                 unset($this->events[$event_id]);
                 $deleted++;
             }
@@ -52,7 +52,7 @@ class StaticL2 extends L2
             if ($entry->getAddress()->isMatch($address)) {
                 if ($entry->getAddress()->isEntireCache() || $entry->getAddress()->isEntireBin()) {
                     $last_matching_entry = null;
-                } elseif (!is_null($entry->expiration) && $entry->expiration < REQUEST_TIME) {
+                } elseif (!is_null($entry->expiration) && $entry->expiration < $_SERVER['REQUEST_TIME']) {
                     $last_matching_entry = null;
                 } else {
                     $last_matching_entry = $entry;
@@ -70,9 +70,8 @@ class StaticL2 extends L2
         return $last_matching_entry;
     }
 
-    public function set($pool, Address $address, $value = null, $ttl = null, array $tags = [], $value_is_serialized = false)
+    public function set($pool, Address $address, $value = null, $expiration = null, array $tags = [], $value_is_serialized = false)
     {
-        $expiration = $ttl ? (REQUEST_TIME + $ttl) : null;
         $this->current_event_id++;
 
         // Serialize the value if it isn't already. We serialize the values
@@ -80,7 +79,7 @@ class StaticL2 extends L2
         if (!$value_is_serialized) {
             $value = serialize($value);
         }
-        $this->events[$this->current_event_id] = new Entry($this->current_event_id, $pool, $address, $value, REQUEST_TIME, $expiration);
+        $this->events[$this->current_event_id] = new Entry($this->current_event_id, $pool, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
 
         // Clear existing tags linked to the item. This is much more
         // efficient with database-style indexes.

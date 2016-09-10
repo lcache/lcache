@@ -42,7 +42,7 @@ class StaticL1 extends L1
             return null;
         }
         $entry = $this->storage[$local_key];
-        if (!is_null($entry->expiration) && $entry->expiration < REQUEST_TIME) {
+        if (!is_null($entry->expiration) && $entry->expiration < $_SERVER['REQUEST_TIME']) {
             unset($this->storage[$local_key]);
             $this->misses++;
             return null;

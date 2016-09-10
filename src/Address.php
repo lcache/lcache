@@ -80,9 +80,3 @@ final class Address implements \Serializable
         }
     }
 }
-
-
-// Operate properly when testing in case Drupal isn't running this code.
-if (!defined('REQUEST_TIME')) {
-    define('REQUEST_TIME', time());
-}
