@@ -8,7 +8,7 @@ final class Integrated
     protected $l2;
     protected $overhead_threshold;
 
-    public function __construct($l1, $l2, $overhead_threshold = 100)
+    public function __construct($l1, $l2, $overhead_threshold = null)
     {
         $this->l1 = $l1;
         $this->l2 = $l2;
@@ -17,29 +17,31 @@ final class Integrated
 
     public function set(Address $address, $value, $ttl = null, array $tags = [])
     {
-        $key_overhead = $this->l1->getKeyOverhead($address);
+        if (!is_null($this->overhead_threshold)) {
+            $key_overhead = $this->l1->getKeyOverhead($address);
 
-        // Check if this key is known to have excessive overhead.
-        $excess = $key_overhead - $this->overhead_threshold;
-        if ($excess >= 0) {
-            // If there's already an L1 negative cache entry, simply skip the write.
-            if ($this->l1->isNegativeCache($address)) {
-                return null;
+            // Check if this key is known to have excessive overhead.
+            $excess = $key_overhead - $this->overhead_threshold;
+            if ($excess >= 0) {
+                // If there's already an L1 negative cache entry, simply skip the write.
+                if ($this->l1->isNegativeCache($address)) {
+                    return null;
+                }
+
+                // Otherwise, delete the item in L2
+                // and create a local negative cache entry.
+                $event_id = $this->l2->delete($this->l1->getPool(), $address);
+                if (!is_null($event_id)) {
+                    $this->l1->set($event_id, $address, $value, $ttl);
+                }
+
+                // Retain this negative cache item for a number of minutes
+                // equivalent to the number of excessive sets over the
+                // threshold, plus one minute.
+                $expiration = $_SERVER['REQUEST_TIME'] + ($excess + 1) * 60;
+                $this->l1->setWithExpiration($event_id, $address, null, $_SERVER['REQUEST_TIME'], $expiration);
+                return $event_id;
             }
-
-            // Otherwise, delete the item in L2
-            // and create a local negative cache entry.
-            $event_id = $this->l2->delete($this->l1->getPool(), $address);
-            if (!is_null($event_id)) {
-                $this->l1->set($event_id, $address, $value, $ttl);
-            }
-
-            // Retain this negative cache item for a number of minutes
-            // equivalent to the number of excessive sets over the
-            // threshold, plus one minute.
-            $expiration = $_SERVER['REQUEST_TIME'] + ($excess + 1) * 60;
-            $this->l1->setWithExpiration($event_id, $address, null, $_SERVER['REQUEST_TIME'], $expiration);
-            return $event_id;
         }
 
         $expiration = is_null($ttl) ? null : $_SERVER['REQUEST_TIME'] + $ttl;
