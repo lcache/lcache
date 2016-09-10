@@ -20,9 +20,24 @@ class APCuL1 extends L1
         return 'lcache:' . $this->pool . ':' . $address->serialize();
     }
 
+    public function getKeyOverhead(Address $address)
+    {
+        // @TODO: Consider subtracting APCu's native hits tracker but
+        // decrementing the overhead by existing hits when an item is set. This
+        // would make hits cheaper but writes more expensive.
+
+        $apcu_key = $this->getLocalKey($address);
+        $overhead = apcu_fetch($apcu_key . ':overhead', $success);
+        if ($success) {
+            return $overhead;
+        }
+        return 0;
+    }
+
     public function setWithExpiration($event_id, Address $address, $value, $created, $expiration = null)
     {
         $apcu_key = $this->getLocalKey($address);
+
         // Don't overwrite local entries that are even newer.
         $entry = apcu_fetch($apcu_key);
         if ($entry !== false && $entry->event_id > $event_id) {
@@ -36,14 +51,41 @@ class APCuL1 extends L1
             return null;
         }
 
-        return apcu_store($apcu_key, $entry, $entry->getTTL());
+        $success = apcu_store($apcu_key, $entry, $entry->getTTL());
+
+        // If not setting a negative cache entry, increment the key's overhead.
+        if (!is_null($value)) {
+            apcu_inc($apcu_key . ':overhead', 1, $overhead_success);
+            if (!$overhead_success) {
+                // @codeCoverageIgnoreStart
+                apcu_store($apcu_key . ':overhead', 1);
+                // @codeCoverageIgnoreEnd
+            }
+        }
+
+        return $success;
+    }
+
+    public function isNegativeCache(Address $address)
+    {
+        $apcu_key = $this->getLocalKey($address);
+        $entry = apcu_fetch($apcu_key, $success);
+        return ($success && is_null($entry->value));
     }
 
     public function getEntry(Address $address)
     {
         $apcu_key = $this->getLocalKey($address);
-        $entry = apcu_fetch($apcu_key, $success);
 
+        // Decrement the key's overhead.
+        apcu_dec($apcu_key . ':overhead', 1, $overhead_success);
+        if (!$overhead_success) {
+            // @codeCoverageIgnoreStart
+            apcu_store($apcu_key . ':overhead', -1);
+            // @codeCoverageIgnoreEnd
+        }
+
+        $entry = apcu_fetch($apcu_key, $success);
         // Handle failed reads.
         if (!$success) {
             $this->recordMiss();
@@ -55,16 +97,15 @@ class APCuL1 extends L1
     }
 
     // @TODO: Remove APCIterator support once we only support PHP 7+
-    protected function getIterator($prefix)
+    protected function getIterator($pattern, $format = APC_ITER_ALL)
     {
-        $pattern = '/^' . $prefix . '.*/';
         if (class_exists('APCIterator')) {
             // @codeCoverageIgnoreStart
-            return new \APCIterator('user', $pattern);
+            return new \APCIterator('user', $pattern, $format);
             // @codeCoverageIgnoreEnd
         }
         // @codeCoverageIgnoreStart
-        return new \APCUIterator($pattern);
+        return new \APCUIterator($pattern, $format);
         // @codeCoverageIgnoreEnd
     }
 
@@ -75,7 +116,8 @@ class APCuL1 extends L1
             return apcu_clear_cache();
         } elseif ($address->isEntireBin()) {
             $prefix = $this->getLocalKey($address);
-            $matching = $this->getIterator($prefix);
+            $pattern = '/^' . $prefix . '.*/';
+            $matching = $this->getIterator($pattern, APC_ITER_KEY);
             if (!$matching) {
                 // @codeCoverageIgnoreStart
                 return false;
