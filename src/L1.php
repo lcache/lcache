@@ -26,9 +26,9 @@ abstract class L1 extends LX
         return $this->pool;
     }
 
-    public function set($event_id, Address $address, $value = null, $ttl = null)
+    public function set($event_id, Address $address, $value = null, $expiration = null)
     {
-        return $this->setWithExpiration($event_id, $address, $value, REQUEST_TIME, is_null($ttl) ? null : $ttl);
+        return $this->setWithExpiration($event_id, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
     }
 
     abstract public function isNegativeCache(Address $address);

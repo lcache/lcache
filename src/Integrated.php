@@ -37,14 +37,15 @@ final class Integrated
             // Retain this negative cache item for a number of minutes
             // equivalent to the number of excessive sets over the
             // threshold, plus one minute.
-            $expiration = REQUEST_TIME + ($excess + 1) * 60;
-            $this->l1->setWithExpiration($event_id, $address, null, REQUEST_TIME, $expiration);
+            $expiration = $_SERVER['REQUEST_TIME'] + ($excess + 1) * 60;
+            $this->l1->setWithExpiration($event_id, $address, null, $_SERVER['REQUEST_TIME'], $expiration);
             return $event_id;
         }
 
-        $event_id = $this->l2->set($this->l1->getPool(), $address, $value, $ttl, $tags);
+        $expiration = is_null($ttl) ? null : $_SERVER['REQUEST_TIME'] + $ttl;
+        $event_id = $this->l2->set($this->l1->getPool(), $address, $value, $expiration, $tags);
         if (!is_null($event_id)) {
-            $this->l1->set($event_id, $address, $value, $ttl);
+            $this->l1->set($event_id, $address, $value, $expiration);
         }
         return $event_id;
     }
@@ -59,12 +60,11 @@ final class Integrated
         if (is_null($entry)) {
             // On an L2 miss, construct a negative cache entry that will be
             // overwritten on any update.
-            $entry = new Entry(0, $this->l1->getPool(), $address, null, REQUEST_TIME, null);
+            $entry = new Entry(0, $this->l1->getPool(), $address, null, $_SERVER['REQUEST_TIME'], null);
         }
         $this->l1->setWithExpiration($entry->event_id, $address, $entry->value, $entry->created, $entry->expiration);
         return $entry;
     }
-
 
     public function getEntry(Address $address, $return_tombstone = false)
     {

@@ -43,8 +43,15 @@ class APCuL1 extends L1
         if ($entry !== false && $entry->event_id > $event_id) {
             return true;
         }
-        $entry = new Entry($event_id, $this->pool, $address, $value, REQUEST_TIME, $expiration);
-        $success = apcu_store($apcu_key, $entry, is_null($expiration) ? 0 : $expiration);
+        $entry = new Entry($event_id, $this->pool, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
+
+        if ($entry->getTTL() === 0) {
+            // Item has already expired, but APCu treats a TTL of zero as no TTL.
+            // So, we'll set nothing.
+            return null;
+        }
+
+        $success = apcu_store($apcu_key, $entry, $entry->getTTL());
 
         // If not setting a negative cache entry, increment the key's overhead.
         if (!is_null($value)) {

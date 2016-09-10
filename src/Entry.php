@@ -27,4 +27,15 @@ final class Entry
     {
         return $this->address;
     }
+
+    public function getTTL()
+    {
+        if (is_null($this->expiration)) {
+            return null;
+        }
+        if ($this->expiration > $_SERVER['REQUEST_TIME']) {
+            return $this->expiration - $_SERVER['REQUEST_TIME'];
+        }
+        return 0;
+    }
 }

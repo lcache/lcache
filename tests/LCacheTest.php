@@ -579,6 +579,17 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertFalse($mybin2_mykey2->isMatch($entire_mybin));
     }
 
+    public function testEntryTTL()
+    {
+        $myaddr = new Address('mybin', 'mykey');
+        $entry = new Entry(0, 'mypool', $myaddr, 'value', $_SERVER['REQUEST_TIME'], $_SERVER['REQUEST_TIME'] + 1);
+        $this->assertEquals(1, $entry->getTTL());
+
+        // TTL should be zero for already-expired items.
+        $old_entry = new Entry(0, 'mypool', $myaddr, 'value', $_SERVER['REQUEST_TIME'], $_SERVER['REQUEST_TIME'] - 1);
+        $this->assertEquals(0, $old_entry->getTTL());
+    }
+
     protected function performSerializationTest($address)
     {
         // The bin and key should persist across native serialization and
@@ -764,6 +775,21 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     public function testAPCuL1ExcessiveOverheadSkipping()
     {
         $this->performExcessiveOverheadSkippingTest(new APCuL1('overhead'));
+    }
+
+    public function testAPCuL1Expiration()
+    {
+        $l1 = new APCuL1();
+        $pool = new Integrated($l1, new StaticL2());
+        $myaddr = new Address('mybin', 'mykey');
+        $pool->set($myaddr, 'value', 1);
+        $this->assertEquals('value', $pool->get($myaddr));
+        $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $l1->getEntry($myaddr)->expiration);
+
+        // Setting items with past expirations should result in a nothing stored.
+        $myaddr2 = new Address('mybin', 'mykey2');
+        $l1->set(0, $myaddr2, 'value', $_SERVER['REQUEST_TIME'] - 1);
+        $this->assertNull($l1->get($myaddr2));
     }
 
     /**
