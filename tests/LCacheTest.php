@@ -37,7 +37,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $myaddr = new Address('mybin', 'mykey');
         $cache->set($event_id++, $myaddr, 'myvalue');
         $entry = $cache->get($myaddr);
-        $this->assertEquals(null, $entry);
+        $this->assertNull($entry);
         $this->assertEquals(0, $cache->getHits());
         $this->assertEquals(1, $cache->getMisses());
 
@@ -146,7 +146,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
         // Initialize sync for Pool 1.
         $applied = $pool1->synchronize();
-        $this->assertEquals(null, $applied);
+        $this->assertNull($applied);
         $current_event_id = $pool1->getLastAppliedEventID();
         $this->assertEquals(0, $current_event_id);
 
@@ -162,7 +162,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         // bump the last applied event ID.
         $pool2 = new Integrated(new StaticL1(), $central);
         $applied = $pool2->synchronize();
-        $this->assertEquals(null, $applied);
+        $this->assertNull($applied);
         $this->assertEquals($pool1->getLastAppliedEventID(), $pool2->getLastAppliedEventID());
     }
 
