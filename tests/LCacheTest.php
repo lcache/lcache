@@ -18,7 +18,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         return $this->createDefaultDBConnection($this->dbh, ':memory:');
     }
 
-    protected function createSchema($prefix='')
+    protected function createSchema($prefix = '')
     {
         $this->dbh->exec('PRAGMA foreign_keys = ON');
 
@@ -374,8 +374,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
             // Because of how APCu only offers full cache clears, we test against a static cache for the other L1.
             $this->performClearSynchronizationTest($central, new APCuL1('testSynchronizationAPCu1b'), new StaticL1());
             $this->performClearSynchronizationTest($central, new StaticL1(), new APCuL1('testSynchronizationAPCu1c'));
-        }
-        else {
+        } else {
             $this->markTestSkipped('The APCu extension is not installed, enabled (for the CLI), or functional.');
         }
     }
@@ -800,4 +799,3 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         return new \PHPUnit_Extensions_Database_DataSet_DefaultDataSet();
     }
 }
-
