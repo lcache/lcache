@@ -25,6 +25,7 @@ before_script:
 
 script:
   - vendor/bin/phpcs --standard=PSR2 -n src
+  - vendor/bin/phpcs --standard=PSR2 -n tests
   - vendor/bin/phpunit
 
 after_success:
