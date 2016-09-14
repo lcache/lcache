@@ -627,7 +627,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(strpos($entire_mybin->serialize(), $mybin_mykey->serialize()), 0);
     }
 
-    public function performFailedUnserializationOnSyncTest($l2)
+    public function performFailedUnserializationTest($l2)
     {
         $l1 = new StaticL1();
         $pool = new Integrated($l1, $l2);
@@ -651,19 +651,24 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertNull($l1->get($myaddr));
         $this->assertEquals(0, $l1->getHits());
         $this->assertEquals(1, $l1->getMisses());
+
+        $myaddr2 = new Address('mybin', 'mykey2');
+        $l2->set('anypool', $myaddr2, $invalid_object, null, [], true);
+        $this->assertNull($pool->get($myaddr2));
+        $this->assertNull($l1->get($myaddr2));
     }
 
-    public function testDatabaseL2FailedUnserializationOnSync()
+    public function testDatabaseL2FailedUnserialization()
     {
         $this->createSchema();
         $l2 = new DatabaseL2($this->dbh);
-        $this->performFailedUnserializationOnSyncTest($l2);
+        $this->performFailedUnserializationTest($l2);
     }
 
-    public function testStaticL2FailedUnserializationOnSync()
+    public function testStaticL2FailedUnserialization()
     {
         $l2 = new StaticL2();
-        $this->performFailedUnserializationOnSyncTest($l2);
+        $this->performFailedUnserializationTest($l2);
     }
 
     public function performGarbageCollectionTest($l2)

@@ -61,10 +61,20 @@ class StaticL2 extends L2
         }
         // Last event was a deletion, so miss.
         if (is_null($last_matching_entry) || is_null($last_matching_entry->value)) {
+            $this->misses++;
             return null;
         }
 
-        $last_matching_entry->value = unserialize($last_matching_entry->value);
+        $unserialized_value = @unserialize($last_matching_entry->value);
+
+        // If unserialization failed, miss.
+        if ($unserialized_value === false && $last_matching_entry->value !== serialize(false)) {
+            // @TODO: Warn or throw an exception.
+            $this->misses++;
+            return null;
+        }
+
+        $last_matching_entry->value = $unserialized_value;
 
         $this->hits++;
         return $last_matching_entry;
