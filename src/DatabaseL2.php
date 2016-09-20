@@ -177,11 +177,9 @@ class DatabaseL2 extends L2
 
         $unserialized_value = @unserialize($last_matching_entry->value);
 
-        // If unserialization failed, miss.
+        // If unserialization failed, raise an exception.
         if ($unserialized_value === false && $last_matching_entry->value !== serialize(false)) {
-            // @TODO: Warn or throw an exception.
-            $this->misses++;
-            return null;
+            throw new UnserializationException($address, $last_matching_entry->value);
         }
 
         $last_matching_entry->value = $unserialized_value;

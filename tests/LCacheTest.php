@@ -627,7 +627,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(strpos($entire_mybin->serialize(), $mybin_mykey->serialize()), 0);
     }
 
-    public function performFailedUnserializationTest($l2)
+    protected function performFailedUnserializationTest($l2)
     {
         $l1 = new StaticL1();
         $pool = new Integrated($l1, $l2);
@@ -651,11 +651,26 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertNull($l1->get($myaddr));
         $this->assertEquals(0, $l1->getHits());
         $this->assertEquals(1, $l1->getMisses());
+    }
 
-        $myaddr2 = new Address('mybin', 'mykey2');
-        $l2->set('anypool', $myaddr2, $invalid_object, null, [], true);
-        $this->assertNull($pool->get($myaddr2));
-        $this->assertNull($l1->get($myaddr2));
+    protected function performCaughtUnserializationOnGetTest($l2)
+    {
+        $l1 = new StaticL1();
+        $pool = new Integrated($l1, $l2);
+        $invalid_object = 'O:10:"HelloWorl":0:{}';
+        $myaddr = new Address('mybin', 'performCaughtUnserializationOnGetTest');
+        $l2->set('anypool', $myaddr, $invalid_object, null, [], true);
+        try {
+            $pool->get($myaddr);
+            $this->assertTrue(false);  // Should not reach here.
+        } catch (UnserializationException $e) {
+            $this->assertEquals($invalid_object, $e->getSerializedData());
+
+            // The text of the exception should include the class name, bin, and key.
+            $this->assertRegExp('/^' . preg_quote('LCache\UnserializationException: Cache') . '/', strval($e));
+            $this->assertRegExp('/bin "' . preg_quote($myaddr->getBin()) . '"/', strval($e));
+            $this->assertRegExp('/key "' . preg_quote($myaddr->getKey()) . '"/', strval($e));
+        }
     }
 
     public function testDatabaseL2FailedUnserialization()
@@ -663,12 +678,44 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->createSchema();
         $l2 = new DatabaseL2($this->dbh);
         $this->performFailedUnserializationTest($l2);
+        $this->performCaughtUnserializationOnGetTest($l2);
     }
 
     public function testStaticL2FailedUnserialization()
     {
         $l2 = new StaticL2();
         $this->performFailedUnserializationTest($l2);
+        $this->performCaughtUnserializationOnGetTest($l2);
+    }
+
+    // Callers should expect an UnserializationException.
+    protected function performFailedUnserializationOnGetTest($l2)
+    {
+        $l1 = new StaticL1();
+        $pool = new Integrated($l1, $l2);
+        $invalid_object = 'O:10:"HelloWorl":0:{}';
+        $myaddr = new Address('mybin', 'performFailedUnserializationOnGetTest');
+        $l2->set('anypool', $myaddr, $invalid_object, null, [], true);
+        $pool->get($myaddr);
+    }
+
+    /**
+     * @expectedException LCache\UnserializationException
+     */
+    public function testDatabaseL2FailedUnserializationOnGet()
+    {
+        $this->createSchema();
+        $l2 = new DatabaseL2($this->dbh);
+        $this->performFailedUnserializationOnGetTest($l2);
+    }
+
+    /**
+     * @expectedException LCache\UnserializationException
+     */
+    public function testStaticL2FailedUnserializationOnGet()
+    {
+        $l2 = new StaticL2();
+        $this->performFailedUnserializationOnGetTest($l2);
     }
 
     public function performGarbageCollectionTest($l2)
