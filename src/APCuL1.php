@@ -116,7 +116,7 @@ class APCuL1 extends L1
             return apcu_clear_cache();
         } elseif ($address->isEntireBin()) {
             $prefix = $this->getLocalKey($address);
-            $pattern = '/^' . $prefix . '.*/';
+            $pattern = '/^' . preg_quote($prefix) . '.*/';
             $matching = $this->getIterator($pattern, APC_ITER_KEY);
             if (!$matching) {
                 // @codeCoverageIgnoreStart

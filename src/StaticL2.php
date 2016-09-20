@@ -69,9 +69,7 @@ class StaticL2 extends L2
 
         // If unserialization failed, miss.
         if ($unserialized_value === false && $last_matching_entry->value !== serialize(false)) {
-            // @TODO: Warn or throw an exception.
-            $this->misses++;
-            return null;
+            throw new UnserializationException($address, $last_matching_entry->value);
         }
 
         $last_matching_entry->value = $unserialized_value;
