@@ -121,7 +121,7 @@ class DatabaseL2 extends L2
                       /* Base table for view not found */ '42S02');
 
         if (in_array($pdo_exception->getCode(), $log_only, true)) {
-            $this->degrated = true;
+            $this->degraded = true;
             $text = 'LCache Database: ' . $description . ' : ' . $pdo_exception->getMessage();
             if ($this->log_locally) {
                 $this->errors[] = $text;
