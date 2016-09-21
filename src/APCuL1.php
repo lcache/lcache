@@ -118,27 +118,23 @@ class APCuL1 extends L1
             $prefix = $this->getLocalKey($address);
             $pattern = '/^' . preg_quote($prefix) . '.*/';
             $matching = $this->getIterator($pattern, APC_ITER_KEY);
-            if (!$matching) {
-                // @codeCoverageIgnoreStart
-                return false;
-                // @codeCoverageIgnoreEnd
-            }
+            assert(!is_null($matching), 'Iterator instantiation failed.');
             foreach ($matching as $match) {
-                if (!apcu_delete($match['key'])) {
-                    // @codeCoverageIgnoreStart
-                    return false;
-                    // @codeCoverageIgnoreEnd
-                }
+                // Ignore failures of delete because the key may have been
+                // deleted in another process using the same APCu.
+                apcu_delete($match['key']);
             }
             $this->setLastAppliedEventID($event_id);
             return true;
         }
+
         $apcu_key = $this->getLocalKey($address);
         $this->setLastAppliedEventID($event_id);
-        // @TODO: Consider adding race protection here, like for set.
-        // @TODO: Consider using an expiring tombstone to prevent the race
-        //        condition of an older set replacing a newer deletion.
-        return apcu_delete($apcu_key);
+
+        // Ignore failures of delete because the key may have been
+        // deleted in another process using the same APCu.
+        apcu_delete($apcu_key);
+        return true;
     }
 
     protected function recordHit()
