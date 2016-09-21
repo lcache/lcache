@@ -124,12 +124,10 @@ class APCuL1 extends L1
                 // deleted in another process using the same APCu.
                 apcu_delete($match['key']);
             }
-            $this->setLastAppliedEventID($event_id);
             return true;
         }
 
         $apcu_key = $this->getLocalKey($address);
-        $this->setLastAppliedEventID($event_id);
 
         // Ignore failures of delete because the key may have been
         // deleted in another process using the same APCu.
