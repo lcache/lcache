@@ -15,8 +15,17 @@ final class Integrated
         $this->overhead_threshold = $overhead_threshold;
     }
 
-    public function set(Address $address, $value, $ttl = null, array $tags = [])
+    public function set(Address $address, $value, $ttl_or_expiration = null, array $tags = [])
     {
+        $expiration = null;
+        if (!is_null($ttl_or_expiration)) {
+            if ($ttl_or_expiration < $_SERVER['REQUEST_TIME']) {
+                $expiration = $_SERVER['REQUEST_TIME'] + $ttl_or_expiration;
+            } else {
+                $expiration = $ttl_or_expiration;
+            }
+        }
+
         if (!is_null($this->overhead_threshold)) {
             $key_overhead = $this->l1->getKeyOverhead($address);
 
@@ -32,7 +41,7 @@ final class Integrated
                 // and create a local negative cache entry.
                 $event_id = $this->l2->delete($this->l1->getPool(), $address);
                 if (!is_null($event_id)) {
-                    $this->l1->set($event_id, $address, $value, $ttl);
+                    $this->l1->set($event_id, $address, $value, $expiration);
                 }
 
                 // Retain this negative cache item for a number of minutes
@@ -44,7 +53,6 @@ final class Integrated
             }
         }
 
-        $expiration = is_null($ttl) ? null : $_SERVER['REQUEST_TIME'] + $ttl;
         $event_id = $this->l2->set($this->l1->getPool(), $address, $value, $expiration, $tags);
         if (!is_null($event_id)) {
             $this->l1->set($event_id, $address, $value, $expiration);
