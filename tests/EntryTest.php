@@ -7,7 +7,8 @@ namespace LCache;
  *
  * @author ndobromirov
  */
-class EntryTest extends \PHPUnit_Framework_TestCase {
+class EntryTest extends \PHPUnit_Framework_TestCase
+{
 
     public function testEntryTTL()
     {
@@ -19,5 +20,4 @@ class EntryTest extends \PHPUnit_Framework_TestCase {
         $old_entry = new Entry(0, 'mypool', $myaddr, 'value', $_SERVER['REQUEST_TIME'], $_SERVER['REQUEST_TIME'] - 1);
         $this->assertEquals(0, $old_entry->getTTL());
     }
-
 }

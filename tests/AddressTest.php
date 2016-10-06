@@ -7,7 +7,8 @@ namespace LCache;
  *
  * @author ndobromirov
  */
-class AddressTest extends \PHPUnit_Framework_TestCase {
+class AddressTest extends \PHPUnit_Framework_TestCase
+{
 
     public function testSerialization()
     {
