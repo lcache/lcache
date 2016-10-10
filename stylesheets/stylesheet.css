@@ -89,17 +89,49 @@ header h2 {
   background: transparent url(../images/highlight-bg.jpg) 50% 0 no-repeat;
 }
 
-.inner {
+header .in, section .in, footer .in {
   width: 620px;
   margin: 0 auto;
+}
+
+section::after, .clearfix {
+  content: " ";
+  clear: both;
 }
 
 #container .inner img {
   max-width: 100%;
 }
 
+#main_content {
+  background-color: #222;
+  color: #eee;
+  padding: 20px 0;
+}
+
+.large {
+  font-size: 2.4em;
+}
+
+.api-docs {
+  padding-top: 16px;
+  width: 100%;
+  text-align: right;
+}
+
+img.featured {
+  border: solid 2px #000;
+  width: 25%;
+  float: left;
+  margin: 0 32px 0 0;
+}
+
 #downloads {
-  margin-bottom: 40px;
+  margin-bottom: 16px;
+}
+
+#presentation {
+  padding-top: 16px;
 }
 
 a.button {
@@ -319,7 +351,6 @@ footer {
   margin-top: 40px;
   font-size: 13px;
   color: #aaa;
-  background: transparent url('../images/hr.png') 0 0 no-repeat;
 }
 
 footer a {
