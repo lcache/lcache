@@ -1,4 +1,5 @@
 vendor
+build
 docs
 .sami-cache/
 composer.lock
