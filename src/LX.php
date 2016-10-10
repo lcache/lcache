@@ -28,7 +28,7 @@ abstract class LX
     /**
      * Determine whether or not the specified Address exists in the cache.
      * @param Address $address
-     * @return type
+     * @return boolean
      */
     public function exists(Address $address)
     {

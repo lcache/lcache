@@ -12,13 +12,13 @@ Foundation Library for Coherent, Multi-Layer Caching
 
  1. Install packages:
  
-    ** On Fedora: **
+    **On Fedora:**
 
     ```
-    sudo dnf install -y php-cli composer php-phpunit-PHPUnit php-phpunit-DbUnit php-pecl-apcu
+    sudo dnf install -y php-cli composer php-phpunit-PHPUnit php-phpunit-DbUnit php-pecl-apcu php-pecl-xdebug php-opcache
     ```
     
-    ** On MacOS: **
+    **On macOS:**
     
     ```
     brew install php70-xdebug 
@@ -26,13 +26,18 @@ Foundation Library for Coherent, Multi-Layer Caching
     brew install php70-apcu
     ```
 
- 2. Enable APCu caching for the CLI:
+ 2. Enable APCu caching for the CLI, if necessary:
 
     ```
     echo "apc.enable_cli=1" | sudo tee -a /etc/php.d/40-apcu.ini
     ```
     
-    Replace last argument with path to your php.ini. (`php -i | grep php.ini`)
+    Replace last argument with path to your php.ini. (`php -i | grep php.ini`).
+    This setting may already be enabled on your system; to find out, run:
+    ```
+    php -i | grep -i enable_cli
+    ```
+    You will see `apc.enable_cli => On => On` if it is enabled.
 
  3. From the project root directory:
 
