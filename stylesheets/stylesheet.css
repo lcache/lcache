@@ -130,8 +130,41 @@ img.featured {
   margin-bottom: 16px;
 }
 
+#modules {
+  padding: 16px 0;
+  background-color: #fff;
+}
+
 #presentation {
-  padding-top: 16px;
+  background: transparent url(../images/drupalcon-dublin-header-watercolor-halfheight.png) 50% 0 no-repeat;
+  background-size: 100% auto;
+  padding: 32px 0;
+}
+
+#presentation p {
+  color: #000;
+  background: rgba(255,255, 255, 0.9);
+  border: solid 2px #000;
+  margin-left: 35%;
+  padding: 16px;
+  font-weight: bold;
+  margin-bottom: 0px;
+}
+
+.two-across {
+  float: left;
+  width: 48%;
+}
+
+.icon-block, #modules .section-title {
+  margin: 0 auto;
+  text-align: center;
+  padding-bottom: 16px;
+}
+
+.icon-block p {
+  margin: 0;
+  padding: 0;
 }
 
 a.button {
