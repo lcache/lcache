@@ -200,8 +200,8 @@ class DatabaseL2 extends L2
     }
 
     /**
-   * @codeCoverageIgnore
-   */
+     * @codeCoverageIgnore
+     */
     public function debugDumpState()
     {
         echo PHP_EOL . PHP_EOL . 'Events:' . PHP_EOL;

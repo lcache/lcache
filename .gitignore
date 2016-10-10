@@ -1,5 +1,8 @@
+.sami-cache
+docs/api
 .DS_Store
 phpunit.xml
 vendor
 composer.lock
-build/
+build/logs
+
