@@ -23,11 +23,19 @@ final class Entry
         $this->tags = $tags;
     }
 
+    /**
+     * Return the Address for this entry.
+     * @return Address
+     */
     public function getAddress()
     {
         return $this->address;
     }
 
+    /**
+     * Return the time-to-live for this entry.
+     * @return integer
+     */
     public function getTTL()
     {
         if (is_null($this->expiration)) {
