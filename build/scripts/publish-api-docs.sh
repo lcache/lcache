@@ -3,7 +3,7 @@
 # Check to make sure that our build environment is right. Skip with no error otherwise.
 test -n "$TRAVIS"                           || { echo "This script is only designed to be run on Travis."; exit 0; }
 test "$TRAVIS_BRANCH" == "master"           || { echo "Skipping docs update for branch $TRAVIS_BRANCH - docs only updated for master branch."; exit 0; }
-test -z "$TRAVIS_PULL_REQUEST"              || { echo "Skipping docs update -- not done on pull requests. (PR #$TRAVIS_PULL_REQUEST)"; exit 0; }
+test "$TRAVIS_PULL_REQUEST" == "false"      || { echo "Skipping docs update -- not done on pull requests. (PR #$TRAVIS_PULL_REQUEST)"; exit 0; }
 test "${TRAVIS_PHP_VERSION:0:3}" == "5.6"   || { echo "Skipping docs update for PHP $TRAVIS_PHP_VERSION -- only update for PHP 5.6 build."; exit 0; }
 test "$TRAVIS_REPO_SLUG" == "lcache/lcache" || { echo "Skipping docs update for repository $TRAVIS_REPO_SLUG -- do not build docs for forks."; exit 0; }
 
