@@ -13,10 +13,11 @@ $iterator = Finder::create()
     ->in($dir)
 ;
 
-// generate documentation for all v2.0.* tags, the 2.0 branch, and the master one
+// List the branches to build documentation for here.  We will use the
+// multi-version documentation structure from the beginning, even when
+// we have but one branch, so that our documentation links do not change
+// when we add a second branch.
 $versions = GitVersionCollection::create($dir)
-    ->addFromTags('v0.*.0')
-    ->addFromTags('v*.0.0')
     ->add('master', 'master branch')
 ;
 
