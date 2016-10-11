@@ -15,6 +15,29 @@ final class Integrated
         $this->overhead_threshold = $overhead_threshold;
     }
 
+    public static function create($dbh, $table_prefix = '', $log_locally = false)
+    {
+        // Use the Null L1 cache for the CLI.
+        $l1 = new NullL1();
+        if (php_sapi_name() !== 'cli') {
+          $l1 = new APCuL1();
+        }
+        $l2 = new DatabaseL2($dbh, $table_prefix, $log_locally);
+
+        $integrated = new self($l1, $l2);
+        return $integrated;
+    }
+
+    public function setOverheadThreshhold($overhead_threshold)
+    {
+        $this->overhead_threshold = $overhead_threshold;
+    }
+
+    public function getOverheadThreshhold()
+    {
+        return $this->overhead_threshold;
+    }
+
     public function set(Address $address, $value, $ttl_or_expiration = null, array $tags = [])
     {
         $expiration = null;
@@ -26,11 +49,11 @@ final class Integrated
             }
         }
 
-        if (!is_null($this->overhead_threshold)) {
+        if (!is_null($this->getOverheadThreshhold())) {
             $key_overhead = $this->l1->getKeyOverhead($address);
 
             // Check if this key is known to have excessive overhead.
-            $excess = $key_overhead - $this->overhead_threshold;
+            $excess = $key_overhead - $this->getOverheadThreshhold();
             if ($excess >= 0) {
                 // If there's already an L1 negative cache entry, simply skip the write.
                 if ($this->l1->isNegativeCache($address)) {
