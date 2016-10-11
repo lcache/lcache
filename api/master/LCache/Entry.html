@@ -26,8 +26,8 @@
                     <form action="#" method="GET">
                 <select id="version-switcher" name="version">
                                             <option value="../../v0.2.0/index.html">v0.2.0</option>
-                                            <option value="../../v0.3.0/index.html" selected>v0.3.0</option>
-                                            <option value="../../master/index.html">master branch</option>
+                                            <option value="../../v0.3.0/index.html">v0.3.0</option>
+                                            <option value="../../master/index.html" selected>master branch</option>
                                     </select>
             </form>
                 <form id="search-form" action="../search.html" method="GET">
@@ -85,7 +85,7 @@
     </div>
 
     <p>    class
-    <strong>Entry</strong>        (<a href="https://github.com/lcache/lcache/blob/v0.3.0/src/Entry.php">View source</a>)
+    <strong>Entry</strong>        (<a href="https://github.com/lcache/lcache/blob/master/src/Entry.php">View source</a>)
 </p>
 
         
@@ -164,24 +164,22 @@
             </div>
                     <div class="row">
                 <div class="col-md-2 type">
-                    
+                    <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a>
                 </div>
                 <div class="col-md-8 type">
                     <a href="#method_getAddress">getAddress</a>()
         
-                                            <p class="no-description">No description</p>
-                                    </div>
+                                            <p>Return the Address for this entry.</p>                </div>
                 <div class="col-md-2"></div>
             </div>
                     <div class="row">
                 <div class="col-md-2 type">
-                    
+                    integer
                 </div>
                 <div class="col-md-8 type">
                     <a href="#method_getTTL">getTTL</a>()
         
-                                            <p class="no-description">No description</p>
-                                    </div>
+                                            <p>Return the time-to-live for this entry.</p>                </div>
                 <div class="col-md-2"></div>
             </div>
             </div>
@@ -192,7 +190,7 @@
             <div id="method-details">
                     <div class="method-item">
                     <h3 id="method___construct">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/v0.3.0/src/Entry.php#L15">line 15</a></div>
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/Entry.php#L15">line 15</a></div>
         <code>                    
     <strong>__construct</strong>($event_id, $pool, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address, $value, $created, $expiration = null, array $tags = array())
         </code>
@@ -251,8 +249,8 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_getAddress">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/v0.3.0/src/Entry.php#L26">line 26</a></div>
-        <code>                    
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/Entry.php#L30">line 30</a></div>
+        <code>                    <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a>
     <strong>getAddress</strong>()
         </code>
     </h3>
@@ -260,8 +258,19 @@
             
     
 
+                    <div class="method-description">
+                                    <p>Return the Address for this entry.</p>                                </div>
                 <div class="tags">
             
+                            <h4>Return Value</h4>
+
+                    <table class="table table-condensed">
+        <tr>
+            <td><a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a></td>
+            <td></td>
+        </tr>
+    </table>
+
             
             
                     </div>
@@ -270,8 +279,8 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_getTTL">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/v0.3.0/src/Entry.php#L31">line 31</a></div>
-        <code>                    
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/Entry.php#L39">line 39</a></div>
+        <code>                    integer
     <strong>getTTL</strong>()
         </code>
     </h3>
@@ -279,8 +288,19 @@
             
     
 
+                    <div class="method-description">
+                                    <p>Return the time-to-live for this entry.</p>                                </div>
                 <div class="tags">
             
+                            <h4>Return Value</h4>
+
+                    <table class="table table-condensed">
+        <tr>
+            <td>integer</td>
+            <td></td>
+        </tr>
+    </table>
+
             
             
                     </div>
