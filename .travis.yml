@@ -4,7 +4,7 @@ branches:
   # Only test the master branch and SemVer tags.
   only:
     - master
-    - /^[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+.*$/
+    - /^v*[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+.*$/
 
 php:
   - 5.6
