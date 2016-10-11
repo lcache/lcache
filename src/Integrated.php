@@ -20,7 +20,7 @@ final class Integrated
         // Use the Null L1 cache for the CLI.
         $l1 = new NullL1();
         if (php_sapi_name() !== 'cli') {
-          $l1 = new APCuL1();
+            $l1 = new APCuL1();
         }
         $l2 = new DatabaseL2($dbh, $table_prefix, $log_locally);
 
