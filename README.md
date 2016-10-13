@@ -8,43 +8,16 @@ Foundation Library for Coherent, Multi-Layer Caching
 [![API](https://img.shields.io/badge/api-latest-brightgreen.svg?style=flat)](https://lcache.github.io/lcache/api/master)
 [![License](https://poser.pugx.org/lcache/lcache/license)](https://packagist.org/packages/lcache/lcache)
 
-## Testing
+## Usage
 
- 1. Install packages:
- 
-    **On Fedora:**
+In most cases, LCache will be used via a module or plugin designed specifically for a given PHP framework.  Available modules / plugins include:
 
-    ```
-    sudo dnf install -y php-cli composer php-phpunit-PHPUnit php-phpunit-DbUnit php-pecl-apcu php-pecl-xdebug php-opcache
-    ```
-    
-    **On macOS:**
-    
-    ```
-    brew install php70-xdebug 
-    brew install php70-opcache
-    brew install php70-apcu
-    ```
+ - [Drupal Module for Drupal 8 and Drupal 7](https://www.drupal.org/project/lcache)
+ - [WordPress Plugin](https://github.com/lcache/wp-lcache)
 
- 2. Enable APCu caching for the CLI, if necessary:
+See the [documentation site](https://lcache.github.io/lcache/) for more information.
 
-    ```
-    echo "apc.enable_cli=1" | sudo tee -a /etc/php.d/40-apcu.ini
-    ```
-    
-    Replace last argument with path to your php.ini. (`php -i | grep php.ini`).
-    This setting may already be enabled on your system; to find out, run:
-    ```
-    php -i | grep -i enable_cli
-    ```
-    You will see `apc.enable_cli => On => On` if it is enabled.
-
- 3. From the project root directory:
-
-    ```
-    composer install
-    composer test
-    ```
+To contribute to the LCache project, see the [Contributing](CONTRIBUTING.md) document.
     
 ## Support
 
