@@ -12,3 +12,5 @@ Which module / plugin were you using?
 - [ ] Drupal 8
 - [ ] Drupal 7
 - [ ] WordPress
+- [ ] Using lcache/lcache directly
+- [ ] Other (specify)
