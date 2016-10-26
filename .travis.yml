@@ -20,7 +20,7 @@ cache:
 before_script:
   - echo 'apc.enable_cli=1' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
   - pear config-set preferred_state beta
-  - if [[ ${TRAVIS_PHP_VERSION:0:2} == "7." ]]; then (yes | pecl install channel://pecl.php.net/apcu-5.1.5) ; else (echo "no\nno" | pecl install channel://pecl.php.net/apcu-4.0.11) ; fi
+  - if [[ ${TRAVIS_PHP_VERSION:0:2} == "7." ]]; then (yes | pecl install apcu) ; else (echo "no\nno" | pecl install channel://pecl.php.net/apcu-4.0.11) ; fi
   - phpenv rehash
   - composer install
 
