@@ -188,20 +188,27 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         // Set and get an entry in Pool 1.
         $pool1->set($myaddr, 'myvalue');
         $this->assertEquals('myvalue', $pool1->get($myaddr));
+        $this->assertEquals(0, $pool1->getHitsL1());
+        $this->assertEquals(1, $pool1->getHitsL2());
+        $this->assertEquals(0, $pool1->getMisses());
+
+        // Following the L2 hit, it should hit L1.
+        $pool1->set($myaddr, 'myvalue');
+        $this->assertEquals('myvalue', $pool1->get($myaddr));
         $this->assertEquals(1, $pool1->getHitsL1());
-        $this->assertEquals(0, $pool1->getHitsL2());
+        $this->assertEquals(1, $pool1->getHitsL2());
         $this->assertEquals(0, $pool1->getMisses());
 
         // Read the entry in Pool 2.
         $this->assertEquals('myvalue', $pool2->get($myaddr));
         $this->assertEquals(0, $pool2->getHitsL1());
-        $this->assertEquals(1, $pool2->getHitsL2());
+        $this->assertEquals(2, $pool2->getHitsL2());
         $this->assertEquals(0, $pool2->getMisses());
 
         // Initialize Pool 2 synchronization.
         $changes = $pool2->synchronize();
         $this->assertNull($changes);
-        $this->assertEquals(1, $second_l1->getLastAppliedEventID());
+        $this->assertEquals(2, $second_l1->getLastAppliedEventID());
 
         // Alter the item in Pool 1. Pool 2 should hit its L1 again
         // with the out-of-date item. Synchronizing should fix it.
@@ -227,9 +234,15 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $mybin1_mykey = new Address('mybin1', 'mykey');
         $mybin1 = new Address('mybin1');
         $mybin2_mykey = new Address('mybin2', 'mykey');
+
         $pool1->set($mybin1_mykey, 'myvalue1');
         $pool1->set($mybin2_mykey, 'myvalue2');
+
+        // Synchronize and populate pool2.
         $pool2->synchronize();
+        $pool2->get($mybin1_mykey);
+        $pool2->get($mybin2_mykey);
+
         $pool1->delete($mybin1);
 
         // The deleted bin should be evident in pool1 but not in pool2.
@@ -297,14 +310,20 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $pool1->set($myaddr, 'myvalue', null, ['mytag']);
         $this->assertEquals([$myaddr], $central->getAddressesForTag('mytag'));
         $this->assertEquals('myvalue', $pool1->get($myaddr));
+        $this->assertEquals(0, $pool1->getHitsL1());
+        $this->assertEquals(1, $pool1->getHitsL2());
+        $this->assertEquals(0, $pool1->getMisses());
+
+        // Following the L2 hit, it should now hit L1.
+        $this->assertEquals('myvalue', $pool1->get($myaddr));
         $this->assertEquals(1, $pool1->getHitsL1());
-        $this->assertEquals(0, $pool1->getHitsL2());
+        $this->assertEquals(1, $pool1->getHitsL2());
         $this->assertEquals(0, $pool1->getMisses());
 
         // Read the entry in Pool 2.
         $this->assertEquals('myvalue', $pool2->get($myaddr));
         $this->assertEquals(0, $pool2->getHitsL1());
-        $this->assertEquals(1, $pool2->getHitsL2());
+        $this->assertEquals(2, $pool2->getHitsL2());
         $this->assertEquals(0, $pool2->getMisses());
 
 
@@ -495,6 +514,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $pool = new Integrated($l1, $l2);
         $myaddr = new Address('mybin', 'mykey');
         $pool->set($myaddr, 'myvalue');
+        $pool->get($myaddr);  // To populate L1.
         $this->assertTrue($pool->exists($myaddr));
         $pool->delete($myaddr);
         $this->assertFalse($pool->exists($myaddr));
@@ -702,8 +722,15 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(0, $l1->getKeyOverhead($myaddr));
         $pool->set($myaddr, 'myvalue');
         $this->assertEquals(1, $l1->getKeyOverhead($myaddr));
+
+        // This first get pulls the data into L1.
+        $pool->get($myaddr);
+        $this->assertEquals(1, $l1->getKeyOverhead($myaddr));
+
+        // This second get should hit L1, decreasing the overhead.
         $pool->get($myaddr);
         $this->assertEquals(0, $l1->getKeyOverhead($myaddr));
+
         $pool->set($myaddr, 'myvalue2');
         $this->assertEquals(1, $l1->getKeyOverhead($myaddr));
 

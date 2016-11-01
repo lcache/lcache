@@ -55,7 +55,7 @@ final class Integrated
 
         $event_id = $this->l2->set($this->l1->getPool(), $address, $value, $expiration, $tags);
         if (!is_null($event_id)) {
-            $this->l1->set($event_id, $address, $value, $expiration);
+            $this->l1->incrementOverhead($address);
         }
         return $event_id;
     }

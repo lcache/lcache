@@ -34,6 +34,17 @@ class APCuL1 extends L1
         return 0;
     }
 
+    public function incrementOverhead(Address $address)
+    {
+        $apcu_key = $this->getLocalKey($address);
+        apcu_inc($apcu_key . ':overhead', 1, $overhead_success);
+        if (!$overhead_success) {
+            // @codeCoverageIgnoreStart
+            apcu_store($apcu_key . ':overhead', 1);
+            // @codeCoverageIgnoreEnd
+        }
+    }
+
     public function setWithExpiration($event_id, Address $address, $value, $created, $expiration = null)
     {
         $apcu_key = $this->getLocalKey($address);
@@ -55,12 +66,7 @@ class APCuL1 extends L1
 
         // If not setting a negative cache entry, increment the key's overhead.
         if (!is_null($value)) {
-            apcu_inc($apcu_key . ':overhead', 1, $overhead_success);
-            if (!$overhead_success) {
-                // @codeCoverageIgnoreStart
-                apcu_store($apcu_key . ':overhead', 1);
-                // @codeCoverageIgnoreEnd
-            }
+            $this->incrementOverhead($address);
         }
 
         return $success;

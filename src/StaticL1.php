@@ -32,17 +32,23 @@ class StaticL1 extends L1
         return 0;
     }
 
+    public function incrementOverhead(Address $address)
+    {
+        $local_key = $address->serialize();
+        if (isset($this->key_overhead[$local_key])) {
+            $this->key_overhead[$local_key]++;
+        } else {
+            $this->key_overhead[$local_key] = 1;
+        }
+    }
+
     public function setWithExpiration($event_id, Address $address, $value, $created, $expiration = null)
     {
         $local_key = $address->serialize();
 
         // If not setting a negative cache entry, increment the key's overhead.
         if (!is_null($value)) {
-            if (isset($this->key_overhead[$local_key])) {
-                $this->key_overhead[$local_key]++;
-            } else {
-                $this->key_overhead[$local_key] = 1;
-            }
+            $this->incrementOverhead($address);
         }
 
         // Don't overwrite local entries that are even newer.
