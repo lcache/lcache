@@ -37,18 +37,16 @@ final class Integrated
                     return null;
                 }
 
-                // Otherwise, delete the item in L2
-                // and create a local negative cache entry.
+                // Otherwise, delete the item in L2 and create a local negative
+                // cache entry (if the L2 deletion succeeds).
                 $event_id = $this->l2->delete($this->l1->getPool(), $address);
                 if (!is_null($event_id)) {
-                    $this->l1->set($event_id, $address, $value, $expiration);
+                    // Retain this negative cache item for a number of minutes
+                    // equivalent to the number of excessive sets over the
+                    // threshold, plus one minute.
+                    $expiration = $_SERVER['REQUEST_TIME'] + ($excess + 1) * 60;
+                    $this->l1->setWithExpiration($event_id, $address, null, $_SERVER['REQUEST_TIME'], $expiration);
                 }
-
-                // Retain this negative cache item for a number of minutes
-                // equivalent to the number of excessive sets over the
-                // threshold, plus one minute.
-                $expiration = $_SERVER['REQUEST_TIME'] + ($excess + 1) * 60;
-                $this->l1->setWithExpiration($event_id, $address, null, $_SERVER['REQUEST_TIME'], $expiration);
                 return $event_id;
             }
         }
