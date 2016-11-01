@@ -359,7 +359,7 @@ class DatabaseL2 extends L2
 
         $applied = 0;
         try {
-            $sth = $this->dbh->prepare('SELECT "event_id", "pool", "address", "value", "created", "expiration" FROM ' . $this->prefixTable('lcache_events') . ' WHERE "event_id" > :last_applied_event_id AND "pool" <> :exclude_pool ORDER BY event_id');
+            $sth = $this->dbh->prepare('SELECT "event_id", "pool", "address", "created", "expiration" FROM ' . $this->prefixTable('lcache_events') . ' WHERE "event_id" > :last_applied_event_id AND "pool" <> :exclude_pool ORDER BY event_id');
             $sth->bindValue(':last_applied_event_id', $last_applied_event_id, \PDO::PARAM_INT);
             $sth->bindValue(':exclude_pool', $l1->getPool(), \PDO::PARAM_STR);
             $sth->execute();
@@ -372,20 +372,7 @@ class DatabaseL2 extends L2
         while ($event = $sth->fetchObject()) {
             $address = new Address();
             $address->unserialize($event->address);
-            if (is_null($event->value)) {
-                $l1->delete($event->event_id, $address);
-            } else {
-                $unserialized_value = @unserialize($event->value);
-                if ($unserialized_value === false && $event->value !== serialize(false)) {
-                    // Delete the L1 entry, if any, when we fail to unserialize.
-                    $l1->delete($event->event_id, $address);
-                } else {
-                    $event->value = $unserialized_value;
-                    $address = new Address();
-                    $address->unserialize($event->address);
-                    $l1->setWithExpiration($event->event_id, $address, $event->value, $event->created, $event->expiration);
-                }
-            }
+            $l1->delete($event->event_id, $address);
             $last_applied_event_id = $event->event_id;
             $applied++;
         }

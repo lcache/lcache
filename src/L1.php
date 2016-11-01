@@ -31,6 +31,8 @@ abstract class L1 extends LX
         return $this->setWithExpiration($event_id, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
     }
 
+    abstract public function incrementOverhead(Address $address);
+
     abstract public function isNegativeCache(Address $address);
     abstract public function getKeyOverhead(Address $address);
     abstract public function setWithExpiration($event_id, Address $address, $value, $created, $expiration = null);

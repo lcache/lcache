@@ -87,7 +87,9 @@ class StaticL2 extends L2
         if (!$value_is_serialized) {
             $value = serialize($value);
         }
-        $this->events[$this->current_event_id] = new Entry($this->current_event_id, $pool, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
+
+        $entry = new Entry($this->current_event_id, $pool, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
+        $this->events[$this->current_event_id] = $entry;
 
         // Clear existing tags linked to the item. This is much more
         // efficient with database-style indexes.
@@ -160,7 +162,8 @@ class StaticL2 extends L2
                         // Delete the L1 entry, if any, when we fail to unserialize.
                         $l1->delete($event->event_id, $event->getAddress());
                     } else {
-                        $l1->setWithExpiration($event->event_id, $event->getAddress(), $unserialized_value, $event->created, $event->expiration);
+                        //$l1->setWithExpiration($event->event_id, $event->getAddress(), $unserialized_value, $event->created, $event->expiration);
+                        $l1->delete($event->event_id, $event->getAddress());
                     }
                 }
                 $applied++;
