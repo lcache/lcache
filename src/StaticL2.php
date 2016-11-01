@@ -55,7 +55,7 @@ class StaticL2 extends L2
                 } elseif (!is_null($entry->expiration) && $entry->expiration < $_SERVER['REQUEST_TIME']) {
                     $last_matching_entry = null;
                 } else {
-                    $last_matching_entry = $entry;
+                    $last_matching_entry = clone $entry;
                 }
             }
         }
