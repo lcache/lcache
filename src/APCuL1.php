@@ -4,6 +4,18 @@ namespace LCache;
 
 class APCuL1 extends L1
 {
+    /** @var string */
+    private $localKeyPrefix;
+
+    /** @var string */
+    private $statusKeyHits;
+
+    /** @var string */
+    private $statusKeyMisses;
+
+    /** @var string */
+    private $statusKeyLastAppliedEventId;
+
     public function __construct($pool = null)
     {
         if (!is_null($pool)) {
@@ -13,11 +25,17 @@ class APCuL1 extends L1
         } else {
             $this->pool = $this->generateUniqueID();
         }
+
+        // Using a designated variables to speed-up key generation on runtime.
+        $this->localKeyPrefix = 'lcache' . $this->pool . ':';
+        $this->statusKeyHits = 'lcache_status:' . $this->pool . ':hits';
+        $this->statusKeyMisses = 'lcache_status:' . $this->pool . ':misses';
+        $this->statusKeyLastAppliedEventId = 'lcache_status:' . $this->pool . ':last_applied_event_id';
     }
 
     protected function getLocalKey($address)
     {
-        return 'lcache:' . $this->pool . ':' . $address->serialize();
+        return $this->localKeyPrefix . $address->serialize();
     }
 
     public function getKeyOverhead(Address $address)
@@ -55,10 +73,11 @@ class APCuL1 extends L1
 
         // If not setting a negative cache entry, increment the key's overhead.
         if (!is_null($value)) {
-            apcu_inc($apcu_key . ':overhead', 1, $overhead_success);
+            $apcu_key_overhead = $apcu_key . ':overhead';
+            apcu_inc($apcu_key_overhead, 1, $overhead_success);
             if (!$overhead_success) {
                 // @codeCoverageIgnoreStart
-                apcu_store($apcu_key . ':overhead', 1);
+                apcu_store($apcu_key_overhead, 1);
                 // @codeCoverageIgnoreEnd
             }
         }
@@ -76,12 +95,13 @@ class APCuL1 extends L1
     public function getEntry(Address $address)
     {
         $apcu_key = $this->getLocalKey($address);
+        $apcu_key_overhead = $apcu_key . ':overhead';
 
         // Decrement the key's overhead.
-        apcu_dec($apcu_key . ':overhead', 1, $overhead_success);
+        apcu_dec($apcu_key_overhead, 1, $overhead_success);
         if (!$overhead_success) {
             // @codeCoverageIgnoreStart
-            apcu_store($apcu_key . ':overhead', -1);
+            apcu_store($apcu_key_overhead, -1);
             // @codeCoverageIgnoreEnd
         }
 
@@ -114,7 +134,8 @@ class APCuL1 extends L1
         if ($address->isEntireCache()) {
             // @TODO: Consider flushing only LCache L1 storage by using an iterator.
             return apcu_clear_cache();
-        } elseif ($address->isEntireBin()) {
+        }
+        if ($address->isEntireBin()) {
             $prefix = $this->getLocalKey($address);
             $pattern = '/^' . preg_quote($prefix) . '.*/';
             $matching = $this->getIterator($pattern, APC_ITER_KEY);
@@ -137,45 +158,45 @@ class APCuL1 extends L1
 
     protected function recordHit()
     {
-        apcu_inc('lcache_status:' . $this->pool . ':hits', 1, $success);
+        apcu_inc($this->statusKeyHits, 1, $success);
         if (!$success) {
             // @TODO: Remove this fallback when we drop APCu 4.x support.
             // @codeCoverageIgnoreStart
             // Ignore coverage because (1) it's tested with other code and
             // (2) APCu 5.x does not use it.
-            apcu_store('lcache_status:' . $this->pool . ':hits', 1);
+            apcu_store($this->statusKeyHits, 1);
             // @codeCoverageIgnoreEnd
         }
     }
 
     protected function recordMiss()
     {
-        apcu_inc('lcache_status:' . $this->pool . ':misses', 1, $success);
+        apcu_inc($this->statusKeyMisses, 1, $success);
         if (!$success) {
             // @TODO: Remove this fallback when we drop APCu 4.x support.
             // @codeCoverageIgnoreStart
             // Ignore coverage because (1) it's tested with other code and
             // (2) APCu 5.x does not use it.
-            apcu_store('lcache_status:' . $this->pool . ':misses', 1);
+            apcu_store($this->statusKeyMisses, 1);
             // @codeCoverageIgnoreEnd
         }
     }
 
     public function getHits()
     {
-        $value = apcu_fetch('lcache_status:' . $this->pool . ':hits');
+        $value = apcu_fetch($this->statusKeyHits);
         return $value ? $value : 0;
     }
 
     public function getMisses()
     {
-        $value = apcu_fetch('lcache_status:' . $this->pool . ':misses');
+        $value = apcu_fetch($this->statusKeyMisses);
         return $value ? $value : 0;
     }
 
     public function getLastAppliedEventID()
     {
-        $value = apcu_fetch('lcache_status:' . $this->pool . ':last_applied_event_id');
+        $value = apcu_fetch($this->statusKeyLastAppliedEventId);
         if ($value === false) {
             $value = null;
         }
@@ -184,6 +205,6 @@ class APCuL1 extends L1
 
     public function setLastAppliedEventID($eid)
     {
-        return apcu_store('lcache_status:' . $this->pool . ':last_applied_event_id', $eid);
+        return apcu_store($this->statusKeyLastAppliedEventId, $eid);
     }
 }
