@@ -43,8 +43,8 @@ class StaticL1 extends L1
             }
         }
 
-        // Don't overwrite local entries that are even newer.
-        if (isset($this->storage[$local_key]) && $this->storage[$local_key]->event_id > $event_id) {
+        // Don't overwrite local entries that are even newer or the same age.
+        if (isset($this->storage[$local_key]) && $this->storage[$local_key]->event_id >= $event_id) {
             return true;
         }
         $this->storage[$local_key] = new Entry($event_id, $this->getPool(), $address, $value, $created, $expiration);
