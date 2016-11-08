@@ -99,10 +99,11 @@ class DatabaseL2 extends L2
             }
             // @codeCoverageIgnoreEnd
             $sth->execute();
+            return $sth->rowCount();
         } catch (\PDOException $e) {
             $this->logSchemaIssueOrRethrow('Failed to collect garbage', $e);
-            return false;
         }
+        return false;
     }
 
     protected function queueDeletion(Address $address)
@@ -251,8 +252,8 @@ class DatabaseL2 extends L2
         if ($address->isEntireBin() || $address->isEntireCache()) {
             $pattern = $address->serialize() . '%';
             $sth = $this->dbh->prepare('DELETE FROM ' . $this->prefixTable('lcache_events') .' WHERE "event_id" < :new_event_id AND "address" LIKE :pattern');
-            $sth->bindValue('new_event_id', $event_id, \PDO::PARAM_INT);
-            $sth->bindValue('pattern', $pattern, \PDO::PARAM_STR);
+            $sth->bindValue(':new_event_id', $event_id, \PDO::PARAM_INT);
+            $sth->bindValue(':pattern', $pattern, \PDO::PARAM_STR);
             $sth->execute();
         } else {
             if (is_null($this->event_id_low_water)) {
