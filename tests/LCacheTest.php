@@ -790,6 +790,19 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $l1->getEntry($myaddr)->expiration);
     }
 
+    public function testDatabaseL2BatchDeletion()
+    {
+        $this->createSchema();
+        $l2 = new DatabaseL2($this->dbh);
+        $myaddr = new Address('mybin', 'mykey');
+        $l2->set('mypool', $myaddr, 'myvalue');
+
+        $mybin = new Address('mybin', null);
+        $l2->delete('mypool', $mybin);
+
+        $this->assertNull($l2->get($myaddr));
+    }
+
     /**
     * @return PHPUnit_Extensions_Database_DataSet_IDataSet
     */
