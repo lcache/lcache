@@ -35,4 +35,9 @@ abstract class LX
         $value = $this->get($address);
         return !is_null($value);
     }
+
+    public function collectGarbage($item_limit = null)
+    {
+        return 0;
+    }
 }
