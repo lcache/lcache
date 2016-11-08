@@ -50,9 +50,9 @@ class APCuL1 extends L1
     {
         $apcu_key = $this->getLocalKey($address);
 
-        // Don't overwrite local entries that are even newer.
+        // Don't overwrite local entries that are even newer or the same age.
         $entry = apcu_fetch($apcu_key);
-        if ($entry !== false && $entry->event_id > $event_id) {
+        if ($entry !== false && $entry->event_id >= $event_id) {
             return true;
         }
         $entry = new Entry($event_id, $this->pool, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
