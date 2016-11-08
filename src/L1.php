@@ -6,16 +6,21 @@ abstract class L1 extends LX
 {
     protected $pool;
 
-    public function __construct()
+    public function __construct($pool = null)
     {
-        if (!isset($this->pool)) {
+        if (!is_null($pool)) {
+            $this->pool = $pool;
+        } elseif (isset($_SERVER['SERVER_ADDR']) && isset($_SERVER['SERVER_PORT'])) {
+            $this->pool = $_SERVER['SERVER_ADDR'] . '-' . $_SERVER['SERVER_PORT'];
+        } else {
             $this->pool = $this->generateUniqueID();
         }
     }
 
     protected function generateUniqueID()
     {
-        return uniqid('', true) . ':' . mt_rand();
+        // @TODO: Replace with a persistent but machine-local (and unique) method.
+        return uniqid('', true) . '-' . mt_rand();
     }
 
     abstract public function getLastAppliedEventID();

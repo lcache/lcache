@@ -18,15 +18,9 @@ class APCuL1 extends L1
 
     public function __construct($pool = null)
     {
-        if (!is_null($pool)) {
-            $this->pool = $pool;
-        } elseif (isset($_SERVER['SERVER_ADDR']) && isset($_SERVER['SERVER_PORT'])) {
-            $this->pool = $_SERVER['SERVER_ADDR'] . ':' . $_SERVER['SERVER_PORT'];
-        } else {
-            $this->pool = $this->generateUniqueID();
-        }
+        parent::__construct($pool);
 
-        // Using a designated variables to speed-up key generation on runtime.
+        // Using designated variables to speed up key generation during runtime.
         $this->localKeyPrefix = 'lcache' . $this->pool . ':';
         $this->statusKeyHits = 'lcache_status:' . $this->pool . ':hits';
         $this->statusKeyMisses = 'lcache_status:' . $this->pool . ':misses';
