@@ -519,7 +519,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $_SERVER['SERVER_ADDR'] = 'localhost';
         $_SERVER['SERVER_PORT'] = '80';
         $l1 = new APCuL1();
-        $this->assertEquals('localhost:80', $l1->getPool());
+        $this->assertEquals('localhost-80', $l1->getPool());
     }
 
     protected function performL1AntirollbackTest($l1)

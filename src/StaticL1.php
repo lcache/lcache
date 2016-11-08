@@ -12,15 +12,13 @@ class StaticL1 extends L1
 
     public function __construct($pool = null)
     {
-        if (!is_null($pool)) {
-            $this->pool = $pool;
-        }
+        parent::__construct($pool);
+
         $this->hits = 0;
         $this->misses = 0;
         $this->key_overhead = [];
         $this->storage = array();
         $this->last_applied_event_id = null;
-        parent::__construct();
     }
 
     public function getKeyOverhead(Address $address)
