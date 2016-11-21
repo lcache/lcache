@@ -46,42 +46,68 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(PHP_INT_MAX, $cache->getLastAppliedEventID());
     }
 
-    public function testStaticL1SetGetDelete()
+    protected function performSetGetDeleteTest($l1)
     {
         $event_id = 1;
-        $cache = new StaticL1();
 
         $myaddr = new Address('mybin', 'mykey');
 
-        $this->assertEquals(0, $cache->getHits());
-        $this->assertEquals(0, $cache->getMisses());
+        $this->assertEquals(0, $l1->getHits());
+        $this->assertEquals(0, $l1->getMisses());
 
-        // Try to get an entry from an empty cache.
-        $entry = $cache->get($myaddr);
+        // Try to get an entry from an empty L1.
+        $entry = $l1->get($myaddr);
         $this->assertNull($entry);
-        $this->assertEquals(0, $cache->getHits());
-        $this->assertEquals(1, $cache->getMisses());
+        $this->assertEquals(0, $l1->getHits());
+        $this->assertEquals(1, $l1->getMisses());
 
         // Set and get an entry.
-        $cache->set($event_id++, $myaddr, 'myvalue');
-        $entry = $cache->get($myaddr);
+        $l1->set($event_id++, $myaddr, 'myvalue');
+        $entry = $l1->get($myaddr);
         $this->assertEquals('myvalue', $entry);
-        $this->assertEquals(1, $cache->getHits());
-        $this->assertEquals(1, $cache->getMisses());
+        $this->assertEquals(1, $l1->getHits());
+        $this->assertEquals(1, $l1->getMisses());
 
         // Delete the entry and try to get it again.
-        $cache->delete($event_id++, $myaddr);
-        $entry = $cache->get($myaddr);
+        $l1->delete($event_id++, $myaddr);
+        $entry = $l1->get($myaddr);
         $this->assertNull($entry);
-        $this->assertEquals(1, $cache->getHits());
-        $this->assertEquals(2, $cache->getMisses());
+        $this->assertEquals(1, $l1->getHits());
+        $this->assertEquals(2, $l1->getMisses());
 
         // Clear everything and try to read.
-        $cache->delete($event_id++, new Address());
-        $entry = $cache->get($myaddr);
+        $l1->delete($event_id++, new Address());
+        $entry = $l1->get($myaddr);
         $this->assertNull($entry);
-        $this->assertEquals(1, $cache->getHits());
-        $this->assertEquals(3, $cache->getMisses());
+        $this->assertEquals(1, $l1->getHits());
+        $this->assertEquals(3, $l1->getMisses());
+
+        // This is a no-op for most L1 implementations, but it should not
+        // return false, regardless.
+        $this->assertTrue(false !== $l1->collectGarbage());
+
+        // Test complex values that need serialization.
+        $myarray = [1, 2, 3];
+        $l1->set($event_id++, $myaddr, $myarray);
+        $entry = $l1->get($myaddr);
+        $this->assertEquals($myarray, $entry);
+
+        // Test creation tracking.
+        $l1->setWithExpiration($event_id++, $myaddr, 'myvalue', 42);
+        $entry = $l1->getEntry($myaddr);
+        $this->assertEquals(42, $entry->created);
+    }
+
+    public function testStaticL1SetGetDelete()
+    {
+        $l1 = new StaticL1();
+        $this->performSetGetDeleteTest($l1);
+    }
+
+    public function testSQLiteL1SetGetDelete()
+    {
+        $l1 = new SQLiteL1();
+        $this->performSetGetDeleteTest($l1);
     }
 
     public function testStaticL1Antirollback()
@@ -177,6 +203,42 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals($pool1->getLastAppliedEventID(), $pool2->getLastAppliedEventID());
     }
 
+    protected function performTombstoneTest($l1)
+    {
+        $central = new Integrated($l1, new StaticL2());
+
+        $dne = new Address('mypool', 'mykey-dne');
+        $this->assertNull($central->get($dne));
+
+        $tombstone = $central->getEntry($dne, true);
+        $this->assertNotNull($tombstone);
+        $this->assertNull($tombstone->value);
+        // The L1 should return the tombstone entry so the integrated cache
+        // can avoid rewriting it.
+        $tombstone = $l1->getEntry($dne);
+        $this->assertNotNull($tombstone);
+        $this->assertNull($tombstone->value);
+
+        // The tombstone should also count as non-existence.
+        $this->assertFalse($central->exists($dne));
+
+        // This is a no-op for most L1 implementations, but it should not
+        // return false, regardless.
+        $this->assertTrue(false !== $l1->collectGarbage());
+    }
+
+    public function testAPCuL1Tombstone()
+    {
+        $l1 = new APCuL1('testAPCuL1Tombstone');
+        $this->performTombstoneTest($l1);
+    }
+
+    public function testSQLiteL1Tombstone()
+    {
+        $l1 = new SQLiteL1();
+        $this->performTombstoneTest($l1);
+    }
+
     protected function performSynchronizationTest($central, $first_l1, $second_l1)
     {
         // Create two integrated pools with independent L1s.
@@ -242,22 +304,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $pool2->synchronize();
         $this->assertNull($pool2->get($mybin1_mykey));
         $this->assertEquals('myvalue2', $pool2->get($mybin2_mykey));
-
-        // An L2 miss should place a tombstone into L1.
-        $dne = new Address('mypool', 'mykey-dne');
-        $this->assertNull($pool1->get($mybin1_mykey));
-        $tombstone = $pool1->getEntry($mybin1_mykey, true);
-        $this->assertNotNull($tombstone);
-        $this->assertNull($tombstone->value);
-
-        // The L1 should return the tombstone entry so the integrated cache
-        // can avoid rewriting it.
-        $tombstone = $first_l1->getEntry($mybin1_mykey);
-        $this->assertNotNull($tombstone);
-        $this->assertNull($tombstone->value);
-
-        // The tombstone should also count as non-existence.
-        $this->assertFalse($pool1->exists($mybin1_mykey));
     }
 
     protected function performClearSynchronizationTest($central, $first_l1, $second_l1)
@@ -390,6 +436,16 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         }
     }
 
+    public function testSynchronizationSQLiteL1()
+    {
+        $central = new StaticL2();
+        $this->performSynchronizationTest($central, new SQLiteL1(), new SQLiteL1());
+
+        $this->performClearSynchronizationTest($central, new SQLiteL1(), new StaticL1());
+        $this->performClearSynchronizationTest($central, new StaticL1(), new SQLiteL1());
+        $this->performClearSynchronizationTest($central, new SQLiteL1(), new SQLiteL1());
+    }
+
     public function testSynchronizationDatabase()
     {
         $this->createSchema();
@@ -467,9 +523,8 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $l2 = new DatabaseL2($this->dbh);
     }
 
-    public function testExistsAPCuL1()
+    protected function performExistsTest($l1)
     {
-        $l1 = new APCuL1('first');
         $myaddr = new Address('mybin', 'mykey');
         $l1->set(1, $myaddr, 'myvalue');
         $this->assertTrue($l1->exists($myaddr));
@@ -477,14 +532,22 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertFalse($l1->exists($myaddr));
     }
 
+    public function testExistsAPCuL1()
+    {
+        $l1 = new APCuL1('first');
+        $this->performExistsTest($l1);
+    }
+
     public function testExistsStaticL1()
     {
         $l1 = new StaticL1();
-        $myaddr = new Address('mybin', 'mykey');
-        $l1->set(1, $myaddr, 'myvalue');
-        $this->assertTrue($l1->exists($myaddr));
-        $l1->delete(2, $myaddr);
-        $this->assertFalse($l1->exists($myaddr));
+        $this->performExistsTest($l1);
+    }
+
+    public function testExistsSQLiteL1()
+    {
+        $l1 = new SQLiteL1();
+        $this->performExistsTest($l1);
     }
 
     public function testExistsIntegrated()
@@ -541,12 +604,18 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->performL1AntirollbackTest($l1);
     }
 
+    public function testSQLite1Antirollback()
+    {
+        $l1 = new SQLiteL1();
+        $this->performL1AntirollbackTest($l1);
+    }
+
     protected function performL1HitMissTest($l1)
     {
         $myaddr = new Address('mybin', 'mykey');
         $current_hits = $l1->getHits();
         $current_misses = $l1->getMisses();
-        $current_event_id = $l1->getLastAppliedEventID();
+        $current_event_id = 1;
         $l1->get($myaddr);
         $this->assertEquals($current_misses + 1, $l1->getMisses());
         $l1->set($current_event_id++, $myaddr, 'myvalue');
@@ -554,9 +623,15 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals($current_hits + 1, $l1->getHits());
     }
 
-    public function testAPCuHitMiss()
+    public function testAPCuL1HitMiss()
     {
-        $l1 = new APCuL1('testAPCuHitMiss');
+        $l1 = new APCuL1('testAPCuL1HitMiss');
+        $this->performL1HitMissTest($l1);
+    }
+
+    public function testSQLiteL1HitMiss()
+    {
+        $l1 = new SQLiteL1();
         $this->performL1HitMissTest($l1);
     }
 
@@ -725,6 +800,11 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->performHitSetCounterTest(new APCuL1('counters'));
     }
 
+    public function testSQLiteL1Counters()
+    {
+        $this->performHitSetCounterTest(new SQLiteL1());
+    }
+
     protected function performExcessiveOverheadSkippingTest($l1)
     {
         $pool = new Integrated($l1, new StaticL2(), 2);
@@ -735,6 +815,8 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertNotNull($pool->set($myaddr, 'myvalue2'));
 
         // This should return an event_id but delete the item.
+        $this->assertEquals(2, $l1->getKeyOverhead($myaddr));
+        $this->assertFalse($l1->isNegativeCache($myaddr));
         $this->assertNotNull($pool->set($myaddr, 'myvalue3'));
         $this->assertFalse($pool->exists($myaddr));
 
@@ -769,6 +851,11 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->performExcessiveOverheadSkippingTest(new APCuL1('overhead'));
     }
 
+    public function testSQLiteL1ExcessiveOverheadSkipping()
+    {
+        $this->performExcessiveOverheadSkippingTest(new SQLiteL1());
+    }
+
     public function testAPCuL1Expiration()
     {
         $l1 = new APCuL1();
@@ -801,6 +888,23 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $l2->delete('mypool', $mybin);
 
         $this->assertNull($l2->get($myaddr));
+    }
+
+    public function testSQLiteL1SchemaErrorHandling()
+    {
+        $pool_name = uniqid('', true) . '-' . mt_rand();
+        $l1_a = new SQLiteL1($pool_name);
+
+        // Opening a second instance of the same pool should work.
+        $l1_b = new SQLiteL1($pool_name);
+
+        $myaddr = new Address('mybin', 'mykey');
+
+        $l1_a->set(1, $myaddr, 'myvalue');
+
+        // Reading from the second handle should show the value written to the
+        // first.
+        $this->assertEquals('myvalue', $l1_b->get($myaddr));
     }
 
     /**
