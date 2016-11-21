@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="robots" content="index, follow, all" />
-    <title>LCache\L2 | LCache API</title>
+    <title>LCache\SQLiteL1 | LCache API</title>
 
             <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="../css/bootstrap-theme.min.css">
@@ -19,7 +19,7 @@
     
     </head>
 
-    <body id="class" data-name="class:LCache_L2" data-root-path="../">
+    <body id="class" data-name="class:LCache_SQLiteL1" data-root-path="../">
             <div id="content">
         <div id="left-column">
                 <div id="control-panel">
@@ -65,20 +65,20 @@
                 <li><span class="label label-default">class</span></li>
                                                             <li><a href="../LCache.html">LCache</a></li>
     
-                <li>L2</li>
+                <li>SQLiteL1</li>
             </ol>
         </div>
                 <div id="page-content">
                 
     <div class="page-header">
         <h1>
-            L2
+            SQLiteL1
                 
         </h1>
     </div>
 
     <p>    class
-    <strong>L2</strong>        extends <a href="../LCache/LX.html"><abbr title="LCache\LX">LX</abbr></a>        (<a href="https://github.com/lcache/lcache/blob/master/src/L2.php">View source</a>)
+    <strong>SQLiteL1</strong>        extends <a href="../LCache/L1.html"><abbr title="LCache\L1">L1</abbr></a>        (<a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php">View source</a>)
 </p>
 
         
@@ -100,7 +100,7 @@
         
                                             <p class="no-description">No description</p>
                                     </div>
-                <div class="col-md-2"><small>from&nbsp;<a href="../LCache/LX.html#method_getEntry"><abbr title="LCache\LX">LX</abbr></a></small></div>
+                <div class="col-md-2"></div>
             </div>
                     <div class="row">
                 <div class="col-md-2 type">
@@ -111,7 +111,7 @@
         
                                             <p class="no-description">No description</p>
                                     </div>
-                <div class="col-md-2"><small>from&nbsp;<a href="../LCache/LX.html#method_getHits"><abbr title="LCache\LX">LX</abbr></a></small></div>
+                <div class="col-md-2"></div>
             </div>
                     <div class="row">
                 <div class="col-md-2 type">
@@ -122,7 +122,7 @@
         
                                             <p class="no-description">No description</p>
                                     </div>
-                <div class="col-md-2"><small>from&nbsp;<a href="../LCache/LX.html#method_getMisses"><abbr title="LCache\LX">LX</abbr></a></small></div>
+                <div class="col-md-2"></div>
             </div>
                     <div class="row">
                 <div class="col-md-2 type">
@@ -142,7 +142,7 @@
                     <a href="#method_exists">exists</a>(<a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
         
                                             <p>Determine whether or not the specified Address exists in the cache.</p>                </div>
-                <div class="col-md-2"><small>from&nbsp;<a href="../LCache/LX.html#method_exists"><abbr title="LCache\LX">LX</abbr></a></small></div>
+                <div class="col-md-2"></div>
             </div>
                     <div class="row">
                 <div class="col-md-2 type">
@@ -153,14 +153,14 @@
         
                                             <p class="no-description">No description</p>
                                     </div>
-                <div class="col-md-2"><small>from&nbsp;<a href="../LCache/LX.html#method_collectGarbage"><abbr title="LCache\LX">LX</abbr></a></small></div>
+                <div class="col-md-2"></div>
             </div>
                     <div class="row">
                 <div class="col-md-2 type">
                     
                 </div>
                 <div class="col-md-8 type">
-                    <a href="#method_applyEvents">applyEvents</a>(<a href="../LCache/L1.html"><abbr title="LCache\L1">L1</abbr></a> $l1)
+                    <a href="#method___construct">__construct</a>($pool = null)
         
                                             <p class="no-description">No description</p>
                                     </div>
@@ -171,7 +171,7 @@
                     
                 </div>
                 <div class="col-md-8 type">
-                    <a href="#method_set">set</a>($pool, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address, $value = null, $expiration = null, array $tags = array(), $value_is_serialized = false)
+                    <a href="#method_getLastAppliedEventID">getLastAppliedEventID</a>()
         
                                             <p class="no-description">No description</p>
                                     </div>
@@ -182,7 +182,7 @@
                     
                 </div>
                 <div class="col-md-8 type">
-                    <a href="#method_delete">delete</a>($pool, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
+                    <a href="#method_setLastAppliedEventID">setLastAppliedEventID</a>($eid)
         
                                             <p class="no-description">No description</p>
                                     </div>
@@ -193,7 +193,29 @@
                     
                 </div>
                 <div class="col-md-8 type">
-                    <a href="#method_deleteTag">deleteTag</a>(<a href="../LCache/L1.html"><abbr title="LCache\L1">L1</abbr></a> $l1, $tag)
+                    <a href="#method_getPool">getPool</a>()
+        
+                                            <p class="no-description">No description</p>
+                                    </div>
+                <div class="col-md-2"><small>from&nbsp;<a href="../LCache/L1.html#method_getPool"><abbr title="LCache\L1">L1</abbr></a></small></div>
+            </div>
+                    <div class="row">
+                <div class="col-md-2 type">
+                    
+                </div>
+                <div class="col-md-8 type">
+                    <a href="#method_set">set</a>($event_id, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address, $value = null, $expiration = null)
+        
+                                            <p class="no-description">No description</p>
+                                    </div>
+                <div class="col-md-2"><small>from&nbsp;<a href="../LCache/L1.html#method_set"><abbr title="LCache\L1">L1</abbr></a></small></div>
+            </div>
+                    <div class="row">
+                <div class="col-md-2 type">
+                    
+                </div>
+                <div class="col-md-8 type">
+                    <a href="#method_isNegativeCache">isNegativeCache</a>(<a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
         
                                             <p class="no-description">No description</p>
                                     </div>
@@ -204,7 +226,7 @@
                     
                 </div>
                 <div class="col-md-8 type">
-                    <a href="#method_getAddressesForTag">getAddressesForTag</a>($tag)
+                    <a href="#method_getKeyOverhead">getKeyOverhead</a>(<a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
         
                                             <p class="no-description">No description</p>
                                     </div>
@@ -215,7 +237,40 @@
                     
                 </div>
                 <div class="col-md-8 type">
-                    <a href="#method_countGarbage">countGarbage</a>()
+                    <a href="#method_setWithExpiration">setWithExpiration</a>($event_id, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address, $value, $created, $expiration = null)
+        
+                                            <p class="no-description">No description</p>
+                                    </div>
+                <div class="col-md-2"></div>
+            </div>
+                    <div class="row">
+                <div class="col-md-2 type">
+                    
+                </div>
+                <div class="col-md-8 type">
+                    <a href="#method_delete">delete</a>($event_id, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
+        
+                                            <p class="no-description">No description</p>
+                                    </div>
+                <div class="col-md-2"></div>
+            </div>
+                    <div class="row">
+                <div class="col-md-2 type">
+                    
+                </div>
+                <div class="col-md-8 type">
+                    <a href="#method___destruct">__destruct</a>()
+        
+                                            <p class="no-description">No description</p>
+                                    </div>
+                <div class="col-md-2"></div>
+            </div>
+                    <div class="row">
+                <div class="col-md-2 type">
+                    
+                </div>
+                <div class="col-md-8 type">
+                    <a href="#method_debugDumpState">debugDumpState</a>()
         
                                             <p class="no-description">No description</p>
                                     </div>
@@ -229,8 +284,8 @@
             <div id="method-details">
                     <div class="method-item">
                     <h3 id="method_getEntry">
-        <div class="location">in <a href="../LCache/LX.html#method_getEntry"><abbr title="LCache\LX">LX</abbr></a> at line         <a href="https://github.com/lcache/lcache/blob/master/src/LX.php#L10">line 10</a></div>
-        <code>    abstract                
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L179">line 179</a></div>
+        <code>                    
     <strong>getEntry</strong>(<a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
         </code>
     </h3>
@@ -258,8 +313,8 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_getHits">
-        <div class="location">in <a href="../LCache/LX.html#method_getHits"><abbr title="LCache\LX">LX</abbr></a> at line         <a href="https://github.com/lcache/lcache/blob/master/src/LX.php#L11">line 11</a></div>
-        <code>    abstract                
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L266">line 266</a></div>
+        <code>                    
     <strong>getHits</strong>()
         </code>
     </h3>
@@ -277,8 +332,8 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_getMisses">
-        <div class="location">in <a href="../LCache/LX.html#method_getMisses"><abbr title="LCache\LX">LX</abbr></a> at line         <a href="https://github.com/lcache/lcache/blob/master/src/LX.php#L12">line 12</a></div>
-        <code>    abstract                
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L272">line 272</a></div>
+        <code>                    
     <strong>getMisses</strong>()
         </code>
     </h3>
@@ -336,7 +391,7 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_exists">
-        <div class="location">in <a href="../LCache/LX.html#method_exists"><abbr title="LCache\LX">LX</abbr></a> at line         <a href="https://github.com/lcache/lcache/blob/master/src/LX.php#L33">line 33</a></div>
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L145">line 145</a></div>
         <code>                    boolean
     <strong>exists</strong>(<a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
         </code>
@@ -376,7 +431,7 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_collectGarbage">
-        <div class="location">in <a href="../LCache/LX.html#method_collectGarbage"><abbr title="LCache\LX">LX</abbr></a> at line         <a href="https://github.com/lcache/lcache/blob/master/src/LX.php#L39">line 39</a></div>
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L85">line 85</a></div>
         <code>                    
     <strong>collectGarbage</strong>($item_limit = null)
         </code>
@@ -404,39 +459,10 @@
 
             </div>
                     <div class="method-item">
-                    <h3 id="method_applyEvents">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L2.php#L7">line 7</a></div>
-        <code>    abstract                
-    <strong>applyEvents</strong>(<a href="../LCache/L1.html"><abbr title="LCache\L1">L1</abbr></a> $l1)
-        </code>
-    </h3>
-    <div class="details">
-            
-    
-
-                <div class="tags">
-                            <h4>Parameters</h4>
-
-                    <table class="table table-condensed">
-                    <tr>
-                <td><a href="../LCache/L1.html"><abbr title="LCache\L1">L1</abbr></a></td>
-                <td>$l1</td>
-                <td></td>
-            </tr>
-            </table>
-
-            
-            
-            
-                    </div>
-    </div>
-
-            </div>
-                    <div class="method-item">
-                    <h3 id="method_set">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L2.php#L8">line 8</a></div>
-        <code>    abstract                
-    <strong>set</strong>($pool, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address, $value = null, $expiration = null, array $tags = array(), $value_is_serialized = false)
+                    <h3 id="method___construct">
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L54">line 54</a></div>
+        <code>                    
+    <strong>__construct</strong>($pool = null)
         </code>
     </h3>
     <div class="details">
@@ -450,6 +476,102 @@
                     <tr>
                 <td></td>
                 <td>$pool</td>
+                <td></td>
+            </tr>
+            </table>
+
+            
+            
+            
+                    </div>
+    </div>
+
+            </div>
+                    <div class="method-item">
+                    <h3 id="method_getLastAppliedEventID">
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L281">line 281</a></div>
+        <code>                    
+    <strong>getLastAppliedEventID</strong>()
+        </code>
+    </h3>
+    <div class="details">
+            
+    
+
+                <div class="tags">
+            
+            
+            
+                    </div>
+    </div>
+
+            </div>
+                    <div class="method-item">
+                    <h3 id="method_setLastAppliedEventID">
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L290">line 290</a></div>
+        <code>                    
+    <strong>setLastAppliedEventID</strong>($eid)
+        </code>
+    </h3>
+    <div class="details">
+            
+    
+
+                <div class="tags">
+                            <h4>Parameters</h4>
+
+                    <table class="table table-condensed">
+                    <tr>
+                <td></td>
+                <td>$eid</td>
+                <td></td>
+            </tr>
+            </table>
+
+            
+            
+            
+                    </div>
+    </div>
+
+            </div>
+                    <div class="method-item">
+                    <h3 id="method_getPool">
+        <div class="location">in <a href="../LCache/L1.html#method_getPool"><abbr title="LCache\L1">L1</abbr></a> at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L29">line 29</a></div>
+        <code>                    
+    <strong>getPool</strong>()
+        </code>
+    </h3>
+    <div class="details">
+            
+    
+
+                <div class="tags">
+            
+            
+            
+                    </div>
+    </div>
+
+            </div>
+                    <div class="method-item">
+                    <h3 id="method_set">
+        <div class="location">in <a href="../LCache/L1.html#method_set"><abbr title="LCache\L1">L1</abbr></a> at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L34">line 34</a></div>
+        <code>                    
+    <strong>set</strong>($event_id, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address, $value = null, $expiration = null)
+        </code>
+    </h3>
+    <div class="details">
+            
+    
+
+                <div class="tags">
+                            <h4>Parameters</h4>
+
+                    <table class="table table-condensed">
+                    <tr>
+                <td></td>
+                <td>$event_id</td>
                 <td></td>
             </tr>
                     <tr>
@@ -467,14 +589,111 @@
                 <td>$expiration</td>
                 <td></td>
             </tr>
+            </table>
+
+            
+            
+            
+                    </div>
+    </div>
+
+            </div>
+                    <div class="method-item">
+                    <h3 id="method_isNegativeCache">
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L155">line 155</a></div>
+        <code>                    
+    <strong>isNegativeCache</strong>(<a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
+        </code>
+    </h3>
+    <div class="details">
+            
+    
+
+                <div class="tags">
+                            <h4>Parameters</h4>
+
+                    <table class="table table-condensed">
                     <tr>
-                <td>array</td>
-                <td>$tags</td>
+                <td><a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a></td>
+                <td>$address</td>
+                <td></td>
+            </tr>
+            </table>
+
+            
+            
+            
+                    </div>
+    </div>
+
+            </div>
+                    <div class="method-item">
+                    <h3 id="method_getKeyOverhead">
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L91">line 91</a></div>
+        <code>                    
+    <strong>getKeyOverhead</strong>(<a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
+        </code>
+    </h3>
+    <div class="details">
+            
+    
+
+                <div class="tags">
+                            <h4>Parameters</h4>
+
+                    <table class="table table-condensed">
+                    <tr>
+                <td><a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a></td>
+                <td>$address</td>
+                <td></td>
+            </tr>
+            </table>
+
+            
+            
+            
+                    </div>
+    </div>
+
+            </div>
+                    <div class="method-item">
+                    <h3 id="method_setWithExpiration">
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L105">line 105</a></div>
+        <code>                    
+    <strong>setWithExpiration</strong>($event_id, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address, $value, $created, $expiration = null)
+        </code>
+    </h3>
+    <div class="details">
+            
+    
+
+                <div class="tags">
+                            <h4>Parameters</h4>
+
+                    <table class="table table-condensed">
+                    <tr>
+                <td></td>
+                <td>$event_id</td>
+                <td></td>
+            </tr>
+                    <tr>
+                <td><a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a></td>
+                <td>$address</td>
                 <td></td>
             </tr>
                     <tr>
                 <td></td>
-                <td>$value_is_serialized</td>
+                <td>$value</td>
+                <td></td>
+            </tr>
+                    <tr>
+                <td></td>
+                <td>$created</td>
+                <td></td>
+            </tr>
+                    <tr>
+                <td></td>
+                <td>$expiration</td>
                 <td></td>
             </tr>
             </table>
@@ -488,9 +707,9 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_delete">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L2.php#L9">line 9</a></div>
-        <code>    abstract                
-    <strong>delete</strong>($pool, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L218">line 218</a></div>
+        <code>                    
+    <strong>delete</strong>($event_id, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
         </code>
     </h3>
     <div class="details">
@@ -503,7 +722,7 @@
                     <table class="table table-condensed">
                     <tr>
                 <td></td>
-                <td>$pool</td>
+                <td>$event_id</td>
                 <td></td>
             </tr>
                     <tr>
@@ -521,10 +740,10 @@
 
             </div>
                     <div class="method-item">
-                    <h3 id="method_deleteTag">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L2.php#L10">line 10</a></div>
-        <code>    abstract                
-    <strong>deleteTag</strong>(<a href="../LCache/L1.html"><abbr title="LCache\L1">L1</abbr></a> $l1, $tag)
+                    <h3 id="method___destruct">
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L80">line 80</a></div>
+        <code>                    
+    <strong>__destruct</strong>()
         </code>
     </h3>
     <div class="details">
@@ -532,21 +751,6 @@
     
 
                 <div class="tags">
-                            <h4>Parameters</h4>
-
-                    <table class="table table-condensed">
-                    <tr>
-                <td><a href="../LCache/L1.html"><abbr title="LCache\L1">L1</abbr></a></td>
-                <td>$l1</td>
-                <td></td>
-            </tr>
-                    <tr>
-                <td></td>
-                <td>$tag</td>
-                <td></td>
-            </tr>
-            </table>
-
             
             
             
@@ -555,39 +759,10 @@
 
             </div>
                     <div class="method-item">
-                    <h3 id="method_getAddressesForTag">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L2.php#L11">line 11</a></div>
-        <code>    abstract                
-    <strong>getAddressesForTag</strong>($tag)
-        </code>
-    </h3>
-    <div class="details">
-            
-    
-
-                <div class="tags">
-                            <h4>Parameters</h4>
-
-                    <table class="table table-condensed">
-                    <tr>
-                <td></td>
-                <td>$tag</td>
-                <td></td>
-            </tr>
-            </table>
-
-            
-            
-            
-                    </div>
-    </div>
-
-            </div>
-                    <div class="method-item">
-                    <h3 id="method_countGarbage">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L2.php#L12">line 12</a></div>
-        <code>    abstract                
-    <strong>countGarbage</strong>()
+                    <h3 id="method_debugDumpState">
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/SQLiteL1.php#L168">line 168</a></div>
+        <code>                    
+    <strong>debugDumpState</strong>()
         </code>
     </h3>
     <div class="details">
