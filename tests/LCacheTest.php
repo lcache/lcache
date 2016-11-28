@@ -34,49 +34,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->dbh->exec('CREATE INDEX ' . $prefix . 'rewritten_entry ON ' . $prefix . 'lcache_tags ("event_id")');
     }
 
-
-    public function testStaticL1SetGetDelete()
-    {
-        $l1 = new StaticL1();
-        $this->performSetGetDeleteTest($l1);
-    }
-
-    public function testStaticL1Antirollback()
-    {
-        $l1 = new StaticL1();
-        $this->performL1AntirollbackTest($l1);
-    }
-
-    public function testStaticL1FullDelete()
-    {
-        $event_id = 1;
-        $cache = new StaticL1();
-
-        $myaddr = new Address('mybin', 'mykey');
-
-        // Set an entry and clear the storage.
-        $cache->set($event_id++, $myaddr, 'myvalue');
-        $cache->delete($event_id++, new Address());
-        $entry = $cache->get($myaddr);
-        $this->assertEquals(null, $entry);
-        $this->assertEquals(0, $cache->getHits());
-        $this->assertEquals(1, $cache->getMisses());
-    }
-
-    public function testStaticL1Expiration()
-    {
-        $event_id = 1;
-        $cache = new StaticL1();
-
-        $myaddr = new Address('mybin', 'mykey');
-
-        // Set and get an entry.
-        $cache->set($event_id++, $myaddr, 'myvalue', -1);
-        $this->assertNull($cache->get($myaddr));
-        $this->assertEquals(0, $cache->getHits());
-        $this->assertEquals(1, $cache->getMisses());
-    }
-
     public function testClearStaticL2()
     {
         $l2 = new StaticL2();
@@ -205,13 +162,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         }
         $this->assertTrue($found);
     }
-
-    public function testSynchronizationStatic()
-    {
-        $central = new StaticL2();
-        $this->performSynchronizationTest($central, new StaticL1(), new StaticL1());
-    }
-
+    
     public function testTaggedSynchronizationStatic()
     {
         $central = new StaticL2();
