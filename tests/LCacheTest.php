@@ -30,22 +30,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->dbh->exec('CREATE INDEX ' . $prefix . 'rewritten_entry ON ' . $prefix . 'lcache_tags ("event_id")');
     }
 
-    public function testNullL1()
-    {
-        $event_id = 1;
-        $cache = new NullL1();
-        $myaddr = new Address('mybin', 'mykey');
-        $cache->set($event_id++, $myaddr, 'myvalue');
-        $entry = $cache->get($myaddr);
-        $this->assertNull($entry);
-        $this->assertEquals(0, $cache->getHits());
-        $this->assertEquals(1, $cache->getMisses());
-
-        // Because this cache stores nothing it should be perpetually
-        // up-to-date.
-        $this->assertEquals(PHP_INT_MAX, $cache->getLastAppliedEventID());
-    }
-
     protected function performSetGetDeleteTest($l1)
     {
         $event_id = 1;
