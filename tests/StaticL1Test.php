@@ -75,6 +75,4 @@ class StaticL1Test extends \PHPUnit_Framework_TestCase
         $l1 = new StaticL1();
         $this->performExistsTest($l1);
     }
-
-
 }
