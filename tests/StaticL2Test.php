@@ -84,6 +84,4 @@ class StaticL2Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals('myvalue', $l2->get($myaddr));
         $this->assertEquals('myvalue', $l2->get($myaddr));
     }
-
-
 }
