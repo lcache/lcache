@@ -8,9 +8,6 @@ class StaticL1Test extends \PHPUnit_Framework_TestCase
 {
     use L1TestHelpers;
 
-
-
-
     public function testStaticL1SetGetDelete()
     {
         $l1 = new StaticL1();
