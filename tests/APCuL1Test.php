@@ -82,6 +82,4 @@ class APCuL1Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals('value', $pool->get($myaddr));
         $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $l1->getEntry($myaddr)->expiration);
     }
-
-
 }
