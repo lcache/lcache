@@ -31,4 +31,45 @@ class SQLiteL1Test extends \PHPUnit_Framework_TestCase
         $l1 = new SQLiteL1();
         $this->performTombstoneTest($l1);
     }
+
+    public function testSQLiteL1SetGetDelete()
+    {
+        $l1 = new SQLiteL1();
+        $this->performSetGetDeleteTest($l1);
+    }
+
+    public function testExistsSQLiteL1()
+    {
+        $l1 = new SQLiteL1();
+        $this->performExistsTest($l1);
+    }
+
+
+    public function testSynchronizationSQLiteL1()
+    {
+        $central = new StaticL2();
+        $this->performSynchronizationTest($central, new SQLiteL1(), new SQLiteL1());
+
+        $this->performClearSynchronizationTest($central, new SQLiteL1(), new StaticL1());
+        $this->performClearSynchronizationTest($central, new StaticL1(), new SQLiteL1());
+        $this->performClearSynchronizationTest($central, new SQLiteL1(), new SQLiteL1());
+    }
+
+
+    public function testSQLite1Antirollback()
+    {
+        $l1 = new SQLiteL1();
+        $this->performL1AntirollbackTest($l1);
+    }
+
+    public function testSQLiteL1Counters()
+    {
+        $this->performHitSetCounterTest(new SQLiteL1());
+    }
+
+    public function testSQLiteL1HitMiss()
+    {
+        $l1 = new SQLiteL1();
+        $this->performL1HitMissTest($l1);
+    }
 }
