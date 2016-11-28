@@ -72,4 +72,11 @@ class SQLiteL1Test extends \PHPUnit_Framework_TestCase
         $l1 = new SQLiteL1();
         $this->performL1HitMissTest($l1);
     }
+
+
+    public function testSQLiteL1ExcessiveOverheadSkipping()
+    {
+        $this->performExcessiveOverheadSkippingTest(new SQLiteL1());
+    }
+
 }

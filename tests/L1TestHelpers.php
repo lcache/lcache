@@ -234,12 +234,6 @@ trait L1TestHelpers {
         $this->assertEquals(-1, $l1->getKeyOverhead($myaddr2));
     }
 
-    public function testSQLiteL1ExcessiveOverheadSkipping()
-    {
-        $this->performExcessiveOverheadSkippingTest(new SQLiteL1());
-    }
-
-
     protected function performExcessiveOverheadSkippingTest($l1)
     {
         $pool = new Integrated($l1, new StaticL2(), 2);
