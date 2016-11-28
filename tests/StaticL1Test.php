@@ -59,5 +59,22 @@ class StaticL1Test extends \PHPUnit_Framework_TestCase
         $central = new StaticL2();
         $this->performSynchronizationTest($central, new StaticL1(), new StaticL1());
     }
+    public function testStaticL1Counters()
+    {
+        $this->performHitSetCounterTest(new StaticL1());
+    }
+
+    public function testStaticL1ExcessiveOverheadSkipping()
+    {
+        $this->performExcessiveOverheadSkippingTest(new StaticL1());
+    }
+
+
+    public function testExistsStaticL1()
+    {
+        $l1 = new StaticL1();
+        $this->performExistsTest($l1);
+    }
+
 
 }

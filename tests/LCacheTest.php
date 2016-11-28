@@ -162,7 +162,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         }
         $this->assertTrue($found);
     }
-    
+
     public function testTaggedSynchronizationStatic()
     {
         $central = new StaticL2();
@@ -271,12 +271,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     {
         $this->createSchema();
         $l2 = new DatabaseL2($this->dbh);
-    }
-
-    public function testExistsStaticL1()
-    {
-        $l1 = new StaticL1();
-        $this->performExistsTest($l1);
     }
 
     public function testExistsIntegrated()
@@ -435,18 +429,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(1, $l2->countGarbage());
     }
 
-    public function testStaticL1Counters()
-    {
-        $this->performHitSetCounterTest(new StaticL1());
-    }
-
-
-
-
-    public function testStaticL1ExcessiveOverheadSkipping()
-    {
-        $this->performExcessiveOverheadSkippingTest(new StaticL1());
-    }
 
 
 
@@ -470,16 +452,4 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     {
         return new \PHPUnit_Extensions_Database_DataSet_DefaultDataSet();
     }
-
-
-
-
-
-
-
-
-
-
-
-
 }
