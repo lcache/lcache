@@ -70,12 +70,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
 
 
-    public function testTaggedSynchronizationStatic()
-    {
-        $central = new StaticL2();
-        $this->performTaggedSynchronizationTest($central, new StaticL1(), new StaticL1());
-    }
-
     public function testSynchronizationAPCu()
     {
         // Warning: As long as LCache\APCuL1 flushes all of APCu on a wildcard

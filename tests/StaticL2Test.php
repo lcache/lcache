@@ -84,4 +84,13 @@ class StaticL2Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals('myvalue', $l2->get($myaddr));
         $this->assertEquals('myvalue', $l2->get($myaddr));
     }
+
+
+
+
+    public function testTaggedSynchronizationStatic()
+    {
+        $central = new StaticL2();
+        $this->performTaggedSynchronizationTest($central, new StaticL1(), new StaticL1());
+    }
 }
