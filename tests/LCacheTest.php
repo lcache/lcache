@@ -7,7 +7,27 @@ require_once 'L2TestHelpers.php';
 
 //use phpunit\framework\TestCase;
 
-class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
+class LCacheTest extends
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  \PHPUnit_Extensions_Database_TestCase
 {
     use L1TestHelpers;
     use L2TestHelpers;
@@ -148,31 +168,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertNull($count);
     }
 
-    public function testDatabaseL2SyncWithNoWrites()
-    {
-        $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh, '', true);
-        $l1 = new StaticL1('first');
-        $pool = new Integrated($l1, $l2);
-        $pool->synchronize();
-    }
-
-    public function testExistsDatabaseL2()
-    {
-        $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh);
-        $myaddr = new Address('mybin', 'mykey');
-        $l2->set('mypool', $myaddr, 'myvalue');
-        $this->assertTrue($l2->exists($myaddr));
-        $l2->delete('mypool', $myaddr);
-        $this->assertFalse($l2->exists($myaddr));
-    }
-
-    public function testEmptyCleanUpDatabaseL2()
-    {
-        $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh);
-    }
 
     public function testExistsIntegrated()
     {
