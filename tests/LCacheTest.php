@@ -2,10 +2,14 @@
 
 namespace LCache;
 
+require_once 'L1TestHelpers.php';
+
 //use phpunit\framework\TestCase;
 
 class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 {
+    use L1TestHelpers;
+
     protected $dbh = null;
 
     /**
@@ -187,39 +191,9 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals($pool1->getLastAppliedEventID(), $pool2->getLastAppliedEventID());
     }
 
-    protected function performTombstoneTest($l1)
-    {
-        $central = new Integrated($l1, new StaticL2());
-
-        $dne = new Address('mypool', 'mykey-dne');
-        $this->assertNull($central->get($dne));
-
-        $tombstone = $central->getEntry($dne, true);
-        $this->assertNotNull($tombstone);
-        $this->assertNull($tombstone->value);
-        // The L1 should return the tombstone entry so the integrated cache
-        // can avoid rewriting it.
-        $tombstone = $l1->getEntry($dne);
-        $this->assertNotNull($tombstone);
-        $this->assertNull($tombstone->value);
-
-        // The tombstone should also count as non-existence.
-        $this->assertFalse($central->exists($dne));
-
-        // This is a no-op for most L1 implementations, but it should not
-        // return false, regardless.
-        $this->assertTrue(false !== $l1->collectGarbage());
-    }
-
     public function testAPCuL1Tombstone()
     {
         $l1 = new APCuL1('testAPCuL1Tombstone');
-        $this->performTombstoneTest($l1);
-    }
-
-    public function testSQLiteL1Tombstone()
-    {
-        $l1 = new SQLiteL1();
         $this->performTombstoneTest($l1);
     }
 
@@ -872,23 +846,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $l2->delete('mypool', $mybin);
 
         $this->assertNull($l2->get($myaddr));
-    }
-
-    public function testSQLiteL1SchemaErrorHandling()
-    {
-        $pool_name = uniqid('', true) . '-' . mt_rand();
-        $l1_a = new SQLiteL1($pool_name);
-
-        // Opening a second instance of the same pool should work.
-        $l1_b = new SQLiteL1($pool_name);
-
-        $myaddr = new Address('mybin', 'mykey');
-
-        $l1_a->set(1, $myaddr, 'myvalue');
-
-        // Reading from the second handle should show the value written to the
-        // first.
-        $this->assertEquals('myvalue', $l1_b->get($myaddr));
     }
 
     /**
