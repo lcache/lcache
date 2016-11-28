@@ -134,4 +134,26 @@ trait L2TestHelpers
         $pool->collectGarbage();
         $this->assertEquals(0, $l2->countGarbage());
     }
+
+    public function performGarbageCollectionTest($l2)
+    {
+        $pool = new Integrated(new StaticL1(), $l2);
+        $myaddr = new Address('mybin', 'mykey');
+        $this->assertEquals(0, $l2->countGarbage());
+        $pool->set($myaddr, 'myvalue', -1);
+        $this->assertEquals(1, $l2->countGarbage());
+        $pool->collectGarbage();
+        $this->assertEquals(0, $l2->countGarbage());
+    }
+
+    // Callers should expect an UnserializationException.
+    protected function performFailedUnserializationOnGetTest($l2)
+    {
+        $l1 = new StaticL1();
+        $pool = new Integrated($l1, $l2);
+        $invalid_object = 'O:10:"HelloWorl":0:{}';
+        $myaddr = new Address('mybin', 'performFailedUnserializationOnGetTest');
+        $l2->set('anypool', $myaddr, $invalid_object, null, [], true);
+        $pool->get($myaddr);
+    }
 }
