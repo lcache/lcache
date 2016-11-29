@@ -2,8 +2,6 @@
 
 namespace LCache;
 
-require_once 'L1TestHelpers.php';
-require_once 'L2TestHelpers.php';
 
 //use phpunit\framework\TestCase;
 

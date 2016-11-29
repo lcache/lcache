@@ -2,8 +2,6 @@
 
 namespace LCache;
 
-require_once 'L1TestHelpers.php';
-
 //use phpunit\framework\TestCase;
 
 class APCuL1Test extends \PHPUnit_Framework_TestCase
