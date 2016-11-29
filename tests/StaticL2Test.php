@@ -28,8 +28,6 @@ class StaticL2Test extends \PHPUnit_Framework_TestCase
         $this->performFailedUnserializationOnGetTest($l2);
     }
 
-
-
     public function testStaticL2GarbageCollection()
     {
         $l2 = new StaticL2();
