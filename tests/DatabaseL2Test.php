@@ -6,8 +6,8 @@ namespace LCache;
 
 class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
 {
-    use L2TestHelpers;
-    use L1TestHelpers;
+    use L2TestHelpersTrait;
+    use L1TestHelpersTrait;
     use DatabaseTestTrait;
     use L2TestsTrait;
 

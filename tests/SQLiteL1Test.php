@@ -7,7 +7,7 @@ namespace LCache;
 class SQLiteL1Test extends \PHPUnit_Framework_TestCase
 {
 
-    use L1TestHelpers;
+    use L1TestHelpersTrait;
     use L1TestsTrait;
 
 

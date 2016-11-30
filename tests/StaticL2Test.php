@@ -6,7 +6,7 @@ namespace LCache;
 
 class StaticL2Test extends \PHPUnit_Framework_TestCase
 {
-    use L2TestHelpers;
+    use L2TestHelpersTrait;
     use L2TestsTrait;
 
     protected function setUp() {

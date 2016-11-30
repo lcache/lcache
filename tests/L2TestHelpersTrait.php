@@ -4,10 +4,8 @@ namespace LCache;
 
 //use phpunit\framework\TestCase;
 
-trait L2TestHelpers
+trait L2TestHelpersTrait
 {
-
-
     protected function performTaggedSynchronizationTest($central, $first_l1, $second_l1)
     {
         // Create two integrated pools with independent L1s.

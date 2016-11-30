@@ -4,7 +4,7 @@ namespace LCache;
 
 //use phpunit\framework\TestCase;
 
-trait L1TestHelpers
+trait L1TestHelpersTrait
 {
 
     protected function performTombstoneTest($l1)
