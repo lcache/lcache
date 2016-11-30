@@ -122,10 +122,10 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->performL1AntirollbackTest($l1);
     }
 
-    public function testStaticL1FullDelete()
+    public function performL1FullDelete($l1)
     {
         $event_id = 1;
-        $cache = new StaticL1();
+        $cache = $l1;
 
         $myaddr = new Address('mybin', 'mykey');
 
@@ -136,6 +136,24 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(null, $entry);
         $this->assertEquals(0, $cache->getHits());
         $this->assertEquals(1, $cache->getMisses());
+    }
+
+    public function testSQLiteL1FullDelete()
+    {
+        $l1 = new SQLiteL1();
+        $this->performL1FullDelete($l1);
+    }
+
+    public function testAPCuL1FullDelete()
+    {
+        $l1 = new APCuL1('setGetDelete');
+        $this->performL1FullDelete($l1);
+    }
+
+    public function testStaticL1FullDelete()
+    {
+        $l1 = new StaticL1();
+        $this->performL1FullDelete($l1);
     }
 
     public function testStaticL1Expiration()
@@ -231,6 +249,12 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         // This is a no-op for most L1 implementations, but it should not
         // return false, regardless.
         $this->assertTrue(false !== $l1->collectGarbage());
+    }
+
+    public function testStaticL1Tombstone()
+    {
+        $l1 = new StaticL1();
+        $this->performTombstoneTest($l1);
     }
 
     public function testAPCuL1Tombstone()
@@ -629,6 +653,12 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals($current_hits + 1, $l1->getHits());
     }
 
+    public function testStaticL1HitMiss()
+    {
+        $l1 = new StaticL1();
+        $this->performL1HitMissTest($l1);
+    }
+
     public function testAPCuL1HitMiss()
     {
         $l1 = new APCuL1('testAPCuL1HitMiss');
@@ -921,3 +951,41 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         return new \PHPUnit_Extensions_Database_DataSet_DefaultDataSet();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+ *
+
+
+
+
+
+  public function testL1Expiration()
+ */
