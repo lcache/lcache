@@ -10,6 +10,14 @@ class SQLiteL1Test extends \PHPUnit_Framework_TestCase
     use L1TestHelpers;
     use L1RequiredTests;
 
+
+    protected function setUp() {
+        parent::setUp();
+        $this->l1 = new SQLiteL1();
+        // Some tests require comparing two L1s against each other.
+        $this->l1_beta = new SQLiteL1();
+    }
+
     public function testSQLiteL1SchemaErrorHandling()
     {
         $pool_name = uniqid('', true) . '-' . mt_rand();
@@ -26,17 +34,6 @@ class SQLiteL1Test extends \PHPUnit_Framework_TestCase
         // first.
         $this->assertEquals('myvalue', $l1_b->get($myaddr));
     }
-
-
-
-    protected function setUp() {
-        parent::setUp();
-        $this->l1 = new SQLiteL1();
-        // Some tests require comparing two L1s against each other.
-        $this->l1_beta = new SQLiteL1();
-    }
-
-
 
     // This method overrides a less complex parent method.
     public function testSynchronization()

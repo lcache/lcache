@@ -15,7 +15,4 @@ class StaticL1Test extends \PHPUnit_Framework_TestCase
         // Some tests require comparing two L1s against each other.
         $this->l1_beta = new StaticL1();
     }
-
-
-
 }
