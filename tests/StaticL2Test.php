@@ -17,8 +17,6 @@ class StaticL2Test extends \PHPUnit_Framework_TestCase
         $this->assertNull($l2->get($myaddr));
     }
 
-
-
     /**
      * @expectedException LCache\UnserializationException
      */
@@ -45,8 +43,6 @@ class StaticL2Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, $l2->countGarbage());
     }
 
-
-
     public function testPoolIntegrated()
     {
         $l2 = new StaticL2();
@@ -61,8 +57,6 @@ class StaticL2Test extends \PHPUnit_Framework_TestCase
         $this->performFailedUnserializationTest($l2);
         $this->performCaughtUnserializationOnGetTest($l2);
     }
-
-
 
     public function testStaticL2Expiration()
     {
@@ -82,9 +76,6 @@ class StaticL2Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals('myvalue', $l2->get($myaddr));
         $this->assertEquals('myvalue', $l2->get($myaddr));
     }
-
-
-
 
     public function testTaggedSynchronizationStatic()
     {
