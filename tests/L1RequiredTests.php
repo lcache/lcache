@@ -76,6 +76,10 @@ trait L1RequiredTests
     $this->assertEquals(1, $cache->getMisses());
   }
 
+  public function testL1IntegratedExpiration() {
+    $l1 = new SQLiteL1();
+    $this->performIntegratedExpiration($l1);
+  }
 
   public function testStaticL1SetGetDelete()
   {

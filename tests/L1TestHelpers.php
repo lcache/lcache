@@ -266,4 +266,25 @@ trait L1TestHelpers
         $this->assertNotNull($pool->set($myaddr2, 'myvalue'));
         $this->assertNotNull($pool->set($myaddr2, 'myvalue'));
     }
+
+    public function performIntegratedExpiration($l1)
+    {
+
+        $pool = new Integrated($l1, new StaticL2());
+        $myaddr = new Address('mybin', 'mykey');
+        $pool->set($myaddr, 'value', 1);
+        $this->assertEquals('value', $pool->get($myaddr));
+        $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $l1->getEntry($myaddr)->expiration);
+
+        // Setting items with past expirations should result in a nothing stored.
+        $myaddr2 = new Address('mybin', 'mykey2');
+        $l1->set(0, $myaddr2, 'value', $_SERVER['REQUEST_TIME'] - 1);
+        $this->assertNull($l1->get($myaddr2));
+
+        // Setting an TTL/expiration more than request time should be treated
+        // as an expiration.
+        $pool->set($myaddr, 'value', $_SERVER['REQUEST_TIME'] + 1);
+        $this->assertEquals('value', $pool->get($myaddr));
+        $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $l1->getEntry($myaddr)->expiration);
+    }
 }
