@@ -565,6 +565,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function testEmptyCleanUpDatabaseL2()
     {
+        // Why does this test make no assertions?
         $this->createSchema();
         $l2 = new DatabaseL2($this->dbh);
     }
