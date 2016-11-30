@@ -55,7 +55,7 @@ class APCuL1 extends L1
         if ($entry !== false && $entry->event_id >= $event_id) {
             return true;
         }
-        $entry = new Entry($event_id, $this->pool, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
+        $entry = new Entry($event_id, $this->pool, $address, $value, $created, $expiration);
 
         if ($entry->getTTL() === 0) {
             // Item has already expired, but APCu treats a TTL of zero as no TTL.
@@ -127,6 +127,7 @@ class APCuL1 extends L1
     {
         if ($address->isEntireCache()) {
             // @TODO: Consider flushing only LCache L1 storage by using an iterator.
+
             return apcu_clear_cache();
         }
         if ($address->isEntireBin()) {
@@ -139,6 +140,7 @@ class APCuL1 extends L1
                 // deleted in another process using the same APCu.
                 apcu_delete($match['key']);
             }
+
             return true;
         }
 
@@ -147,6 +149,7 @@ class APCuL1 extends L1
         // Ignore failures of delete because the key may have been
         // deleted in another process using the same APCu.
         apcu_delete($apcu_key);
+
         return true;
     }
 

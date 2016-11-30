@@ -36,10 +36,7 @@ class SQLiteL1Test extends \PHPUnit_Framework_TestCase
         $this->l1_beta = new SQLiteL1();
     }
 
-    public function testStaticL1SetGetDelete()
-    {
-        $this->performSetGetDeleteTest($this->l1);
-    }
+
 
     // This method overrides a less complex parent method.
     public function testSynchronization()

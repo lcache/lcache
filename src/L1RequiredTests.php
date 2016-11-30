@@ -76,4 +76,9 @@ trait L1RequiredTests
     $this->assertEquals(1, $cache->getMisses());
   }
 
+
+  public function testStaticL1SetGetDelete()
+  {
+    $this->performSetGetDeleteTest($this->l1);
+  }
 }

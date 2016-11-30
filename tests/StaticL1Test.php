@@ -16,9 +16,6 @@ class StaticL1Test extends \PHPUnit_Framework_TestCase
         $this->l1_beta = new StaticL1();
     }
 
-    public function testStaticL1SetGetDelete()
-    {
-        $this->performSetGetDeleteTest($this->l1);
-    }
+
 
 }
