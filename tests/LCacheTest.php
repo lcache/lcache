@@ -110,6 +110,12 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->performSetGetDeleteTest($l1);
     }
 
+    public function testAPCuL1SetGetDelete()
+    {
+        $l1 = new APCuL1('setGetDelete');
+        $this->performSetGetDeleteTest($l1);
+    }
+
     public function testStaticL1Antirollback()
     {
         $l1 = new StaticL1();
