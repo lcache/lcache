@@ -6,7 +6,7 @@ namespace LCache;
 // NullL1 does not use these tests because the point of NullL1 is to not
 // actually cache.
 
-trait L1RequiredTests
+trait L1TestsTrait
 {
   public function testAntirollback()
   {

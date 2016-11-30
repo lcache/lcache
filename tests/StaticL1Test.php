@@ -7,7 +7,7 @@ namespace LCache;
 class StaticL1Test extends \PHPUnit_Framework_TestCase
 {
     use L1TestHelpers;
-    use L1RequiredTests;
+    use L1TestsTrait;
 
     protected function setUp() {
         parent::setUp();
