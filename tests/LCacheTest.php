@@ -7,8 +7,6 @@ namespace LCache;
 
 class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 {
-    use L1TestHelpers;
-    use L2TestHelpers;
     use DatabaseTestTrait;
 
     public function testNewPoolSynchronization()
