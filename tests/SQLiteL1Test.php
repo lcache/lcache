@@ -27,18 +27,13 @@ class SQLiteL1Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals('myvalue', $l1_b->get($myaddr));
     }
 
-    public function testSQLiteL1Tombstone()
-    {
-        $l1 = new SQLiteL1();
-        $this->performTombstoneTest($l1);
-    }
-
-
 
 
     protected function setUp() {
         parent::setUp();
         $this->l1 = new SQLiteL1();
+        // Some tests require comparing two L1s against each other.
+        $this->l1_beta = new SQLiteL1();
     }
 
     public function testStaticL1SetGetDelete()
@@ -46,11 +41,8 @@ class SQLiteL1Test extends \PHPUnit_Framework_TestCase
         $this->performSetGetDeleteTest($this->l1);
     }
 
-
-
-
-
-    public function testSynchronizationSQLiteL1()
+    // This method overrides a less complex parent method.
+    public function testSynchronization()
     {
         $central = new StaticL2();
         $this->performSynchronizationTest($central, new SQLiteL1(), new SQLiteL1());
@@ -59,15 +51,4 @@ class SQLiteL1Test extends \PHPUnit_Framework_TestCase
         $this->performClearSynchronizationTest($central, new StaticL1(), new SQLiteL1());
         $this->performClearSynchronizationTest($central, new SQLiteL1(), new SQLiteL1());
     }
-
-
-
-    public function testSQLiteL1HitMiss()
-    {
-        $l1 = new SQLiteL1();
-        $this->performL1HitMissTest($l1);
-    }
-
-
-
 }

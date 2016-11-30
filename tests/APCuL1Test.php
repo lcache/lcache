@@ -13,14 +13,8 @@ class APCuL1Test extends \PHPUnit_Framework_TestCase
     protected function setUp() {
         parent::setUp();
         $this->l1 = new APCuL1($this->getName());
+        $this->l1_beta = new APCuL1($this->getName() . '_beta');
     }
-
-    public function testAPCuL1Tombstone()
-    {
-        $l1 = new APCuL1('testAPCuL1Tombstone');
-        $this->performTombstoneTest($l1);
-    }
-
 
 
     public function testAPCuL1PoolIDs()
@@ -35,15 +29,6 @@ class APCuL1Test extends \PHPUnit_Framework_TestCase
         $l1 = new APCuL1();
         $this->assertEquals('localhost-80', $l1->getPool());
     }
-
-
-
-    public function testAPCuL1HitMiss()
-    {
-        $l1 = new APCuL1('testAPCuL1HitMiss');
-        $this->performL1HitMissTest($l1);
-    }
-
 
 
 
@@ -70,4 +55,7 @@ class APCuL1Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals('value', $pool->get($myaddr));
         $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $l1->getEntry($myaddr)->expiration);
     }
+
+
+
 }
