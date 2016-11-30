@@ -89,6 +89,8 @@ class StaticL1 extends L1
         $local_key = $address->serialize();
         if ($address->isEntireCache()) {
             $this->storage = array();
+            $this->hits = 0;
+            $this->misses = 0;
             return true;
         } elseif ($address->isEntireBin()) {
             foreach ($this->storage as $index => $value) {

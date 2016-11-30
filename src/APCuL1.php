@@ -55,7 +55,7 @@ class APCuL1 extends L1
         if ($entry !== false && $entry->event_id >= $event_id) {
             return true;
         }
-        $entry = new Entry($event_id, $this->pool, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
+        $entry = new Entry($event_id, $this->pool, $address, $value, $created, $expiration);
 
         if ($entry->getTTL() === 0) {
             // Item has already expired, but APCu treats a TTL of zero as no TTL.
