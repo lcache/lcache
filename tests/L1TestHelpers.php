@@ -31,8 +31,6 @@ trait L1TestHelpers
         $this->assertTrue(false !== $l1->collectGarbage());
     }
 
-
-
     protected function performSetGetDeleteTest($l1)
     {
         $event_id = 1;
@@ -84,8 +82,6 @@ trait L1TestHelpers
         $entry = $l1->getEntry($myaddr);
         $this->assertEquals(42, $entry->created);
     }
-
-
 
     protected function performSynchronizationTest($central, $first_l1, $second_l1)
     {
