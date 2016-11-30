@@ -122,10 +122,9 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->performL1AntirollbackTest($l1);
     }
 
-    public function performL1FullDelete($l1)
+    public function performL1FullDelete($cache)
     {
         $event_id = 1;
-        $cache = $l1;
 
         $myaddr = new Address('mybin', 'mykey');
 
