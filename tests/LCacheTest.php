@@ -79,8 +79,8 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $l1->delete($event_id++, new Address());
         $entry = $l1->get($myaddr);
         $this->assertNull($entry);
-        $this->assertEquals(1, $l1->getHits());
-        $this->assertEquals(3, $l1->getMisses());
+        $this->assertEquals(0, $l1->getHits());
+        $this->assertEquals(1, $l1->getMisses());
 
         // This is a no-op for most L1 implementations, but it should not
         // return false, regardless.
