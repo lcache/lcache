@@ -8,6 +8,7 @@ class SQLiteL1Test extends \PHPUnit_Framework_TestCase
 {
 
     use L1TestHelpers;
+    use L1RequiredTests;
 
     public function testSQLiteL1SchemaErrorHandling()
     {
@@ -32,17 +33,21 @@ class SQLiteL1Test extends \PHPUnit_Framework_TestCase
         $this->performTombstoneTest($l1);
     }
 
-    public function testSQLiteL1SetGetDelete()
-    {
-        $l1 = new SQLiteL1();
-        $this->performSetGetDeleteTest($l1);
+
+
+
+    protected function setUp() {
+        parent::setUp();
+        $this->l1 = new SQLiteL1();
     }
 
-    public function testExistsSQLiteL1()
+    public function testStaticL1SetGetDelete()
     {
-        $l1 = new SQLiteL1();
-        $this->performExistsTest($l1);
+        $this->performSetGetDeleteTest($this->l1);
     }
+
+
+
 
 
     public function testSynchronizationSQLiteL1()
@@ -56,16 +61,6 @@ class SQLiteL1Test extends \PHPUnit_Framework_TestCase
     }
 
 
-    public function testSQLite1Antirollback()
-    {
-        $l1 = new SQLiteL1();
-        $this->performL1AntirollbackTest($l1);
-    }
-
-    public function testSQLiteL1Counters()
-    {
-        $this->performHitSetCounterTest(new SQLiteL1());
-    }
 
     public function testSQLiteL1HitMiss()
     {
@@ -74,8 +69,5 @@ class SQLiteL1Test extends \PHPUnit_Framework_TestCase
     }
 
 
-    public function testSQLiteL1ExcessiveOverheadSkipping()
-    {
-        $this->performExcessiveOverheadSkippingTest(new SQLiteL1());
-    }
+
 }

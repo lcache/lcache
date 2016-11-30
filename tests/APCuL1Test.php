@@ -8,6 +8,12 @@ class APCuL1Test extends \PHPUnit_Framework_TestCase
 {
 
     use L1TestHelpers;
+    use L1RequiredTests;
+
+    protected function setUp() {
+        parent::setUp();
+        $this->l1 = new APCuL1($this->getName());
+    }
 
     public function testAPCuL1Tombstone()
     {
@@ -16,11 +22,6 @@ class APCuL1Test extends \PHPUnit_Framework_TestCase
     }
 
 
-    public function testExistsAPCuL1()
-    {
-        $l1 = new APCuL1('first');
-        $this->performExistsTest($l1);
-    }
 
     public function testAPCuL1PoolIDs()
     {
@@ -35,11 +36,7 @@ class APCuL1Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals('localhost-80', $l1->getPool());
     }
 
-    public function testAPCuL1Antirollback()
-    {
-        $l1 = new APCuL1('first');
-        $this->performL1AntirollbackTest($l1);
-    }
+
 
     public function testAPCuL1HitMiss()
     {
@@ -50,15 +47,8 @@ class APCuL1Test extends \PHPUnit_Framework_TestCase
 
 
 
-    public function testAPCuL1Counters()
-    {
-        $this->performHitSetCounterTest(new APCuL1('counters'));
-    }
 
-    public function testAPCuL1ExcessiveOverheadSkipping()
-    {
-        $this->performExcessiveOverheadSkippingTest(new APCuL1('overhead'));
-    }
+
 
     public function testAPCuL1Expiration()
     {

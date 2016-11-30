@@ -7,17 +7,16 @@ namespace LCache;
 class StaticL1Test extends \PHPUnit_Framework_TestCase
 {
     use L1TestHelpers;
+    use L1RequiredTests;
+
+    protected function setUp() {
+        parent::setUp();
+        $this->l1 = new StaticL1();
+    }
 
     public function testStaticL1SetGetDelete()
     {
-        $l1 = new StaticL1();
-        $this->performSetGetDeleteTest($l1);
-    }
-
-    public function testStaticL1Antirollback()
-    {
-        $l1 = new StaticL1();
-        $this->performL1AntirollbackTest($l1);
+        $this->performSetGetDeleteTest($this->l1);
     }
 
     public function testStaticL1FullDelete()
@@ -56,20 +55,7 @@ class StaticL1Test extends \PHPUnit_Framework_TestCase
         $central = new StaticL2();
         $this->performSynchronizationTest($central, new StaticL1(), new StaticL1());
     }
-    public function testStaticL1Counters()
-    {
-        $this->performHitSetCounterTest(new StaticL1());
-    }
-
-    public function testStaticL1ExcessiveOverheadSkipping()
-    {
-        $this->performExcessiveOverheadSkippingTest(new StaticL1());
-    }
 
 
-    public function testExistsStaticL1()
-    {
-        $l1 = new StaticL1();
-        $this->performExistsTest($l1);
-    }
+
 }
