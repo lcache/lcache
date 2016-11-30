@@ -30,30 +30,24 @@ class APCuL1Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals('localhost-80', $l1->getPool());
     }
 
-
-
-
-
-
-    public function testAPCuL1Expiration()
+    public function testL1Expiration()
     {
-        $l1 = new APCuL1();
-        $pool = new Integrated($l1, new StaticL2());
+        $pool = new Integrated($this->l1, new StaticL2());
         $myaddr = new Address('mybin', 'mykey');
         $pool->set($myaddr, 'value', 1);
         $this->assertEquals('value', $pool->get($myaddr));
-        $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $l1->getEntry($myaddr)->expiration);
+        $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $this->l1->getEntry($myaddr)->expiration);
 
         // Setting items with past expirations should result in a nothing stored.
         $myaddr2 = new Address('mybin', 'mykey2');
-        $l1->set(0, $myaddr2, 'value', $_SERVER['REQUEST_TIME'] - 1);
-        $this->assertNull($l1->get($myaddr2));
+        $this->l1->set(0, $myaddr2, 'value', $_SERVER['REQUEST_TIME'] - 1);
+        $this->assertNull($this->l1->get($myaddr2));
 
         // Setting an TTL/expiration more than request time should be treated
         // as an expiration.
         $pool->set($myaddr, 'value', $_SERVER['REQUEST_TIME'] + 1);
         $this->assertEquals('value', $pool->get($myaddr));
-        $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $l1->getEntry($myaddr)->expiration);
+        $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $this->l1->getEntry($myaddr)->expiration);
     }
 
     public function testSynchronization()
