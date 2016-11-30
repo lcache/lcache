@@ -14,8 +14,8 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
     protected function setUp() {
         parent::setUp();
         $this->createSchema();
+        $this->l2  = new DatabaseL2($this->dbh);
     }
-
 
     public function testSynchronizationDatabase()
     {
@@ -40,17 +40,17 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
 
     public function testExistsDatabaseL2()
     {
-        $l2 = new DatabaseL2($this->dbh);
         $myaddr = new Address('mybin', 'mykey');
-        $l2->set('mypool', $myaddr, 'myvalue');
-        $this->assertTrue($l2->exists($myaddr));
-        $l2->delete('mypool', $myaddr);
-        $this->assertFalse($l2->exists($myaddr));
+        $this->l2->set('mypool', $myaddr, 'myvalue');
+        $this->assertTrue($this->l2->exists($myaddr));
+        $this->l2->delete('mypool', $myaddr);
+        $this->assertFalse($this->l2->exists($myaddr));
     }
 
     public function testEmptyCleanUpDatabaseL2()
     {
-        $l2 = new DatabaseL2($this->dbh);
+        // @todo, I don't know what this test does.
+        $l2 = $this->l2;
     }
 
 
@@ -63,47 +63,37 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals('myvalue', $l2->get($myaddr));
     }
 
-
-
     public function testDatabaseL2FailedUnserialization()
     {
-        $l2 = new DatabaseL2($this->dbh);
-        $this->performFailedUnserializationTest($l2);
-        $this->performCaughtUnserializationOnGetTest($l2);
+        $this->performFailedUnserializationTest($this->l2);
+        $this->performCaughtUnserializationOnGetTest($this->l2);
     }
-
-
-
-
 
     /**
      * @expectedException LCache\UnserializationException
      */
     public function testDatabaseL2FailedUnserializationOnGet()
     {
-        $l2 = new DatabaseL2($this->dbh);
-        $this->performFailedUnserializationOnGetTest($l2);
+        $this->performFailedUnserializationOnGetTest($this->l2);
     }
 
 
     public function testDatabaseL2GarbageCollection()
     {
-        $l2 = new DatabaseL2($this->dbh);
-        $this->performGarbageCollectionTest($l2);
+        $this->performGarbageCollectionTest($this->l2);
     }
 
 
 
     public function testDatabaseL2BatchDeletion()
     {
-        $l2 = new DatabaseL2($this->dbh);
         $myaddr = new Address('mybin', 'mykey');
-        $l2->set('mypool', $myaddr, 'myvalue');
+        $this->l2->set('mypool', $myaddr, 'myvalue');
 
         $mybin = new Address('mybin', null);
-        $l2->delete('mypool', $mybin);
+        $this->l2->delete('mypool', $mybin);
 
-        $this->assertNull($l2->get($myaddr));
+        $this->assertNull($this->l2->get($myaddr));
     }
 
 
