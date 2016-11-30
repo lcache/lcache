@@ -38,6 +38,14 @@ class IntegratedTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals($pool1->getLastAppliedEventID(), $pool2->getLastAppliedEventID());
     }
 
+    public function testPoolIntegrated()
+    {
+        $l2 = new StaticL2();
+        $l1 = new APCuL1('first');
+        $pool = new Integrated($l1, $l2);
+        $this->assertEquals('first', $pool->getPool());
+    }
+
     public function testExistsIntegrated()
     {
         $this->createSchema();

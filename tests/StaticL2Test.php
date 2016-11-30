@@ -7,6 +7,12 @@ namespace LCache;
 class StaticL2Test extends \PHPUnit_Framework_TestCase
 {
     use L2TestHelpers;
+    use L2TestsTrait;
+
+    protected function setUp() {
+        parent::setUp();
+        $this->l2  = new StaticL2();
+    }
 
     public function testClearStaticL2()
     {
@@ -41,21 +47,6 @@ class StaticL2Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals(2, $l2->countGarbage());
         $pool->collectGarbage(1);
         $this->assertEquals(1, $l2->countGarbage());
-    }
-
-    public function testPoolIntegrated()
-    {
-        $l2 = new StaticL2();
-        $l1 = new APCuL1('first');
-        $pool = new Integrated($l1, $l2);
-        $this->assertEquals('first', $pool->getPool());
-    }
-
-    public function testStaticL2FailedUnserialization()
-    {
-        $l2 = new StaticL2();
-        $this->performFailedUnserializationTest($l2);
-        $this->performCaughtUnserializationOnGetTest($l2);
     }
 
     public function testStaticL2Expiration()

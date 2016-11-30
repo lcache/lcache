@@ -9,6 +9,7 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
     use L2TestHelpers;
     use L1TestHelpers;
     use DatabaseTestTrait;
+    use L2TestsTrait;
 
 
     protected function setUp() {
@@ -61,12 +62,6 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
         $myaddr = new Address('mybin', 'mykey');
         $l2->set('mypool', $myaddr, 'myvalue', null, ['mytag']);
         $this->assertEquals('myvalue', $l2->get($myaddr));
-    }
-
-    public function testDatabaseL2FailedUnserialization()
-    {
-        $this->performFailedUnserializationTest($this->l2);
-        $this->performCaughtUnserializationOnGetTest($this->l2);
     }
 
     /**
