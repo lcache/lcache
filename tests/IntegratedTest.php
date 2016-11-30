@@ -5,7 +5,7 @@ namespace LCache;
 
 //use phpunit\framework\TestCase;
 
-class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
+class IntegratedTest extends \PHPUnit_Extensions_Database_TestCase
 {
     use DatabaseTestTrait;
 
