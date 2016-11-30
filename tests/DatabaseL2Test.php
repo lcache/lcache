@@ -11,9 +11,14 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
     use DatabaseTestTrait;
 
 
+    protected function setUp() {
+        parent::setUp();
+        $this->createSchema();
+    }
+
+
     public function testSynchronizationDatabase()
     {
-        $this->createSchema();
         $central = new DatabaseL2($this->dbh);
         $this->performSynchronizationTest($central, new StaticL1('testSynchronizationDatabase1'), new StaticL1('testSynchronizationDatabase2'));
         $this->performClearSynchronizationTest($central, new StaticL1('testSynchronizationDatabase1a'), new StaticL1('testSynchronizationDatabase2a'));
@@ -21,14 +26,12 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
 
     public function testTaggedSynchronizationDatabase()
     {
-        $this->createSchema();
         $central = new DatabaseL2($this->dbh);
         $this->performTaggedSynchronizationTest($central, new StaticL1('testTaggedSynchronizationDatabase1'), new StaticL1('testTaggedSynchronizationDatabase2'));
     }
 
     public function testDatabaseL2SyncWithNoWrites()
     {
-        $this->createSchema();
         $l2 = new DatabaseL2($this->dbh, '', true);
         $l1 = new StaticL1('first');
         $pool = new Integrated($l1, $l2);
@@ -37,7 +40,6 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
 
     public function testExistsDatabaseL2()
     {
-        $this->createSchema();
         $l2 = new DatabaseL2($this->dbh);
         $myaddr = new Address('mybin', 'mykey');
         $l2->set('mypool', $myaddr, 'myvalue');
@@ -48,7 +50,6 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
 
     public function testEmptyCleanUpDatabaseL2()
     {
-        $this->createSchema();
         $l2 = new DatabaseL2($this->dbh);
     }
 
@@ -66,7 +67,6 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
 
     public function testDatabaseL2FailedUnserialization()
     {
-        $this->createSchema();
         $l2 = new DatabaseL2($this->dbh);
         $this->performFailedUnserializationTest($l2);
         $this->performCaughtUnserializationOnGetTest($l2);
@@ -81,7 +81,6 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
      */
     public function testDatabaseL2FailedUnserializationOnGet()
     {
-        $this->createSchema();
         $l2 = new DatabaseL2($this->dbh);
         $this->performFailedUnserializationOnGetTest($l2);
     }
@@ -89,7 +88,6 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
 
     public function testDatabaseL2GarbageCollection()
     {
-        $this->createSchema();
         $l2 = new DatabaseL2($this->dbh);
         $this->performGarbageCollectionTest($l2);
     }
@@ -98,7 +96,6 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
 
     public function testDatabaseL2BatchDeletion()
     {
-        $this->createSchema();
         $l2 = new DatabaseL2($this->dbh);
         $myaddr = new Address('mybin', 'mykey');
         $l2->set('mypool', $myaddr, 'myvalue');
@@ -112,7 +109,6 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
 
     public function testBrokenDatabaseFallback()
     {
-        $this->createSchema();
         $l2 = new DatabaseL2($this->dbh, '', true);
         $l1 = new StaticL1('first');
         $pool = new Integrated($l1, $l2);
