@@ -909,17 +909,20 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->performExcessiveOverheadSkippingTest(new SQLiteL1());
     }
 
-    public function testAPCuL1IntegratedExpiration() {
+    public function testAPCuL1IntegratedExpiration()
+    {
         $l1 = new APCuL1('expiration');
         $this->performIntegratedExpiration($l1);
     }
 
-    public function testStaticL1IntegratedExpiration() {
+    public function testStaticL1IntegratedExpiration()
+    {
         $l1 = new StaticL1();
         $this->performIntegratedExpiration($l1);
     }
 
-    public function testSQLiteL1IntegratedExpiration() {
+    public function testSQLiteL1IntegratedExpiration()
+    {
         $l1 = new SQLiteL1();
         $this->performIntegratedExpiration($l1);
     }
