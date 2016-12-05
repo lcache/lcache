@@ -11,7 +11,8 @@ class SQLiteL1Test extends \PHPUnit_Framework_TestCase
     use L1TestsTrait;
 
 
-    protected function setUp() {
+    protected function setUp()
+    {
         parent::setUp();
         $this->l1 = new SQLiteL1();
         // Some tests require comparing two L1s against each other.

@@ -10,7 +10,8 @@ class APCuL1Test extends \PHPUnit_Framework_TestCase
     use L1TestHelpersTrait;
     use L1TestsTrait;
 
-    protected function setUp() {
+    protected function setUp()
+    {
         parent::setUp();
         $this->l1 = new APCuL1($this->getName());
         $this->l1_beta = new APCuL1($this->getName() . '_beta');

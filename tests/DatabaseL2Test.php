@@ -12,7 +12,8 @@ class DatabaseL2Test extends \PHPUnit_Extensions_Database_TestCase
     use L2TestsTrait;
 
 
-    protected function setUp() {
+    protected function setUp()
+    {
         parent::setUp();
         $this->createSchema();
         $this->l2  = new DatabaseL2($this->dbh);

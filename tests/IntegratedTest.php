@@ -2,7 +2,6 @@
 
 namespace LCache;
 
-
 //use phpunit\framework\TestCase;
 
 class IntegratedTest extends \PHPUnit_Extensions_Database_TestCase
