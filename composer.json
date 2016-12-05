@@ -10,12 +10,12 @@
     ],
     "autoload":{
         "psr-4":{
-            "LCache\\": ["src/", "tests/"]
+            "LCache\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "LCache\\TestUtils\\": "tests/src"
+            "LCache\\": "tests/"
         }
     },
     "require": {
