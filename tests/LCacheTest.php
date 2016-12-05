@@ -975,6 +975,39 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals('myvalue', $l1_b->get($myaddr));
     }
 
+    public function testDatabaseL2CleanupAfterWrite()
+    {
+        $this->createSchema();
+        $myaddr = new Address('mybin', 'mykey');
+
+        // Write to the key with the first client.
+        $l2_client_a = new DatabaseL2($this->dbh);
+        $event_id_a = $l2_client_a->set('mypool', $myaddr, 'myvalue');
+
+        // Verify that the first event exists and has the right value.
+        $event = $l2_client_a->getEvent($event_id_a);
+        $this->assertEquals('myvalue', $event->value);
+
+        // Use a second client. This gives us a fresh event_id_low_water,
+        // just like a new PHP request.
+        $l2_client_b = new DatabaseL2($this->dbh);
+
+        // Write to the same key with the second client.
+        $event_id_b = $l2_client_b->set('mypool', $myaddr, 'myvalue2');
+
+        // Verify that the second event exists and has the right value.
+        $event = $l2_client_b->getEvent($event_id_b);
+        $this->assertEquals('myvalue2', $event->value);
+
+        // Call the same method as on destruction. This second client should
+        // now prune any writes to the key from earlier requests.
+        $l2_client_b->pruneReplacedEvents();
+
+        // Verify that the first event no longer exists.
+        $event = $l2_client_b->getEvent($event_id_a);
+        $this->assertNull($event);
+    }
+
     /**
     * @return PHPUnit_Extensions_Database_DataSet_IDataSet
     */

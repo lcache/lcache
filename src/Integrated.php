@@ -8,7 +8,7 @@ final class Integrated
     protected $l2;
     protected $overhead_threshold;
 
-    public function __construct($l1, $l2, $overhead_threshold = null)
+    public function __construct(L1 $l1, L2 $l2, $overhead_threshold = null)
     {
         $this->l1 = $l1;
         $this->l2 = $l2;

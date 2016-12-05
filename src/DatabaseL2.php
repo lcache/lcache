@@ -31,7 +31,7 @@ class DatabaseL2 extends L2
         return $this->table_prefix . $base_name;
     }
 
-    protected function pruneReplacedEvents()
+    public function pruneReplacedEvents()
     {
         // No deletions, nothing to do.
         if (empty($this->address_deletion_patterns)) {
@@ -183,6 +183,20 @@ class DatabaseL2 extends L2
         $last_matching_entry->value = $unserialized_value;
         $this->hits++;
         return $last_matching_entry;
+    }
+
+    // Returns the event entry. Currently used only for testing.
+    public function getEvent($event_id)
+    {
+        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->prefixTable('lcache_events') .' WHERE event_id = :event_id');
+        $sth->bindValue(':event_id', $event_id, \PDO::PARAM_INT);
+        $sth->execute();
+        $event = $sth->fetchObject();
+        if (false === $event) {
+            return null;
+        }
+        $event->value = unserialize($event->value);
+        return $event;
     }
 
     public function exists(Address $address)
