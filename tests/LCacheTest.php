@@ -79,8 +79,8 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $l1->delete($event_id++, new Address());
         $entry = $l1->get($myaddr);
         $this->assertNull($entry);
-        $this->assertEquals(1, $l1->getHits());
-        $this->assertEquals(3, $l1->getMisses());
+        $this->assertEquals(0, $l1->getHits());
+        $this->assertEquals(1, $l1->getMisses());
 
         // This is a no-op for most L1 implementations, but it should not
         // return false, regardless.
@@ -110,16 +110,21 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->performSetGetDeleteTest($l1);
     }
 
+    public function testAPCuL1SetGetDelete()
+    {
+        $l1 = new APCuL1('setGetDelete');
+        $this->performSetGetDeleteTest($l1);
+    }
+
     public function testStaticL1Antirollback()
     {
         $l1 = new StaticL1();
         $this->performL1AntirollbackTest($l1);
     }
 
-    public function testStaticL1FullDelete()
+    public function performL1FullDelete($cache)
     {
         $event_id = 1;
-        $cache = new StaticL1();
 
         $myaddr = new Address('mybin', 'mykey');
 
@@ -132,18 +137,53 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(1, $cache->getMisses());
     }
 
-    public function testStaticL1Expiration()
+    public function testSQLiteL1FullDelete()
+    {
+        $l1 = new SQLiteL1();
+        $this->performL1FullDelete($l1);
+    }
+
+    public function testAPCuL1FullDelete()
+    {
+        $l1 = new APCuL1('setGetDelete');
+        $this->performL1FullDelete($l1);
+    }
+
+    public function testStaticL1FullDelete()
+    {
+        $l1 = new StaticL1();
+        $this->performL1FullDelete($l1);
+    }
+
+    public function performL1Expiration($l1)
     {
         $event_id = 1;
-        $cache = new StaticL1();
 
         $myaddr = new Address('mybin', 'mykey');
 
         // Set and get an entry.
-        $cache->set($event_id++, $myaddr, 'myvalue', -1);
-        $this->assertNull($cache->get($myaddr));
-        $this->assertEquals(0, $cache->getHits());
-        $this->assertEquals(1, $cache->getMisses());
+        $l1->set($event_id++, $myaddr, 'myvalue', -1);
+        $this->assertNull($l1->get($myaddr));
+        $this->assertEquals(0, $l1->getHits());
+        $this->assertEquals(1, $l1->getMisses());
+    }
+
+    public function testSQLiteL1Expiration()
+    {
+        $l1 = new SQLiteL1();
+        $this->performL1Expiration($l1);
+    }
+
+    public function testAPCuL1Expiration()
+    {
+        $l1 = new APCuL1('expiration');
+        $this->performL1Expiration($l1);
+    }
+
+    public function testStaticL1Expiration()
+    {
+        $l1 = new StaticL1();
+        $this->performL1Expiration($l1);
     }
 
     public function testClearStaticL2()
@@ -225,6 +265,12 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         // This is a no-op for most L1 implementations, but it should not
         // return false, regardless.
         $this->assertTrue(false !== $l1->collectGarbage());
+    }
+
+    public function testStaticL1Tombstone()
+    {
+        $l1 = new StaticL1();
+        $this->performTombstoneTest($l1);
     }
 
     public function testAPCuL1Tombstone()
@@ -623,6 +669,12 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals($current_hits + 1, $l1->getHits());
     }
 
+    public function testStaticL1HitMiss()
+    {
+        $l1 = new StaticL1();
+        $this->performL1HitMissTest($l1);
+    }
+
     public function testAPCuL1HitMiss()
     {
         $l1 = new APCuL1('testAPCuL1HitMiss');
@@ -856,9 +908,27 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->performExcessiveOverheadSkippingTest(new SQLiteL1());
     }
 
-    public function testAPCuL1Expiration()
+    public function testAPCuL1IntegratedExpiration()
     {
-        $l1 = new APCuL1();
+        $l1 = new APCuL1('expiration');
+        $this->performIntegratedExpiration($l1);
+    }
+
+    public function testStaticL1IntegratedExpiration()
+    {
+        $l1 = new StaticL1();
+        $this->performIntegratedExpiration($l1);
+    }
+
+    public function testSQLiteL1IntegratedExpiration()
+    {
+        $l1 = new SQLiteL1();
+        $this->performIntegratedExpiration($l1);
+    }
+
+    public function performIntegratedExpiration($l1)
+    {
+
         $pool = new Integrated($l1, new StaticL2());
         $myaddr = new Address('mybin', 'mykey');
         $pool->set($myaddr, 'value', 1);

@@ -222,6 +222,8 @@ class SQLiteL1 extends L1
             $sth = $this->dbh->prepare('DELETE FROM entries WHERE "address" LIKE :pattern');
             $sth->bindValue('pattern', $pattern, \PDO::PARAM_STR);
             $sth->execute();
+            apcu_store($this->statusKeyHits, 0);
+            apcu_store($this->statusKeyMisses, 0);
             return true;
         }
 
