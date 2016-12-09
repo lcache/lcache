@@ -4,21 +4,15 @@ namespace LCache;
 
 class StaticL1 extends L1
 {
-    protected $hits;
-    protected $misses;
     protected $key_overhead;
     protected $storage;
-    protected $last_applied_event_id;
 
     public function __construct($pool = null)
     {
-        parent::__construct($pool);
+        parent::__construct($pool, new StateL1Static());
 
-        $this->hits = 0;
-        $this->misses = 0;
         $this->key_overhead = [];
         $this->storage = array();
-        $this->last_applied_event_id = null;
     }
 
     public function getKeyOverhead(Address $address)
@@ -70,17 +64,18 @@ class StaticL1 extends L1
         }
 
         if (!array_key_exists($local_key, $this->storage)) {
-            $this->misses++;
+            $this->recordMiss();
             return null;
         }
         $entry = $this->storage[$local_key];
         if (!is_null($entry->expiration) && $entry->expiration < $_SERVER['REQUEST_TIME']) {
             unset($this->storage[$local_key]);
-            $this->misses++;
+            $this->recordMiss();
             return null;
         }
 
-        $this->hits++;
+        $this->recordHit();
+
         return $entry;
     }
 
@@ -89,8 +84,7 @@ class StaticL1 extends L1
         $local_key = $address->serialize();
         if ($address->isEntireCache()) {
             $this->storage = array();
-            $this->hits = 0;
-            $this->misses = 0;
+            $this->state->clear();
             return true;
         } elseif ($address->isEntireBin()) {
             foreach ($this->storage as $index => $value) {
@@ -103,27 +97,6 @@ class StaticL1 extends L1
         $this->setLastAppliedEventID($event_id);
         // @TODO: Consider adding "race" protection here, like for set.
         unset($this->storage[$local_key]);
-        return true;
-    }
-
-    public function getHits()
-    {
-        return $this->hits;
-    }
-
-    public function getMisses()
-    {
-        return $this->misses;
-    }
-
-    public function getLastAppliedEventID()
-    {
-        return $this->last_applied_event_id;
-    }
-
-    public function setLastAppliedEventID($eid)
-    {
-        $this->last_applied_event_id = $eid;
         return true;
     }
 }

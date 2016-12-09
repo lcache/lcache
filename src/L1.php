@@ -6,7 +6,10 @@ abstract class L1 extends LX
 {
     protected $pool;
 
-    public function __construct($pool = null)
+    /** @var StateL1Interface */
+    protected $state;
+
+    public function __construct($pool = null, StateL1Interface $state = null)
     {
         if (!is_null($pool)) {
             $this->pool = $pool;
@@ -14,6 +17,14 @@ abstract class L1 extends LX
             $this->pool = $_SERVER['SERVER_ADDR'] . '-' . $_SERVER['SERVER_PORT'];
         } else {
             $this->pool = $this->generateUniqueID();
+        }
+
+        if (!is_null($state)) {
+            $this->state = $state;
+        } elseif (function_exists('apcu_fetch')) {
+            $this->state = new StateL1APCu($this->pool);
+        } else {
+            $this->state = new StateL1Static();
         }
     }
 
@@ -23,8 +34,15 @@ abstract class L1 extends LX
         return uniqid('', true) . '-' . mt_rand();
     }
 
-    abstract public function getLastAppliedEventID();
-    abstract public function setLastAppliedEventID($event_id);
+    public function getLastAppliedEventID()
+    {
+        return $this->state->getLastAppliedEventID();
+    }
+
+    public function setLastAppliedEventID($event_id)
+    {
+        return $this->state->setLastAppliedEventID($event_id);
+    }
 
     public function getPool()
     {
@@ -40,4 +58,24 @@ abstract class L1 extends LX
     abstract public function getKeyOverhead(Address $address);
     abstract public function setWithExpiration($event_id, Address $address, $value, $created, $expiration = null);
     abstract public function delete($event_id, Address $address);
+
+    public function getHits()
+    {
+        return $this->state->getHits();
+    }
+
+    public function getMisses()
+    {
+        return $this->state->getMisses();
+    }
+
+    protected function recordHit()
+    {
+        $this->state->recordHit();
+    }
+
+    protected function recordMiss()
+    {
+        $this->state->recordMiss();
+    }
 }

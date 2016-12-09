@@ -7,24 +7,17 @@ class APCuL1 extends L1
     /** @var string */
     private $localKeyPrefix;
 
-    /** @var string */
-    private $statusKeyHits;
-
-    /** @var string */
-    private $statusKeyMisses;
-
-    /** @var string */
-    private $statusKeyLastAppliedEventId;
-
     public function __construct($pool = null)
     {
         parent::__construct($pool);
 
+        // TODO: consifer injecting this...
+        if (!($this->state instanceof StateL1APCu)) {
+            $this->state = new StateL1APCu($this->pool);
+        }
+
         // Using designated variables to speed up key generation during runtime.
-        $this->localKeyPrefix = 'lcache' . $this->pool . ':';
-        $this->statusKeyHits = 'lcache_status:' . $this->pool . ':hits';
-        $this->statusKeyMisses = 'lcache_status:' . $this->pool . ':misses';
-        $this->statusKeyLastAppliedEventId = 'lcache_status:' . $this->pool . ':last_applied_event_id';
+        $this->localKeyPrefix = 'lcache:' . $this->pool . ':';
     }
 
     protected function getLocalKey($address)
@@ -126,6 +119,7 @@ class APCuL1 extends L1
     public function delete($event_id, Address $address)
     {
         if ($address->isEntireCache()) {
+            $this->state->clear();
             // @TODO: Consider flushing only LCache L1 storage by using an iterator.
             return apcu_clear_cache();
         }
@@ -148,57 +142,5 @@ class APCuL1 extends L1
         // deleted in another process using the same APCu.
         apcu_delete($apcu_key);
         return true;
-    }
-
-    protected function recordHit()
-    {
-        apcu_inc($this->statusKeyHits, 1, $success);
-        if (!$success) {
-            // @TODO: Remove this fallback when we drop APCu 4.x support.
-            // @codeCoverageIgnoreStart
-            // Ignore coverage because (1) it's tested with other code and
-            // (2) APCu 5.x does not use it.
-            apcu_store($this->statusKeyHits, 1);
-            // @codeCoverageIgnoreEnd
-        }
-    }
-
-    protected function recordMiss()
-    {
-        apcu_inc($this->statusKeyMisses, 1, $success);
-        if (!$success) {
-            // @TODO: Remove this fallback when we drop APCu 4.x support.
-            // @codeCoverageIgnoreStart
-            // Ignore coverage because (1) it's tested with other code and
-            // (2) APCu 5.x does not use it.
-            apcu_store($this->statusKeyMisses, 1);
-            // @codeCoverageIgnoreEnd
-        }
-    }
-
-    public function getHits()
-    {
-        $value = apcu_fetch($this->statusKeyHits);
-        return $value ? $value : 0;
-    }
-
-    public function getMisses()
-    {
-        $value = apcu_fetch($this->statusKeyMisses);
-        return $value ? $value : 0;
-    }
-
-    public function getLastAppliedEventID()
-    {
-        $value = apcu_fetch($this->statusKeyLastAppliedEventId);
-        if ($value === false) {
-            $value = null;
-        }
-        return $value;
-    }
-
-    public function setLastAppliedEventID($eid)
-    {
-        return apcu_store($this->statusKeyLastAppliedEventId, $eid);
     }
 }
