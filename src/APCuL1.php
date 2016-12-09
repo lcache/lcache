@@ -11,10 +11,8 @@ class APCuL1 extends L1
     {
         parent::__construct($pool);
 
-        // TODO: consifer injecting this...
-        if (!($this->state instanceof StateL1APCu)) {
-            $this->state = new StateL1APCu($this->pool);
-        }
+        // TODO: Consifer injecting this.
+        $this->state = new StateL1APCu($this->pool);
 
         // Using designated variables to speed up key generation during runtime.
         $this->localKeyPrefix = 'lcache:' . $this->pool . ':';

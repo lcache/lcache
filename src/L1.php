@@ -21,10 +21,6 @@ abstract class L1 extends LX
 
         if (!is_null($state)) {
             $this->state = $state;
-        } elseif (function_exists('apcu_fetch')) {
-            $this->state = new StateL1APCu($this->pool);
-        } else {
-            $this->state = new StateL1Static();
         }
     }
 
