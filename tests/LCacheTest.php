@@ -43,7 +43,8 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->dbh->exec('CREATE INDEX ' . $prefix . 'rewritten_entry ON ' . $prefix . 'lcache_tags ("event_id")');
     }
 
-    public function testL1Factory() {
+    public function testL1Factory()
+    {
         $staticL1 = $this->l1Factory()->create('static');
         $invalidL1 = $this->l1Factory()->create('invalid_cache_driver');
         $this->assertEquals(get_class($staticL1), get_class($invalidL1));
