@@ -24,12 +24,6 @@ abstract class L1 extends LX
         $this->state = $state;
     }
 
-    protected function generateUniqueID()
-    {
-        // @TODO: Replace with a persistent but machine-local (and unique) method.
-        return uniqid('', true) . '-' . mt_rand();
-    }
-
     public function getLastAppliedEventID()
     {
         return $this->state->getLastAppliedEventID();
