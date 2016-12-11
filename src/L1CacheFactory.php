@@ -104,7 +104,6 @@ class L1CacheFactory
      */
     protected function getPool($pool = null)
     {
-        $result = null;
         if (!is_null($pool)) {
             $result = (string) $pool;
         } elseif (isset($_SERVER['SERVER_ADDR']) && isset($_SERVER['SERVER_PORT'])) {

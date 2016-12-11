@@ -15,7 +15,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
      */
     protected function l1Factory()
     {
-        if ($this->_factory === NULL) {
+        if ($this->_factory === null) {
             $this->_factory = new L1CacheFactory();
         }
         return $this->_factory;

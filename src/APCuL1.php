@@ -26,9 +26,10 @@ class APCuL1 extends L1
         // decrementing the overhead by existing hits when an item is set. This
         // would make hits cheaper but writes more expensive.
 
+        $success = null;
         $apcu_key = $this->getLocalKey($address);
         $overhead = apcu_fetch($apcu_key . ':overhead', $success);
-        if ($success) {
+        if ($success === true) {
             return $overhead;
         }
         return 0;
@@ -55,9 +56,10 @@ class APCuL1 extends L1
 
         // If not setting a negative cache entry, increment the key's overhead.
         if (!is_null($value)) {
+            $overhead_success = null;
             $apcu_key_overhead = $apcu_key . ':overhead';
             apcu_inc($apcu_key_overhead, 1, $overhead_success);
-            if (!$overhead_success) {
+            if ($overhead_success === false) {
                 // @codeCoverageIgnoreStart
                 apcu_store($apcu_key_overhead, 1);
                 // @codeCoverageIgnoreEnd
@@ -69,9 +71,10 @@ class APCuL1 extends L1
 
     public function isNegativeCache(Address $address)
     {
+        $success = null;
         $apcu_key = $this->getLocalKey($address);
         $entry = apcu_fetch($apcu_key, $success);
-        return ($success && is_null($entry->value));
+        return ($success === true && is_null($entry->value));
     }
 
     public function getEntry(Address $address)
@@ -80,16 +83,18 @@ class APCuL1 extends L1
         $apcu_key_overhead = $apcu_key . ':overhead';
 
         // Decrement the key's overhead.
+        $overhead_success = null;
         apcu_dec($apcu_key_overhead, 1, $overhead_success);
-        if (!$overhead_success) {
+        if ($overhead_success === false) {
             // @codeCoverageIgnoreStart
             apcu_store($apcu_key_overhead, -1);
             // @codeCoverageIgnoreEnd
         }
 
+        $success = null;
         $entry = apcu_fetch($apcu_key, $success);
         // Handle failed reads.
-        if (!$success) {
+        if ($success === false) {
             $this->recordMiss();
             return null;
         }
