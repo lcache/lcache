@@ -12,14 +12,11 @@ namespace LCache;
  *
  * @author ndobromirov
  */
-class StateL1Null implements StateL1Interface
+class StateL1Null extends StateL1Static implements StateL1Interface
 {
-    /**
-     * {inheritdoc}
-     */
-    public function clear()
+    public function __construct()
     {
-        // Nothing to do here.
+        parent::__construct();
     }
 
     /**
@@ -33,23 +30,7 @@ class StateL1Null implements StateL1Interface
     /**
      * {inheritdoc}
      */
-    public function getMisses()
-    {
-        return 0;
-    }
-
-    /**
-     * {inheritdoc}
-     */
     public function recordHit()
-    {
-        return false;
-    }
-
-    /**
-     * {inheritdoc}
-     */
-    public function recordMiss()
     {
         return false;
     }
