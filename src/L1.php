@@ -9,19 +9,19 @@ abstract class L1 extends LX
     /** @var StateL1Interface */
     protected $state;
 
-    public function __construct($pool = null, StateL1Interface $state = null)
+    /**
+     * Constructor for all the L1 implementations.
+     *
+     * @param string $pool
+     *   Pool ID to group the cache data in.
+     * @param \LCache\StateL1Interface $state
+     *   State manager class. Used to collect hit/miss statistics as well as
+     *   the ID of the last cache mutation event.
+     */
+    public function __construct($pool, StateL1Interface $state)
     {
-        if (!is_null($pool)) {
-            $this->pool = $pool;
-        } elseif (isset($_SERVER['SERVER_ADDR']) && isset($_SERVER['SERVER_PORT'])) {
-            $this->pool = $_SERVER['SERVER_ADDR'] . '-' . $_SERVER['SERVER_PORT'];
-        } else {
-            $this->pool = $this->generateUniqueID();
-        }
-
-        if (!is_null($state)) {
-            $this->state = $state;
-        }
+        $this->pool = $pool;
+        $this->state = $state;
     }
 
     protected function generateUniqueID()

@@ -10,6 +10,12 @@ namespace LCache;
 /**
  * Interface for the state manager drivers used in L1 driver implementations.
  *
+ * This interface is separated from L1 drivers, due to the need to separate L1
+ * storage implementations from L1 statistics storage. It was proven that L1
+ * SQLite driver implementation is much slower, unless APCu is used for the
+ * events data tracking. This pushed the need to separate statistics storage
+ * from the main storage of L1 data and to allow free combinations between them.
+ *
  * @author ndobromirov
  */
 interface StateL1Interface

@@ -7,15 +7,12 @@ class APCuL1 extends L1
     /** @var string */
     private $localKeyPrefix;
 
-    public function __construct($pool = null)
+    public function __construct($pool, StateL1Interface $state)
     {
-        parent::__construct($pool);
-
-        // TODO: Consifer injecting this.
-        $this->state = new StateL1APCu($this->pool);
+        parent::__construct($pool, $state);
 
         // Using designated variables to speed up key generation during runtime.
-        $this->localKeyPrefix = 'lcache:' . $this->pool . ':';
+        $this->localKeyPrefix = 'lcache:' . $pool . ':';
     }
 
     protected function getLocalKey($address)

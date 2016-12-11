@@ -42,13 +42,10 @@ class SQLiteL1 extends L1
         return $dbh;
     }
 
-    public function __construct($pool = null)
+    public function __construct($pool, StateL1Interface $state)
     {
-        parent::__construct($pool);
-        $this->dbh = self::getDatabaseHandle($this->pool);
-
-        // TODO: Sniff-out APCu presence and use sqlite or null implementation.
-        $this->state = new StateL1APCu($this->pool);
+        parent::__construct($pool, $state);
+        $this->dbh = self::getDatabaseHandle($pool);
     }
 
     protected function pruneExpiredEntries()

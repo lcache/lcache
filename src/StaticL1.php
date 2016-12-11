@@ -7,9 +7,9 @@ class StaticL1 extends L1
     protected $key_overhead;
     protected $storage;
 
-    public function __construct($pool = null)
+    public function __construct($pool, StateL1Interface $state)
     {
-        parent::__construct($pool, new StateL1Static());
+        parent::__construct($pool, $state);
 
         $this->key_overhead = [];
         $this->storage = array();
