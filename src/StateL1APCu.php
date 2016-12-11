@@ -1,20 +1,20 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * @file
+ * L1 state manager implementation.
  */
 
 namespace LCache;
 
 /**
- * Description of StateL1APCu
+ * L1 statistics manager storing in APCu.
  *
  * @author ndobromirov
  */
 class StateL1APCu implements StateL1Interface
 {
+    /** @var string */
     private $pool;
 
     /** @var string */
@@ -26,6 +26,12 @@ class StateL1APCu implements StateL1Interface
     /** @var string */
     private $statusKeyLastAppliedEventId;
 
+    /**
+     * Constructor implementation.
+     *
+     * @param string $pool
+     *   Pool string that this state manager will collect statistics for.
+     */
     public function __construct($pool)
     {
         $this->pool = $pool;
@@ -36,44 +42,67 @@ class StateL1APCu implements StateL1Interface
         $this->statusKeyLastAppliedEventId = 'lcache_status:' . $this->pool . ':last_applied_event_id';
     }
 
+    /**
+     * {inheritdoc}
+     */
     public function recordHit()
     {
-        apcu_inc($this->statusKeyHits, 1, $success);
-        if (!$success) {
-            // @TODO: Remove this fallback when we drop APCu 4.x support.
-            // @codeCoverageIgnoreStart
-            // Ignore coverage because (1) it's tested with other code and
-            // (2) APCu 5.x does not use it.
-            apcu_store($this->statusKeyHits, 1);
-            // @codeCoverageIgnoreEnd
-        }
+        return $this->_recordEvent($this->statusKeyHits);
     }
 
+    /**
+     * {inheritdoc}
+     */
     public function recordMiss()
     {
-        apcu_inc($this->statusKeyMisses, 1, $success);
-        if (!$success) {
+        return $this->_recordEvent($this->statusKeyMisses);
+    }
+
+    /**
+     * Utility method to reduce code duplication.
+     *
+     * @param string $key
+     *   Key to store the evet counters in.
+     *
+     * @return bool
+     *   True on success, false otherwise.
+     */
+    private function _recordEvent($key)
+    {
+        $success = null;
+        apcu_inc($key, 1, $success);
+        if ($success !== null && !$success) {
             // @TODO: Remove this fallback when we drop APCu 4.x support.
             // @codeCoverageIgnoreStart
             // Ignore coverage because (1) it's tested with other code and
             // (2) APCu 5.x does not use it.
-            apcu_store($this->statusKeyMisses, 1);
+            $success = apcu_store($key, 1);
             // @codeCoverageIgnoreEnd
         }
+        return $success;
     }
 
+    /**
+     * {inheritdoc}
+     */
     public function getHits()
     {
         $value = apcu_fetch($this->statusKeyHits);
         return $value ? $value : 0;
     }
 
+    /**
+     * {inheritdoc}
+     */
     public function getMisses()
     {
         $value = apcu_fetch($this->statusKeyMisses);
         return $value ? $value : 0;
     }
 
+    /**
+     * {inheritdoc}
+     */
     public function getLastAppliedEventID()
     {
         $value = apcu_fetch($this->statusKeyLastAppliedEventId);
@@ -83,11 +112,17 @@ class StateL1APCu implements StateL1Interface
         return $value;
     }
 
+    /**
+     * {inheritdoc}
+     */
     public function setLastAppliedEventID($eventId)
     {
         return apcu_store($this->statusKeyLastAppliedEventId, $eventId);
     }
 
+    /**
+     * {inheritdoc}
+     */
     public function clear()
     {
         apcu_store($this->statusKeyHits, 0);
