@@ -40,8 +40,8 @@ class StateL1Null extends StateL1Static implements StateL1Interface
      */
     public function getLastAppliedEventID()
     {
-        // TODO: Decide on this.
-        // Current assumtion is that all events were applied already.
+        // Because we store nothing locally, behave as if all events
+        // are applied.
         return PHP_INT_MAX;
     }
 
