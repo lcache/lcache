@@ -35,14 +35,27 @@ class SQLiteL1 extends L1
     protected static function initializeSchema(\PDO $dbh)
     {
         if (!self::tableExists($dbh, 'entries')) {
-            $dbh->exec('CREATE TABLE IF NOT EXISTS entries("address" TEXT PRIMARY KEY, "value" BLOB, "expiration" INTEGER, "created" INTEGER, "event_id" INTEGER NOT NULL DEFAULT 0, "reads" INTEGER NOT NULL DEFAULT 0, "writes" INTEGER NOT NULL DEFAULT 0)');
-            $dbh->exec('CREATE INDEX IF NOT EXISTS expiration ON entries ("expiration")');
+            foreach (self::schemaStatements() as $query) {
+                $dbh->exec($query);
+            }
         }
+    }
+
+    protected static function schemaStatements()
+    {
+        return [
+            // Table creation.
+            'CREATE TABLE IF NOT EXISTS entries("address" TEXT PRIMARY KEY, "value" BLOB, "expiration" INTEGER, "created" INTEGER, "event_id" INTEGER NOT NULL DEFAULT 0, "reads" INTEGER NOT NULL DEFAULT 0, "writes" INTEGER NOT NULL DEFAULT 0)',
+
+            // Index creation.
+            'CREATE INDEX IF NOT EXISTS expiration ON entries ("expiration")',
+        ];
     }
 
     protected static function getDatabaseHandle($pool)
     {
-        $path = join(DIRECTORY_SEPARATOR, array(sys_get_temp_dir(), 'lcache-' . $pool));
+        $schemaId = md5(implode(';', self::schemaStatements()));
+        $path = join(DIRECTORY_SEPARATOR, array(sys_get_temp_dir(), "lcache-$pool-$schemaId"));
         $dbh = new \PDO('sqlite:' . $path . '.sqlite3');
         $dbh->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $dbh->exec('PRAGMA synchronous = OFF');
