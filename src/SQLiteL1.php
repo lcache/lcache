@@ -54,7 +54,7 @@ class SQLiteL1 extends L1
 
     protected static function getDatabaseHandle($pool)
     {
-        $schemaId = md5(implode(';', self::schemaStatements()));
+        $schemaId = substr(hash('sha512', implode(';', self::schemaStatements())), 0, 20);
         $path = join(DIRECTORY_SEPARATOR, array(sys_get_temp_dir(), "lcache-$pool-$schemaId"));
         $dbh = new \PDO('sqlite:' . $path . '.sqlite3');
         $dbh->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
