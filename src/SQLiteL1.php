@@ -82,7 +82,7 @@ class SQLiteL1 extends L1
         $sth->execute();
         $result = $sth->fetchObject();
 
-        if ($result === false) {
+        if (false === $result) {
             return 0;
         }
 
@@ -175,7 +175,7 @@ class SQLiteL1 extends L1
         // do this to simultaneously track useful overhead data but not unnecessarily
         // record reads after they massively outweigh writes for an address.
         // @TODO: Make this adapt to overhead thresholds.
-        if ($entry === false || $entry->reads < 10 * $entry->writes || $entry->reads < 10) {
+        if (false === $entry || $entry->reads < 10 * $entry->writes || $entry->reads < 10) {
             $sth = $this->dbh->prepare('UPDATE entries SET "reads" = "reads" + 1 WHERE "address" = :address');
             $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
             $sth->execute();
@@ -188,7 +188,7 @@ class SQLiteL1 extends L1
             }
         }
 
-        if ($entry === false) {
+        if (false === $entry) {
             $this->recordMiss();
             return null;
         }

@@ -29,7 +29,7 @@ class APCuL1 extends L1
         $success = null;
         $apcu_key = $this->getLocalKey($address);
         $overhead = apcu_fetch($apcu_key . ':overhead', $success);
-        if ($success === true) {
+        if (true === $success) {
             return $overhead;
         }
         return 0;
@@ -59,7 +59,7 @@ class APCuL1 extends L1
             $overhead_success = null;
             $apcu_key_overhead = $apcu_key . ':overhead';
             apcu_inc($apcu_key_overhead, 1, $overhead_success);
-            if ($overhead_success === false) {
+            if (false === $overhead_success) {
                 // @codeCoverageIgnoreStart
                 apcu_store($apcu_key_overhead, 1);
                 // @codeCoverageIgnoreEnd
@@ -74,7 +74,7 @@ class APCuL1 extends L1
         $success = null;
         $apcu_key = $this->getLocalKey($address);
         $entry = apcu_fetch($apcu_key, $success);
-        return ($success === true && is_null($entry->value));
+        return (true === $success && is_null($entry->value));
     }
 
     public function getEntry(Address $address)
@@ -85,7 +85,7 @@ class APCuL1 extends L1
         // Decrement the key's overhead.
         $overhead_success = null;
         apcu_dec($apcu_key_overhead, 1, $overhead_success);
-        if ($overhead_success === false) {
+        if (false === $overhead_success) {
             // @codeCoverageIgnoreStart
             apcu_store($apcu_key_overhead, -1);
             // @codeCoverageIgnoreEnd
@@ -94,7 +94,7 @@ class APCuL1 extends L1
         $success = null;
         $entry = apcu_fetch($apcu_key, $success);
         // Handle failed reads.
-        if ($success === false) {
+        if (false === $success) {
             $this->recordMiss();
             return null;
         }

@@ -106,7 +106,7 @@ class StateL1APCu implements StateL1Interface
     public function getLastAppliedEventID()
     {
         $value = apcu_fetch($this->statusKeyLastAppliedEventId);
-        if ($value === false) {
+        if (false === $value) {
             $value = null;
         }
         return $value;

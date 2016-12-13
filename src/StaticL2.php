@@ -47,16 +47,17 @@ class StaticL2 extends L2
     // Returns an LCache\Entry
     public function getEntry(Address $address)
     {
+        $events = array_filter($this->events, function (Entry $entry) use ($address) {
+            return $entry->getAddress()->isMatch($address);
+        });
         $last_matching_entry = null;
-        foreach ($this->events as $event_id => $entry) {
-            if ($entry->getAddress()->isMatch($address)) {
-                if ($entry->getAddress()->isEntireCache() || $entry->getAddress()->isEntireBin()) {
-                    $last_matching_entry = null;
-                } elseif (!is_null($entry->expiration) && $entry->expiration < $_SERVER['REQUEST_TIME']) {
-                    $last_matching_entry = null;
-                } else {
-                    $last_matching_entry = clone $entry;
-                }
+        foreach ($events as $entry) {
+            if ($entry->getAddress()->isEntireCache() || $entry->getAddress()->isEntireBin()) {
+                $last_matching_entry = null;
+            } elseif (!is_null($entry->expiration) && $entry->expiration < $_SERVER['REQUEST_TIME']) {
+                $last_matching_entry = null;
+            } else {
+                $last_matching_entry = clone $entry;
             }
         }
         // Last event was a deletion, so miss.
@@ -68,7 +69,7 @@ class StaticL2 extends L2
         $unserialized_value = @unserialize($last_matching_entry->value);
 
         // If unserialization failed, miss.
-        if ($unserialized_value === false && $last_matching_entry->value !== serialize(false)) {
+        if (false === $unserialized_value && serialize(false) !== $last_matching_entry->value) {
             throw new UnserializationException($address, $last_matching_entry->value);
         }
 
@@ -151,20 +152,22 @@ class StaticL2 extends L2
         $applied = 0;
         foreach ($this->events as $event_id => $event) {
             // Skip events that are too old or were created by the local L1.
-            if ($event_id > $last_applied_event_id && $event->pool !== $l1->getPool()) {
-                if (is_null($event->value)) {
+            if ($event_id <= $last_applied_event_id || $event->pool === $l1->getPool()) {
+                continue;
+            }
+
+            if (is_null($event->value)) {
+                $l1->delete($event->event_id, $event->getAddress());
+            } else {
+                $unserialized_value = @unserialize($event->value);
+                if (false === $unserialized_value && serialize(false) !== $event->value) {
+                    // Delete the L1 entry, if any, when we fail to unserialize.
                     $l1->delete($event->event_id, $event->getAddress());
                 } else {
-                    $unserialized_value = @unserialize($event->value);
-                    if ($unserialized_value === false && $event->value !== serialize(false)) {
-                        // Delete the L1 entry, if any, when we fail to unserialize.
-                        $l1->delete($event->event_id, $event->getAddress());
-                    } else {
-                        $l1->setWithExpiration($event->event_id, $event->getAddress(), $unserialized_value, $event->created, $event->expiration);
-                    }
+                    $l1->setWithExpiration($event->event_id, $event->getAddress(), $unserialized_value, $event->created, $event->expiration);
                 }
-                $applied++;
             }
+            $applied++;
         }
 
         // Just in case there were skipped events, set the high water mark.

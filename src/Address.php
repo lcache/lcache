@@ -121,7 +121,7 @@ final class Address implements \Serializable
         }
 
         // @TODO: Remove check against false for PHP 7+
-        if ($this->key === false || $this->key === '') {
+        if (false === $this->key || '' === $this->key) {
             $this->key = null;
         }
     }
