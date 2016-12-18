@@ -162,7 +162,7 @@ class DatabaseL2 extends L2
         //$last_matching_entry = $sth->fetchObject('LCacheEntry');
         $last_matching_entry = $sth->fetchObject();
 
-        if ($last_matching_entry === false) {
+        if (false === $last_matching_entry) {
             $this->misses++;
             return null;
         }
@@ -176,7 +176,7 @@ class DatabaseL2 extends L2
         $unserialized_value = @unserialize($last_matching_entry->value);
 
         // If unserialization failed, raise an exception.
-        if ($unserialized_value === false && $last_matching_entry->value !== serialize(false)) {
+        if (false === $unserialized_value && serialize(false) !== $last_matching_entry->value) {
             throw new UnserializationException($address, $last_matching_entry->value);
         }
 
@@ -364,7 +364,7 @@ class DatabaseL2 extends L2
                 return null;
             }
             $last_event = $sth->fetchObject();
-            if ($last_event === false) {
+            if (false === $last_event) {
                 $l1->setLastAppliedEventID(0);
             } else {
                 $l1->setLastAppliedEventID($last_event->event_id);
@@ -391,7 +391,7 @@ class DatabaseL2 extends L2
                 $l1->delete($event->event_id, $address);
             } else {
                 $unserialized_value = @unserialize($event->value);
-                if ($unserialized_value === false && $event->value !== serialize(false)) {
+                if (false === $unserialized_value && serialize(false) !== $event->value) {
                     // Delete the L1 entry, if any, when we fail to unserialize.
                     $l1->delete($event->event_id, $address);
                 } else {

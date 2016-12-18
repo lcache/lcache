@@ -8,6 +8,19 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 {
     protected $dbh = null;
 
+    private $_factory;
+    /**
+     *
+     * @return \LCache\L1CacheFactory
+     */
+    protected function l1Factory()
+    {
+        if ($this->_factory === null) {
+            $this->_factory = new L1CacheFactory();
+        }
+        return $this->_factory;
+    }
+
     /**
    * @return PHPUnit_Extensions_Database_DB_IDatabaseConnection
    */
@@ -30,10 +43,17 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->dbh->exec('CREATE INDEX ' . $prefix . 'rewritten_entry ON ' . $prefix . 'lcache_tags ("event_id")');
     }
 
+    public function testL1Factory()
+    {
+        $staticL1 = $this->l1Factory()->create('static');
+        $invalidL1 = $this->l1Factory()->create('invalid_cache_driver');
+        $this->assertEquals(get_class($staticL1), get_class($invalidL1));
+    }
+
     public function testNullL1()
     {
         $event_id = 1;
-        $cache = new NullL1();
+        $cache = $this->l1Factory()->create('null');
         $myaddr = new Address('mybin', 'mykey');
         $cache->set($event_id++, $myaddr, 'myvalue');
         $entry = $cache->get($myaddr);
@@ -100,25 +120,27 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function testStaticL1SetGetDelete()
     {
-        $l1 = new StaticL1();
+
+        $l1 = $this->l1Factory()->create('static');
         $this->performSetGetDeleteTest($l1);
     }
 
     public function testSQLiteL1SetGetDelete()
     {
-        $l1 = new SQLiteL1();
+        $l1 = $this->l1Factory()->create('sqlite');
         $this->performSetGetDeleteTest($l1);
     }
 
     public function testAPCuL1SetGetDelete()
     {
-        $l1 = new APCuL1('setGetDelete');
+        $l1 = $this->l1Factory()->create('apcu', 'setGetDelete');
+
         $this->performSetGetDeleteTest($l1);
     }
 
     public function testStaticL1Antirollback()
     {
-        $l1 = new StaticL1();
+        $l1 = $this->l1Factory()->create('static');
         $this->performL1AntirollbackTest($l1);
     }
 
@@ -139,19 +161,19 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function testSQLiteL1FullDelete()
     {
-        $l1 = new SQLiteL1();
+        $l1 = $this->l1Factory()->create('sqlite');
         $this->performL1FullDelete($l1);
     }
 
     public function testAPCuL1FullDelete()
     {
-        $l1 = new APCuL1('setGetDelete');
+        $l1 = $this->l1Factory()->create('apcu', 'setGetDelete');
         $this->performL1FullDelete($l1);
     }
 
     public function testStaticL1FullDelete()
     {
-        $l1 = new StaticL1();
+        $l1 = $this->l1Factory()->create('static');
         $this->performL1FullDelete($l1);
     }
 
@@ -170,19 +192,19 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function testSQLiteL1Expiration()
     {
-        $l1 = new SQLiteL1();
+        $l1 = $this->l1Factory()->create('sqlite');
         $this->performL1Expiration($l1);
     }
 
     public function testAPCuL1Expiration()
     {
-        $l1 = new APCuL1('expiration');
+        $l1 = $this->l1Factory()->create('apcu', 'expiration');
         $this->performL1Expiration($l1);
     }
 
     public function testStaticL1Expiration()
     {
-        $l1 = new StaticL1();
+        $l1 = $this->l1Factory()->create('static');
         $this->performL1Expiration($l1);
     }
 
@@ -217,7 +239,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     public function testNewPoolSynchronization()
     {
         $central = new StaticL2();
-        $pool1 = new Integrated(new StaticL1(), $central);
+        $pool1 = new Integrated($this->l1Factory()->create('static'), $central);
 
         $myaddr = new Address('mybin', 'mykey');
 
@@ -237,7 +259,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
         // Add a new pool. Sync should return NULL applied changes but should
         // bump the last applied event ID.
-        $pool2 = new Integrated(new StaticL1(), $central);
+        $pool2 = new Integrated($this->l1Factory()->create('static'), $central);
         $applied = $pool2->synchronize();
         $this->assertNull($applied);
         $this->assertEquals($pool1->getLastAppliedEventID(), $pool2->getLastAppliedEventID());
@@ -269,19 +291,19 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function testStaticL1Tombstone()
     {
-        $l1 = new StaticL1();
+        $l1 = $this->l1Factory()->create('static');
         $this->performTombstoneTest($l1);
     }
 
     public function testAPCuL1Tombstone()
     {
-        $l1 = new APCuL1('testAPCuL1Tombstone');
+        $l1 = $this->l1Factory()->create('apcu', 'testAPCuL1Tombstone');
         $this->performTombstoneTest($l1);
     }
 
     public function testSQLiteL1Tombstone()
     {
-        $l1 = new SQLiteL1();
+        $l1 = $this->l1Factory()->create('sqlite');
         $this->performTombstoneTest($l1);
     }
 
@@ -446,13 +468,13 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     public function testSynchronizationStatic()
     {
         $central = new StaticL2();
-        $this->performSynchronizationTest($central, new StaticL1(), new StaticL1());
+        $this->performSynchronizationTest($central, $this->l1Factory()->create('static'), $this->l1Factory()->create('static'));
     }
 
     public function testTaggedSynchronizationStatic()
     {
         $central = new StaticL2();
-        $this->performTaggedSynchronizationTest($central, new StaticL1(), new StaticL1());
+        $this->performTaggedSynchronizationTest($central, $this->l1Factory()->create('static'), $this->l1Factory()->create('static'));
     }
 
     public function testSynchronizationAPCu()
@@ -472,11 +494,23 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
         if ($run_test) {
             $central = new StaticL2();
-            $this->performSynchronizationTest($central, new APCuL1('testSynchronizationAPCu1'), new APCuL1('testSynchronizationAPCu2'));
+            $this->performSynchronizationTest(
+                $central,
+                $this->l1Factory()->create('apcu', 'testSynchronizationAPCu1'),
+                $this->l1Factory()->create('apcu', 'testSynchronizationAPCu2')
+            );
 
             // Because of how APCu only offers full cache clears, we test against a static cache for the other L1.
-            $this->performClearSynchronizationTest($central, new APCuL1('testSynchronizationAPCu1b'), new StaticL1());
-            $this->performClearSynchronizationTest($central, new StaticL1(), new APCuL1('testSynchronizationAPCu1c'));
+            $this->performClearSynchronizationTest(
+                $central,
+                $this->l1Factory()->create('apcu', 'testSynchronizationAPCu1b'),
+                $this->l1Factory()->create('static')
+            );
+            $this->performClearSynchronizationTest(
+                $central,
+                $this->l1Factory()->create('static'),
+                $this->l1Factory()->create('apcu', 'testSynchronizationAPCu1c')
+            );
         } else {
             $this->markTestSkipped('The APCu extension is not installed, enabled (for the CLI), or functional.');
         }
@@ -485,33 +519,61 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     public function testSynchronizationSQLiteL1()
     {
         $central = new StaticL2();
-        $this->performSynchronizationTest($central, new SQLiteL1(), new SQLiteL1());
+        $this->performSynchronizationTest(
+            $central,
+            $this->l1Factory()->create('sqlite'),
+            $this->l1Factory()->create('sqlite')
+        );
 
-        $this->performClearSynchronizationTest($central, new SQLiteL1(), new StaticL1());
-        $this->performClearSynchronizationTest($central, new StaticL1(), new SQLiteL1());
-        $this->performClearSynchronizationTest($central, new SQLiteL1(), new SQLiteL1());
+        $this->performClearSynchronizationTest(
+            $central,
+            $this->l1Factory()->create('sqlite'),
+            $this->l1Factory()->create('static')
+        );
+        $this->performClearSynchronizationTest(
+            $central,
+            $this->l1Factory()->create('static'),
+            $this->l1Factory()->create('sqlite')
+        );
+        $this->performClearSynchronizationTest(
+            $central,
+            $this->l1Factory()->create('sqlite'),
+            $this->l1Factory()->create('sqlite')
+        );
     }
 
     public function testSynchronizationDatabase()
     {
         $this->createSchema();
         $central = new DatabaseL2($this->dbh);
-        $this->performSynchronizationTest($central, new StaticL1('testSynchronizationDatabase1'), new StaticL1('testSynchronizationDatabase2'));
-        $this->performClearSynchronizationTest($central, new StaticL1('testSynchronizationDatabase1a'), new StaticL1('testSynchronizationDatabase2a'));
+        $this->performSynchronizationTest(
+            $central,
+            $this->l1Factory()->create('static', 'testSynchronizationDatabase1'),
+            $this->l1Factory()->create('static', 'testSynchronizationDatabase2')
+        );
+        $this->performClearSynchronizationTest(
+            $central,
+            $this->l1Factory()->create('static', 'testSynchronizationDatabase1a'),
+            $this->l1Factory()->create('static', 'testSynchronizationDatabase2a')
+        );
     }
 
     public function testTaggedSynchronizationDatabase()
     {
         $this->createSchema();
         $central = new DatabaseL2($this->dbh);
-        $this->performTaggedSynchronizationTest($central, new StaticL1('testTaggedSynchronizationDatabase1'), new StaticL1('testTaggedSynchronizationDatabase2'));
+        $this->performTaggedSynchronizationTest(
+            $central,
+            $this->l1Factory()->create('static', 'testTaggedSynchronizationDatabase1'),
+            $this->l1Factory()->create('static', 'testTaggedSynchronizationDatabase2')
+        );
     }
 
     public function testBrokenDatabaseFallback()
     {
         $this->createSchema();
         $l2 = new DatabaseL2($this->dbh, '', true);
-        $l1 = new StaticL1('first');
+        $l1 = $this->l1Factory()->create('static', 'first');
         $pool = new Integrated($l1, $l2);
 
         $myaddr = new Address('mybin', 'mykey');
@@ -535,7 +597,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertNull($l2->getAddressesForTag('mytag'));
 
         // Try applying events to an uninitialized L1.
-        $this->assertNull($l2->applyEvents(new StaticL1()));
+        $this->assertNull($l2->applyEvents($this->l1Factory()->create('static')));
 
         // Try garbage collection routines.
         $pool->collectGarbage();
@@ -547,7 +609,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     {
         $this->createSchema();
         $l2 = new DatabaseL2($this->dbh, '', true);
-        $l1 = new StaticL1('first');
+        $l1 = $this->l1Factory()->create('static', 'first');
         $pool = new Integrated($l1, $l2);
         $pool->synchronize();
     }
@@ -580,19 +642,19 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function testExistsAPCuL1()
     {
-        $l1 = new APCuL1('first');
+        $l1 = $this->l1Factory()->create('apcu', 'first');
         $this->performExistsTest($l1);
     }
 
     public function testExistsStaticL1()
     {
-        $l1 = new StaticL1();
+        $l1 = $this->l1Factory()->create('static');
         $this->performExistsTest($l1);
     }
 
     public function testExistsSQLiteL1()
     {
-        $l1 = new SQLiteL1();
+        $l1 = $this->l1Factory()->create('sqlite');
         $this->performExistsTest($l1);
     }
 
@@ -600,7 +662,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     {
         $this->createSchema();
         $l2 = new DatabaseL2($this->dbh);
-        $l1 = new APCuL1('first');
+        $l1 = $this->l1Factory()->create('apcu', 'first');
         $pool = new Integrated($l1, $l2);
         $myaddr = new Address('mybin', 'mykey');
         $pool->set($myaddr, 'myvalue');
@@ -621,13 +683,13 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     public function testAPCuL1PoolIDs()
     {
         // Test unique ID generation.
-        $l1 = new APCuL1();
+        $l1 = $this->l1Factory()->create('apcu');
         $this->assertNotNull($l1->getPool());
 
         // Test host-based generation.
         $_SERVER['SERVER_ADDR'] = 'localhost';
         $_SERVER['SERVER_PORT'] = '80';
-        $l1 = new APCuL1();
+        $l1 = $this->l1Factory()->create('apcu');
         $this->assertEquals('localhost-80', $l1->getPool());
     }
 
@@ -646,13 +708,13 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function testAPCuL1Antirollback()
     {
-        $l1 = new APCuL1('first');
+        $l1 = $this->l1Factory()->create('apcu', 'first');
         $this->performL1AntirollbackTest($l1);
     }
 
     public function testSQLite1Antirollback()
     {
-        $l1 = new SQLiteL1();
+        $l1 = $this->l1Factory()->create('sqlite');
         $this->performL1AntirollbackTest($l1);
     }
 
@@ -671,33 +733,33 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function testStaticL1HitMiss()
     {
-        $l1 = new StaticL1();
+        $l1 = $this->l1Factory()->create('static');
         $this->performL1HitMissTest($l1);
     }
 
     public function testAPCuL1HitMiss()
     {
-        $l1 = new APCuL1('testAPCuL1HitMiss');
+        $l1 = $this->l1Factory()->create('apcu', 'testAPCuL1HitMiss');
         $this->performL1HitMissTest($l1);
     }
 
     public function testSQLiteL1HitMiss()
     {
-        $l1 = new SQLiteL1();
+        $l1 = $this->l1Factory()->create('sqlite');
         $this->performL1HitMissTest($l1);
     }
 
     public function testPoolIntegrated()
     {
         $l2 = new StaticL2();
-        $l1 = new APCuL1('first');
+        $l1 = $this->l1Factory()->create('apcu', 'first');
         $pool = new Integrated($l1, $l2);
         $this->assertEquals('first', $pool->getPool());
     }
 
     protected function performFailedUnserializationTest($l2)
     {
-        $l1 = new StaticL1();
+        $l1 = $this->l1Factory()->create('static');
         $pool = new Integrated($l1, $l2);
         $myaddr = new Address('mybin', 'mykey');
 
@@ -723,7 +785,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     protected function performCaughtUnserializationOnGetTest($l2)
     {
-        $l1 = new StaticL1();
+        $l1 = $this->l1Factory()->create('static');
         $pool = new Integrated($l1, $l2);
         $invalid_object = 'O:10:"HelloWorl":0:{}';
         $myaddr = new Address('mybin', 'performCaughtUnserializationOnGetTest');
@@ -759,7 +821,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     // Callers should expect an UnserializationException.
     protected function performFailedUnserializationOnGetTest($l2)
     {
-        $l1 = new StaticL1();
+        $l1 = $this->l1Factory()->create('static');
         $pool = new Integrated($l1, $l2);
         $invalid_object = 'O:10:"HelloWorl":0:{}';
         $myaddr = new Address('mybin', 'performFailedUnserializationOnGetTest');
@@ -788,7 +850,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function performGarbageCollectionTest($l2)
     {
-        $pool = new Integrated(new StaticL1(), $l2);
+        $pool = new Integrated($this->l1Factory()->create('static'), $l2);
         $myaddr = new Address('mybin', 'mykey');
         $this->assertEquals(0, $l2->countGarbage());
         $pool->set($myaddr, 'myvalue', -1);
@@ -810,7 +872,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->performGarbageCollectionTest($l2);
 
         // Test item limits.
-        $pool = new Integrated(new StaticL1(), $l2);
+        $pool = new Integrated($this->l1Factory()->create('static'), $l2);
         $myaddr2 = new Address('mybin', 'mykey2');
         $myaddr3 = new Address('mybin', 'mykey3');
         $pool->collectGarbage();
@@ -844,17 +906,17 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function testStaticL1Counters()
     {
-        $this->performHitSetCounterTest(new StaticL1());
+        $this->performHitSetCounterTest($this->l1Factory()->create('static'));
     }
 
     public function testAPCuL1Counters()
     {
-        $this->performHitSetCounterTest(new APCuL1('counters'));
+        $this->performHitSetCounterTest($this->l1Factory()->create('apcu', 'counters'));
     }
 
     public function testSQLiteL1Counters()
     {
-        $this->performHitSetCounterTest(new SQLiteL1());
+        $this->performHitSetCounterTest($this->l1Factory()->create('sqlite'));
     }
 
     protected function performExcessiveOverheadSkippingTest($l1)
@@ -895,34 +957,34 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function testStaticL1ExcessiveOverheadSkipping()
     {
-        $this->performExcessiveOverheadSkippingTest(new StaticL1());
+        $this->performExcessiveOverheadSkippingTest($this->l1Factory()->create('static'));
     }
 
     public function testAPCuL1ExcessiveOverheadSkipping()
     {
-        $this->performExcessiveOverheadSkippingTest(new APCuL1('overhead'));
+        $this->performExcessiveOverheadSkippingTest($this->l1Factory()->create('apcu', 'overhead'));
     }
 
     public function testSQLiteL1ExcessiveOverheadSkipping()
     {
-        $this->performExcessiveOverheadSkippingTest(new SQLiteL1());
+        $this->performExcessiveOverheadSkippingTest($this->l1Factory()->create('sqlite'));
     }
 
     public function testAPCuL1IntegratedExpiration()
     {
-        $l1 = new APCuL1('expiration');
+        $l1 = $this->l1Factory()->create('apcu', 'expiration');
         $this->performIntegratedExpiration($l1);
     }
 
     public function testStaticL1IntegratedExpiration()
     {
-        $l1 = new StaticL1();
+        $l1 = $this->l1Factory()->create('static');
         $this->performIntegratedExpiration($l1);
     }
 
     public function testSQLiteL1IntegratedExpiration()
     {
-        $l1 = new SQLiteL1();
+        $l1 = $this->l1Factory()->create('sqlite');
         $this->performIntegratedExpiration($l1);
     }
 
@@ -963,10 +1025,10 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     public function testSQLiteL1SchemaErrorHandling()
     {
         $pool_name = uniqid('', true) . '-' . mt_rand();
-        $l1_a = new SQLiteL1($pool_name);
+        $l1_a = $this->l1Factory()->create('sqlite', $pool_name);
 
         // Opening a second instance of the same pool should work.
-        $l1_b = new SQLiteL1($pool_name);
+        $l1_b = $this->l1Factory()->create('sqlite', $pool_name);
 
         $myaddr = new Address('mybin', 'mykey');
 

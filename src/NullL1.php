@@ -9,11 +9,4 @@ class NullL1 extends StaticL1
         // Store nothing; always succeed.
         return true;
     }
-
-    public function getLastAppliedEventID()
-    {
-        // Because we store nothing locally, behave as if all events
-        // are applied.
-        return PHP_INT_MAX;
-    }
 }

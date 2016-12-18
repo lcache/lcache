@@ -6,25 +6,33 @@ abstract class L1 extends LX
 {
     protected $pool;
 
-    public function __construct($pool = null)
+    /** @var StateL1Interface */
+    protected $state;
+
+    /**
+     * Constructor for all the L1 implementations.
+     *
+     * @param string $pool
+     *   Pool ID to group the cache data in.
+     * @param \LCache\StateL1Interface $state
+     *   State manager class. Used to collect hit/miss statistics as well as
+     *   the ID of the last cache mutation event.
+     */
+    public function __construct($pool, StateL1Interface $state)
     {
-        if (!is_null($pool)) {
-            $this->pool = $pool;
-        } elseif (isset($_SERVER['SERVER_ADDR']) && isset($_SERVER['SERVER_PORT'])) {
-            $this->pool = $_SERVER['SERVER_ADDR'] . '-' . $_SERVER['SERVER_PORT'];
-        } else {
-            $this->pool = $this->generateUniqueID();
-        }
+        $this->pool = $pool;
+        $this->state = $state;
     }
 
-    protected function generateUniqueID()
+    public function getLastAppliedEventID()
     {
-        // @TODO: Replace with a persistent but machine-local (and unique) method.
-        return uniqid('', true) . '-' . mt_rand();
+        return $this->state->getLastAppliedEventID();
     }
 
-    abstract public function getLastAppliedEventID();
-    abstract public function setLastAppliedEventID($event_id);
+    public function setLastAppliedEventID($event_id)
+    {
+        return $this->state->setLastAppliedEventID($event_id);
+    }
 
     public function getPool()
     {
@@ -40,4 +48,24 @@ abstract class L1 extends LX
     abstract public function getKeyOverhead(Address $address);
     abstract public function setWithExpiration($event_id, Address $address, $value, $created, $expiration = null);
     abstract public function delete($event_id, Address $address);
+
+    public function getHits()
+    {
+        return $this->state->getHits();
+    }
+
+    public function getMisses()
+    {
+        return $this->state->getMisses();
+    }
+
+    protected function recordHit()
+    {
+        $this->state->recordHit();
+    }
+
+    protected function recordMiss()
+    {
+        $this->state->recordMiss();
+    }
 }
