@@ -50,7 +50,7 @@ class L1CacheFactory
      * @param string $pool
      * @return \LCache\APCuL1
      */
-    protected function createApcu($pool)
+    protected function createAPCu($pool)
     {
         return new APCuL1($pool, new StateL1APCu($pool));
     }
@@ -63,7 +63,7 @@ class L1CacheFactory
      */
     protected function createNull($pool)
     {
-        return new NullL1($pool, new StateL1Null());
+        return new NullL1($pool, new StateL1Static());
     }
 
     /**
@@ -78,16 +78,16 @@ class L1CacheFactory
     }
 
     /**
-     * Factory method for the L1 static driver.
+     * Factory method for the L1 SQLite driver.
      *
      * @param string $pool
      * @return \LCache\SQLiteL1
      */
-    protected function createSqlite($pool)
+    protected function createSQLite($pool)
     {
         $hasApcu = function_exists('apcu_fetch');
         // TODO: Maybe implement StateL1SQLite class instead of NULL one.
-        $state = $hasApcu ? new StateL1APCu("sqlite-$pool") : new StateL1Null();
+        $state = $hasApcu ? new StateL1APCu("sqlite-$pool") : new StateL1Static();
         $cache = new SQLiteL1($pool, $state);
         return $cache;
     }

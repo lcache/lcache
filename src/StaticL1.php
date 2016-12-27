@@ -4,7 +4,7 @@ namespace LCache;
 
 class StaticL1 extends L1
 {
-    private static $_cacheData = [];
+    private static $cacheData = [];
 
     protected $key_overhead;
 
@@ -17,10 +17,10 @@ class StaticL1 extends L1
 
         $this->key_overhead = [];
 
-        if (!isset(self::$_cacheData[$this->pool])) {
-            self::$_cacheData[$this->pool] = [];
+        if (!isset(self::$cacheData[$this->pool])) {
+            self::$cacheData[$this->pool] = [];
         }
-        $this->storage = &self::$_cacheData[$this->pool];
+        $this->storage = &self::$cacheData[$this->pool];
     }
 
     public function getKeyOverhead(Address $address)

@@ -47,7 +47,7 @@ class StateL1APCu implements StateL1Interface
      */
     public function recordHit()
     {
-        return $this->_recordEvent($this->statusKeyHits);
+        return $this->recordEvent($this->statusKeyHits);
     }
 
     /**
@@ -55,7 +55,7 @@ class StateL1APCu implements StateL1Interface
      */
     public function recordMiss()
     {
-        return $this->_recordEvent($this->statusKeyMisses);
+        return $this->recordEvent($this->statusKeyMisses);
     }
 
     /**
@@ -67,7 +67,7 @@ class StateL1APCu implements StateL1Interface
      * @return bool
      *   True on success, false otherwise.
      */
-    private function _recordEvent($key)
+    private function recordEvent($key)
     {
         $success = null;
         apcu_inc($key, 1, $success);
@@ -127,6 +127,5 @@ class StateL1APCu implements StateL1Interface
     {
         apcu_store($this->statusKeyHits, 0);
         apcu_store($this->statusKeyMisses, 0);
-        // TODO: Decide on how to handle the last applied event state on clear?
     }
 }
