@@ -87,7 +87,7 @@ class L1CacheFactory
     {
         $hasApcu = function_exists('apcu_fetch');
         // TODO: Maybe implement StateL1SQLite class instead of NULL one.
-        $state = $hasApcu ? new StateL1APCu($pool) : new StateL1Null();
+        $state = $hasApcu ? new StateL1APCu("sqlite-$pool") : new StateL1Null();
         $cache = new SQLiteL1($pool, $state);
         return $cache;
     }
