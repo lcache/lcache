@@ -1,9 +1,8 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * @file
+ * Test file for the Null L1 driver in LCache library.
  */
 
 namespace LCache\L1;
@@ -11,13 +10,16 @@ namespace LCache\L1;
 use LCache\Address;
 
 /**
- * Description of NullTest
+ * NullTest concrete implementation.
  *
  * @author ndobromirov
  */
 class NullTest extends \LCache\L1CacheTest
 {
 
+    /**
+     * {@inheritDoc}
+     */
     protected function driverName()
     {
         return 'null';

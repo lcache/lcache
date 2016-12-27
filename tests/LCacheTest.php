@@ -8,22 +8,17 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 {
     protected $dbh = null;
 
-    private $_factory;
     /**
-     *
      * @return \LCache\L1CacheFactory
      */
     protected function l1Factory()
     {
-        if ($this->_factory === null) {
-            $this->_factory = new L1CacheFactory();
-        }
-        return $this->_factory;
+        return new L1CacheFactory();
     }
 
     /**
-   * @return PHPUnit_Extensions_Database_DB_IDatabaseConnection
-   */
+     * @return PHPUnit_Extensions_Database_DB_IDatabaseConnection
+     */
     protected function getConnection()
     {
         $this->dbh = new \PDO('sqlite::memory:');
