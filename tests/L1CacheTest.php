@@ -159,6 +159,21 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('localhost-80', $this->createL1()->getPool());
     }
 
+    public function testPoolSharing()
+    {
+        $value = 'myvalue';
+        $myaddr = new Address('mybin', 'mykey');
+        $poolName = uniqid('', true) . '-' . mt_rand();
+
+        $l1_a = $this->createL1($poolName);
+        // Opening a second instance of the same pool should work.
+        $l1_b = $this->createL1($poolName);
+
+        $l1_a->set(1, $myaddr, $value);
+        // Reading from the second handle should show the same value.
+        $this->assertEquals($value, $l1_b->get($myaddr));
+    }
+
     public function testHitMiss()
     {
         $event_id = 1;

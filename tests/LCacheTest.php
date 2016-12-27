@@ -785,23 +785,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertNull($l2->get($myaddr));
     }
 
-    public function testSQLiteL1SchemaErrorHandling()
-    {
-        $pool_name = uniqid('', true) . '-' . mt_rand();
-        $l1_a = $this->l1Factory()->create('sqlite', $pool_name);
-
-        // Opening a second instance of the same pool should work.
-        $l1_b = $this->l1Factory()->create('sqlite', $pool_name);
-
-        $myaddr = new Address('mybin', 'mykey');
-
-        $l1_a->set(1, $myaddr, 'myvalue');
-
-        // Reading from the second handle should show the value written to the
-        // first.
-        $this->assertEquals('myvalue', $l1_b->get($myaddr));
-    }
-
     public function testDatabaseL2CleanupAfterWrite()
     {
         $this->createSchema();

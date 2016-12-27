@@ -4,7 +4,11 @@ namespace LCache;
 
 class StaticL1 extends L1
 {
+    private static $_cacheData = [];
+
     protected $key_overhead;
+
+    /** @var array Reference to the data array for the instance data pool. */
     protected $storage;
 
     public function __construct($pool, StateL1Interface $state)
@@ -12,7 +16,11 @@ class StaticL1 extends L1
         parent::__construct($pool, $state);
 
         $this->key_overhead = [];
-        $this->storage = array();
+
+        if (!isset(self::$_cacheData[$this->pool])) {
+            self::$_cacheData[$this->pool] = [];
+        }
+        $this->storage = &self::$_cacheData[$this->pool];
     }
 
     public function getKeyOverhead(Address $address)
