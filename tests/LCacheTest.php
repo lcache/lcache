@@ -646,6 +646,11 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(1, $l2->countGarbage());
     }
 
+    /**
+     * @todo Is this still needed, or it can be deleted.
+     *   Same tests are implemented against all L1 drivers directly in
+     *   L1CacheTest::testStateStorage().
+     */
     protected function performHitSetCounterTest($l1)
     {
         $pool = new Integrated($l1, new StaticL2());
@@ -665,7 +670,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $pool->get($myaddr2);
         $this->assertEquals(-1, $l1->getKeyOverhead($myaddr2));
     }
-
 
     public function testStaticL1Counters()
     {

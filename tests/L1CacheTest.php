@@ -188,4 +188,25 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $l1->get($myaddr);
         $this->assertEquals($hits + 1, $l1->getHits());
     }
+
+    public function testStateStorage()
+    {
+        $event_id = 1;
+        $l1 = $this->createL1();
+        $myaddr = new Address('mybin', 'mykey');
+
+        $this->assertEquals(0, $l1->getKeyOverhead($myaddr));
+        $l1->set($event_id++, $myaddr, 'myvalue');
+        $this->assertEquals(1, $l1->getKeyOverhead($myaddr));
+        $l1->get($myaddr);
+        $this->assertEquals(0, $l1->getKeyOverhead($myaddr));
+        $l1->set($event_id++, $myaddr, 'myvalue2');
+        $this->assertEquals(1, $l1->getKeyOverhead($myaddr));
+
+        // An unknown get should create negative overhead, generally
+        // in anticipation of a set.
+        $myaddr2 = new Address('mybin', 'mykey2');
+        $l1->get($myaddr2);
+        $this->assertEquals(-1, $l1->getKeyOverhead($myaddr2));
+    }
 }
