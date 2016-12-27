@@ -66,12 +66,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(PHP_INT_MAX, $cache->getLastAppliedEventID());
     }
 
-    public function testStaticL1Antirollback()
-    {
-        $l1 = $this->l1Factory()->create('static');
-        $this->performL1AntirollbackTest($l1);
-    }
-
     public function performL1FullDelete($cache)
     {
         $event_id = 1;
@@ -619,31 +613,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $_SERVER['SERVER_PORT'] = '80';
         $l1 = $this->l1Factory()->create('apcu');
         $this->assertEquals('localhost-80', $l1->getPool());
-    }
-
-    protected function performL1AntirollbackTest($l1)
-    {
-        $myaddr = new Address('mybin', 'mykey');
-        $current_event_id = $l1->getLastAppliedEventID();
-        if (is_null($current_event_id)) {
-            $current_event_id = 1;
-        }
-        $l1->set($current_event_id++, $myaddr, 'myvalue');
-        $this->assertEquals('myvalue', $l1->get($myaddr));
-        $l1->set($current_event_id - 2, $myaddr, 'myoldvalue');
-        $this->assertEquals('myvalue', $l1->get($myaddr));
-    }
-
-    public function testAPCuL1Antirollback()
-    {
-        $l1 = $this->l1Factory()->create('apcu', 'first');
-        $this->performL1AntirollbackTest($l1);
-    }
-
-    public function testSQLite1Antirollback()
-    {
-        $l1 = $this->l1Factory()->create('sqlite');
-        $this->performL1AntirollbackTest($l1);
     }
 
     protected function performL1HitMissTest($l1)
