@@ -34,18 +34,18 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
      * @return L1
      *   One of the L1 concrete descendants.
      */
-    protected function createL1($pool = null) {
+    protected function createL1($pool = null)
+    {
         return (new L1CacheFactory())->create($this->driverName(), $pool);
     }
 
     public function testSetGetDelete()
     {
-        $l1 = $this->createL1();
-
         $event_id = 1;
-
+        $l1 = $this->createL1();
         $myaddr = new Address('mybin', 'mykey');
 
+        // Validate emptyness.
         $this->assertEquals(0, $l1->getHits());
         $this->assertEquals(0, $l1->getMisses());
 
@@ -165,13 +165,12 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $myaddr = new Address('mybin', 'mykey');
         $poolName = uniqid('', true) . '-' . mt_rand();
 
-        $l1_a = $this->createL1($poolName);
-        // Opening a second instance of the same pool should work.
-        $l1_b = $this->createL1($poolName);
+        // Initialize a value in cache.
+        $this->createL1($poolName)->set(1, $myaddr, $value);
 
-        $l1_a->set(1, $myaddr, $value);
+        // Opening a second instance of the same pool should work.
         // Reading from the second handle should show the same value.
-        $this->assertEquals($value, $l1_b->get($myaddr));
+        $this->assertEquals($value, $this->createL1($poolName)->get($myaddr));
     }
 
     public function testHitMiss()
