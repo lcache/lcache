@@ -109,4 +109,18 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $l1->set($current_event_id - 2, $myaddr, 'myoldvalue');
         $this->assertEquals('myvalue', $l1->get($myaddr));
     }
+
+    public function testFullDelete()
+    {
+        $event_id = 1;
+        $l1 = $this->createL1();
+        $myaddr = new Address('mybin', 'mykey');
+
+        // Set an entry and clear the storage.
+        $l1->set($event_id++, $myaddr, 'myvalue');
+        $l1->delete($event_id++, new Address());
+        $this->assertEquals(null, $l1->get($myaddr));
+        $this->assertEquals(0, $l1->getHits());
+        $this->assertEquals(1, $l1->getMisses());
+    }
 }

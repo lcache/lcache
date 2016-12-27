@@ -118,14 +118,11 @@ class APCuL1 extends L1
 
     public function delete($event_id, Address $address)
     {
-        if ($address->isEntireCache()) {
-            $this->state->clear();
-            // @TODO: Consider flushing only LCache L1 storage by using an iterator.
-            return apcu_clear_cache();
-        }
-        if ($address->isEntireBin()) {
-            $prefix = $this->getLocalKey($address);
-            $pattern = '/^' . preg_quote($prefix) . '.*/';
+        $localKey = $this->getLocalKey($address);
+
+        if ($address->isEntireCache() || $address->isEntireBin()) {
+            $localKey = $this->getLocalKey($address);
+            $pattern = '/^' . preg_quote($localKey) . '.*/';
             $matching = $this->getIterator($pattern, APC_ITER_KEY);
             assert(!is_null($matching), 'Iterator instantiation failed.');
             foreach ($matching as $match) {
@@ -133,14 +130,15 @@ class APCuL1 extends L1
                 // deleted in another process using the same APCu.
                 apcu_delete($match['key']);
             }
+            if ($address->isEntireCache()) {
+                $this->state->clear();
+            }
             return true;
         }
 
-        $apcu_key = $this->getLocalKey($address);
-
         // Ignore failures of delete because the key may have been
         // deleted in another process using the same APCu.
-        apcu_delete($apcu_key);
+        apcu_delete($localKey);
         return true;
     }
 }

@@ -66,39 +66,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(PHP_INT_MAX, $cache->getLastAppliedEventID());
     }
 
-    public function performL1FullDelete($cache)
-    {
-        $event_id = 1;
-
-        $myaddr = new Address('mybin', 'mykey');
-
-        // Set an entry and clear the storage.
-        $cache->set($event_id++, $myaddr, 'myvalue');
-        $cache->delete($event_id++, new Address());
-        $entry = $cache->get($myaddr);
-        $this->assertEquals(null, $entry);
-        $this->assertEquals(0, $cache->getHits());
-        $this->assertEquals(1, $cache->getMisses());
-    }
-
-    public function testSQLiteL1FullDelete()
-    {
-        $l1 = $this->l1Factory()->create('sqlite');
-        $this->performL1FullDelete($l1);
-    }
-
-    public function testAPCuL1FullDelete()
-    {
-        $l1 = $this->l1Factory()->create('apcu', 'setGetDelete');
-        $this->performL1FullDelete($l1);
-    }
-
-    public function testStaticL1FullDelete()
-    {
-        $l1 = $this->l1Factory()->create('static');
-        $this->performL1FullDelete($l1);
-    }
-
     public function performL1Expiration($l1)
     {
         $event_id = 1;
