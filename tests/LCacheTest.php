@@ -66,37 +66,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(PHP_INT_MAX, $cache->getLastAppliedEventID());
     }
 
-    public function performL1Expiration($l1)
-    {
-        $event_id = 1;
-
-        $myaddr = new Address('mybin', 'mykey');
-
-        // Set and get an entry.
-        $l1->set($event_id++, $myaddr, 'myvalue', -1);
-        $this->assertNull($l1->get($myaddr));
-        $this->assertEquals(0, $l1->getHits());
-        $this->assertEquals(1, $l1->getMisses());
-    }
-
-    public function testSQLiteL1Expiration()
-    {
-        $l1 = $this->l1Factory()->create('sqlite');
-        $this->performL1Expiration($l1);
-    }
-
-    public function testAPCuL1Expiration()
-    {
-        $l1 = $this->l1Factory()->create('apcu', 'expiration');
-        $this->performL1Expiration($l1);
-    }
-
-    public function testStaticL1Expiration()
-    {
-        $l1 = $this->l1Factory()->create('static');
-        $this->performL1Expiration($l1);
-    }
-
     public function testClearStaticL2()
     {
         $l2 = new StaticL2();

@@ -123,4 +123,17 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(0, $l1->getHits());
         $this->assertEquals(1, $l1->getMisses());
     }
+
+    public function testExpiration()
+    {
+        $event_id = 1;
+        $l1 = $this->createL1();
+        $myaddr = new Address('mybin', 'mykey');
+
+        // Set and get an entry.
+        $l1->set($event_id++, $myaddr, 'myvalue', -1);
+        $this->assertNull($l1->get($myaddr));
+        $this->assertEquals(0, $l1->getHits());
+        $this->assertEquals(1, $l1->getMisses());
+    }
 }
