@@ -51,22 +51,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(get_class($staticL1), get_class($invalidL1));
     }
 
-    public function testNullL1()
-    {
-        $event_id = 1;
-        $cache = $this->l1Factory()->create('null');
-        $myaddr = new Address('mybin', 'mykey');
-        $cache->set($event_id++, $myaddr, 'myvalue');
-        $entry = $cache->get($myaddr);
-        $this->assertNull($entry);
-        $this->assertEquals(0, $cache->getHits());
-        $this->assertEquals(1, $cache->getMisses());
-
-        // Because this cache stores nothing it should be perpetually
-        // up-to-date.
-        $this->assertEquals(PHP_INT_MAX, $cache->getLastAppliedEventID());
-    }
-
     public function testClearStaticL2()
     {
         $l2 = new StaticL2();
