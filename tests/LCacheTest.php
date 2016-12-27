@@ -125,6 +125,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     protected function performTombstoneTest($l1)
     {
+        // This test is not for L1 - this tests integratino logick.
         $central = new Integrated($l1, new StaticL2());
 
         $dne = new Address('mypool', 'mykey-dne');
@@ -489,33 +490,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $l2 = new DatabaseL2($this->dbh);
     }
 
-    protected function performExistsTest($l1)
-    {
-        $myaddr = new Address('mybin', 'mykey');
-        $l1->set(1, $myaddr, 'myvalue');
-        $this->assertTrue($l1->exists($myaddr));
-        $l1->delete(2, $myaddr);
-        $this->assertFalse($l1->exists($myaddr));
-    }
-
-    public function testExistsAPCuL1()
-    {
-        $l1 = $this->l1Factory()->create('apcu', 'first');
-        $this->performExistsTest($l1);
-    }
-
-    public function testExistsStaticL1()
-    {
-        $l1 = $this->l1Factory()->create('static');
-        $this->performExistsTest($l1);
-    }
-
-    public function testExistsSQLiteL1()
-    {
-        $l1 = $this->l1Factory()->create('sqlite');
-        $this->performExistsTest($l1);
-    }
-
     public function testExistsIntegrated()
     {
         $this->createSchema();
@@ -536,19 +510,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $myaddr = new Address('mybin', 'mykey');
         $l2->set('mypool', $myaddr, 'myvalue', null, ['mytag']);
         $this->assertEquals('myvalue', $l2->get($myaddr));
-    }
-
-    public function testAPCuL1PoolIDs()
-    {
-        // Test unique ID generation.
-        $l1 = $this->l1Factory()->create('apcu');
-        $this->assertNotNull($l1->getPool());
-
-        // Test host-based generation.
-        $_SERVER['SERVER_ADDR'] = 'localhost';
-        $_SERVER['SERVER_PORT'] = '80';
-        $l1 = $this->l1Factory()->create('apcu');
-        $this->assertEquals('localhost-80', $l1->getPool());
     }
 
     protected function performL1HitMissTest($l1)

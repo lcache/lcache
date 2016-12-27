@@ -136,4 +136,26 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(0, $l1->getHits());
         $this->assertEquals(1, $l1->getMisses());
     }
+
+    public function testExists()
+    {
+        $l1 = $this->createL1();
+        $myaddr = new Address('mybin', 'mykey');
+
+        $l1->set(1, $myaddr, 'myvalue');
+        $this->assertTrue($l1->exists($myaddr));
+        $l1->delete(2, $myaddr);
+        $this->assertFalse($l1->exists($myaddr));
+    }
+
+    public function testPoolIDs()
+    {
+        // Test unique ID generation.
+        $this->assertNotNull($this->createL1()->getPool());
+
+        // Test host-based generation.
+        $_SERVER['SERVER_ADDR'] = 'localhost';
+        $_SERVER['SERVER_PORT'] = '80';
+        $this->assertEquals('localhost-80', $this->createL1()->getPool());
+    }
 }
