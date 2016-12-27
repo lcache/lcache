@@ -4,21 +4,23 @@ namespace LCache;
 
 class StaticL1 extends L1
 {
-    protected $hits;
-    protected $misses;
+    private static $cacheData = [];
+
     protected $key_overhead;
+
+    /** @var array Reference to the data array for the instance data pool. */
     protected $storage;
-    protected $last_applied_event_id;
 
-    public function __construct($pool = null)
+    public function __construct($pool, StateL1Interface $state)
     {
-        parent::__construct($pool);
+        parent::__construct($pool, $state);
 
-        $this->hits = 0;
-        $this->misses = 0;
         $this->key_overhead = [];
-        $this->storage = array();
-        $this->last_applied_event_id = null;
+
+        if (!isset(self::$cacheData[$this->pool])) {
+            self::$cacheData[$this->pool] = [];
+        }
+        $this->storage = &self::$cacheData[$this->pool];
     }
 
     public function getKeyOverhead(Address $address)
@@ -70,17 +72,18 @@ class StaticL1 extends L1
         }
 
         if (!array_key_exists($local_key, $this->storage)) {
-            $this->misses++;
+            $this->recordMiss();
             return null;
         }
         $entry = $this->storage[$local_key];
         if (!is_null($entry->expiration) && $entry->expiration < $_SERVER['REQUEST_TIME']) {
             unset($this->storage[$local_key]);
-            $this->misses++;
+            $this->recordMiss();
             return null;
         }
 
-        $this->hits++;
+        $this->recordHit();
+
         return $entry;
     }
 
@@ -89,8 +92,7 @@ class StaticL1 extends L1
         $local_key = $address->serialize();
         if ($address->isEntireCache()) {
             $this->storage = array();
-            $this->hits = 0;
-            $this->misses = 0;
+            $this->state->clear();
             return true;
         } elseif ($address->isEntireBin()) {
             foreach ($this->storage as $index => $value) {
@@ -103,27 +105,6 @@ class StaticL1 extends L1
         $this->setLastAppliedEventID($event_id);
         // @TODO: Consider adding "race" protection here, like for set.
         unset($this->storage[$local_key]);
-        return true;
-    }
-
-    public function getHits()
-    {
-        return $this->hits;
-    }
-
-    public function getMisses()
-    {
-        return $this->misses;
-    }
-
-    public function getLastAppliedEventID()
-    {
-        return $this->last_applied_event_id;
-    }
-
-    public function setLastAppliedEventID($eid)
-    {
-        $this->last_applied_event_id = $eid;
         return true;
     }
 }

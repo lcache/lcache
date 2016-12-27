@@ -7,15 +7,6 @@ class SQLiteL1 extends L1
     /** @var \PDO */
     private $dbh;
 
-    /** @var string */
-    private $statusKeyHits;
-
-    /** @var string */
-    private $statusKeyMisses;
-
-    /** @var string */
-    private $statusKeyLastAppliedEventId;
-
     protected static function tableExists(\PDO $dbh, $table_name)
     {
         try {
@@ -64,14 +55,10 @@ class SQLiteL1 extends L1
         return $dbh;
     }
 
-    public function __construct($pool = null)
+    public function __construct($pool, StateL1Interface $state)
     {
-        parent::__construct($pool);
-        $this->dbh = self::getDatabaseHandle($this->pool);
-
-        $this->statusKeyHits = 'lcache_status:' . $this->pool . ':hits';
-        $this->statusKeyMisses = 'lcache_status:' . $this->pool . ':misses';
-        $this->statusKeyLastAppliedEventId = 'lcache_status:' . $this->pool . ':last_applied_event_id';
+        parent::__construct($pool, $state);
+        $this->dbh = self::getDatabaseHandle($pool);
     }
 
     protected function pruneExpiredEntries()
@@ -108,7 +95,7 @@ class SQLiteL1 extends L1
         $sth->execute();
         $result = $sth->fetchObject();
 
-        if ($result === false) {
+        if (false === $result) {
             return 0;
         }
 
@@ -201,7 +188,7 @@ class SQLiteL1 extends L1
         // do this to simultaneously track useful overhead data but not unnecessarily
         // record reads after they massively outweigh writes for an address.
         // @TODO: Make this adapt to overhead thresholds.
-        if ($entry === false || $entry->reads < 10 * $entry->writes || $entry->reads < 10) {
+        if (false === $entry || $entry->reads < 10 * $entry->writes || $entry->reads < 10) {
             $sth = $this->dbh->prepare('UPDATE entries SET "reads" = "reads" + 1 WHERE "address" = :address');
             $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
             $sth->execute();
@@ -214,7 +201,7 @@ class SQLiteL1 extends L1
             }
         }
 
-        if ($entry === false) {
+        if (false === $entry) {
             $this->recordMiss();
             return null;
         }
@@ -235,8 +222,8 @@ class SQLiteL1 extends L1
             $sth = $this->dbh->prepare('DELETE FROM entries WHERE "address" LIKE :pattern');
             $sth->bindValue('pattern', $pattern, \PDO::PARAM_STR);
             $sth->execute();
-            apcu_store($this->statusKeyHits, 0);
-            apcu_store($this->statusKeyMisses, 0);
+
+            $this->state->clear();
             return true;
         }
 
@@ -245,65 +232,5 @@ class SQLiteL1 extends L1
         $sth->bindValue(':event_id', $event_id, \PDO::PARAM_INT);
         $sth->execute();
         return true;
-    }
-
-    // @TODO: Update hit/miss functions to either record nothing or fall back
-    //        to SQLite storage if APCu is not available.
-
-    protected function recordHit()
-    {
-        $success = false; // Make Scrutinizer happy.
-        apcu_inc($this->statusKeyHits, 1, $success);
-        if (!$success) {
-            // @TODO: Remove this fallback when we drop APCu 4.x support.
-            // @codeCoverageIgnoreStart
-            // Ignore coverage because (1) it's tested with other code and
-            // (2) APCu 5.x does not use it.
-            apcu_store($this->statusKeyHits, 1);
-            // @codeCoverageIgnoreEnd
-        }
-    }
-
-    protected function recordMiss()
-    {
-        $success = false; // Make Scrutinizer happy.
-        apcu_inc($this->statusKeyMisses, 1, $success);
-        if (!$success) {
-            // @TODO: Remove this fallback when we drop APCu 4.x support.
-            // @codeCoverageIgnoreStart
-            // Ignore coverage because (1) it's tested with other code and
-            // (2) APCu 5.x does not use it.
-            apcu_store($this->statusKeyMisses, 1);
-            // @codeCoverageIgnoreEnd
-        }
-    }
-
-    public function getHits()
-    {
-        $value = apcu_fetch($this->statusKeyHits);
-        return $value ? $value : 0;
-    }
-
-    public function getMisses()
-    {
-        $value = apcu_fetch($this->statusKeyMisses);
-        return $value ? $value : 0;
-    }
-
-    // @TODO: Update event ID tracking to either record fall back
-    //        to SQLite storage if APCu is not available.
-
-    public function getLastAppliedEventID()
-    {
-        $value = apcu_fetch($this->statusKeyLastAppliedEventId);
-        if ($value === false) {
-            $value = null;
-        }
-        return $value;
-    }
-
-    public function setLastAppliedEventID($eid)
-    {
-        return apcu_store($this->statusKeyLastAppliedEventId, $eid);
     }
 }
