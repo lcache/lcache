@@ -111,7 +111,7 @@
         
                                             <p class="no-description">No description</p>
                                     </div>
-                <div class="col-md-2"><small>from&nbsp;<a href="../LCache/LX.html#method_getHits"><abbr title="LCache\LX">LX</abbr></a></small></div>
+                <div class="col-md-2"></div>
             </div>
                     <div class="row">
                 <div class="col-md-2 type">
@@ -122,7 +122,7 @@
         
                                             <p class="no-description">No description</p>
                                     </div>
-                <div class="col-md-2"><small>from&nbsp;<a href="../LCache/LX.html#method_getMisses"><abbr title="LCache\LX">LX</abbr></a></small></div>
+                <div class="col-md-2"></div>
             </div>
                     <div class="row">
                 <div class="col-md-2 type">
@@ -160,10 +160,9 @@
                     
                 </div>
                 <div class="col-md-8 type">
-                    <a href="#method___construct">__construct</a>($pool = null)
+                    <a href="#method___construct">__construct</a>(string $pool, <a href="../LCache/StateL1Interface.html"><abbr title="LCache\StateL1Interface">StateL1Interface</abbr></a> $state)
         
-                                            <p class="no-description">No description</p>
-                                    </div>
+                                            <p>Constructor for all the L1 implementations.</p>                </div>
                 <div class="col-md-2"></div>
             </div>
                     <div class="row">
@@ -291,8 +290,8 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_getHits">
-        <div class="location">in <a href="../LCache/LX.html#method_getHits"><abbr title="LCache\LX">LX</abbr></a> at line         <a href="https://github.com/lcache/lcache/blob/master/src/LX.php#L11">line 11</a></div>
-        <code>    abstract                
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L52">line 52</a></div>
+        <code>                    
     <strong>getHits</strong>()
         </code>
     </h3>
@@ -310,8 +309,8 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_getMisses">
-        <div class="location">in <a href="../LCache/LX.html#method_getMisses"><abbr title="LCache\LX">LX</abbr></a> at line         <a href="https://github.com/lcache/lcache/blob/master/src/LX.php#L12">line 12</a></div>
-        <code>    abstract                
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L57">line 57</a></div>
+        <code>                    
     <strong>getMisses</strong>()
         </code>
     </h3>
@@ -438,23 +437,31 @@
             </div>
                     <div class="method-item">
                     <h3 id="method___construct">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L9">line 9</a></div>
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L21">line 21</a></div>
         <code>                    
-    <strong>__construct</strong>($pool = null)
+    <strong>__construct</strong>(string $pool, <a href="../LCache/StateL1Interface.html"><abbr title="LCache\StateL1Interface">StateL1Interface</abbr></a> $state)
         </code>
     </h3>
     <div class="details">
             
     
 
+                    <div class="method-description">
+                                    <p>Constructor for all the L1 implementations.</p>                                </div>
                 <div class="tags">
                             <h4>Parameters</h4>
 
                     <table class="table table-condensed">
                     <tr>
-                <td></td>
+                <td>string</td>
                 <td>$pool</td>
-                <td></td>
+                <td>Pool ID to group the cache data in.</td>
+            </tr>
+                    <tr>
+                <td><a href="../LCache/StateL1Interface.html"><abbr title="LCache\StateL1Interface">StateL1Interface</abbr></a></td>
+                <td>$state</td>
+                <td>State manager class. Used to collect hit/miss statistics as well as
+  the ID of the last cache mutation event.</td>
             </tr>
             </table>
 
@@ -467,8 +474,8 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_getLastAppliedEventID">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L26">line 26</a></div>
-        <code>    abstract                
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L27">line 27</a></div>
+        <code>                    
     <strong>getLastAppliedEventID</strong>()
         </code>
     </h3>
@@ -486,8 +493,8 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_setLastAppliedEventID">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L27">line 27</a></div>
-        <code>    abstract                
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L32">line 32</a></div>
+        <code>                    
     <strong>setLastAppliedEventID</strong>($event_id)
         </code>
     </h3>
@@ -515,7 +522,7 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_getPool">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L29">line 29</a></div>
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L37">line 37</a></div>
         <code>                    
     <strong>getPool</strong>()
         </code>
@@ -534,7 +541,7 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_set">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L34">line 34</a></div>
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L42">line 42</a></div>
         <code>                    
     <strong>set</strong>($event_id, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address, $value = null, $expiration = null)
         </code>
@@ -578,7 +585,7 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_isNegativeCache">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L39">line 39</a></div>
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L47">line 47</a></div>
         <code>    abstract                
     <strong>isNegativeCache</strong>(<a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
         </code>
@@ -607,7 +614,7 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_getKeyOverhead">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L40">line 40</a></div>
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L48">line 48</a></div>
         <code>    abstract                
     <strong>getKeyOverhead</strong>(<a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
         </code>
@@ -636,7 +643,7 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_setWithExpiration">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L41">line 41</a></div>
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L49">line 49</a></div>
         <code>    abstract                
     <strong>setWithExpiration</strong>($event_id, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address, $value, $created, $expiration = null)
         </code>
@@ -685,7 +692,7 @@
             </div>
                     <div class="method-item">
                     <h3 id="method_delete">
-        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L42">line 42</a></div>
+        <div class="location">at line         <a href="https://github.com/lcache/lcache/blob/master/src/L1.php#L50">line 50</a></div>
         <code>    abstract                
     <strong>delete</strong>($event_id, <a href="../LCache/Address.html"><abbr title="LCache\Address">Address</abbr></a> $address)
         </code>
