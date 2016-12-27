@@ -158,4 +158,19 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $_SERVER['SERVER_PORT'] = '80';
         $this->assertEquals('localhost-80', $this->createL1()->getPool());
     }
+
+    public function testHitMiss()
+    {
+        $event_id = 1;
+        $l1 = $this->createL1();
+        $myaddr = new Address('mybin', 'mykey');
+        list($hits, $misses) = [$l1->getHits(), $l1->getMisses()];
+
+        $l1->get($myaddr);
+        $this->assertEquals($misses + 1, $l1->getMisses());
+
+        $l1->set($event_id++, $myaddr, 'myvalue');
+        $l1->get($myaddr);
+        $this->assertEquals($hits + 1, $l1->getHits());
+    }
 }

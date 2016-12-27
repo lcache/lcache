@@ -512,37 +512,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals('myvalue', $l2->get($myaddr));
     }
 
-    protected function performL1HitMissTest($l1)
-    {
-        $myaddr = new Address('mybin', 'mykey');
-        $current_hits = $l1->getHits();
-        $current_misses = $l1->getMisses();
-        $current_event_id = 1;
-        $l1->get($myaddr);
-        $this->assertEquals($current_misses + 1, $l1->getMisses());
-        $l1->set($current_event_id++, $myaddr, 'myvalue');
-        $l1->get($myaddr);
-        $this->assertEquals($current_hits + 1, $l1->getHits());
-    }
-
-    public function testStaticL1HitMiss()
-    {
-        $l1 = $this->l1Factory()->create('static');
-        $this->performL1HitMissTest($l1);
-    }
-
-    public function testAPCuL1HitMiss()
-    {
-        $l1 = $this->l1Factory()->create('apcu', 'testAPCuL1HitMiss');
-        $this->performL1HitMissTest($l1);
-    }
-
-    public function testSQLiteL1HitMiss()
-    {
-        $l1 = $this->l1Factory()->create('sqlite');
-        $this->performL1HitMissTest($l1);
-    }
-
     public function testPoolIntegrated()
     {
         $l2 = new StaticL2();
