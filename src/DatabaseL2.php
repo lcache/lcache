@@ -34,17 +34,18 @@ class DatabaseL2 extends L2
     public function pruneReplacedEvents()
     {
         // No deletions, nothing to do.
-        if (empty($this->address_deletion_patterns)) {
-            return true;
-        }
+		if (empty($this->address_deletion_patterns[0])) {
+			return true;
+		}
 
         // De-dupe the deletion patterns.
         // @TODO: Have bin deletions replace key deletions?
         $deletions = array_values(array_unique($this->address_deletion_patterns));
 
-        $filler = implode(',', array_fill(0, count($deletions), '?'));
+		$filler = implode(',', array_fill(0, count($deletions), '?'));
+
         try {
-            $sth = $this->dbh->prepare('DELETE FROM ' . $this->prefixTable('lcache_events') .' WHERE "event_id" < ? AND "address" IN ('. $filler .')');
+            $sth = $this->dbh->prepare('DELETE FROM ' . $this->prefixTable('lcache_events') .' WHERE `event_id` < ? AND `address` IN ('. $filler .')');
             $sth->bindValue(1, $this->event_id_low_water, \PDO::PARAM_INT);
             foreach ($deletions as $i => $address) {
                 $sth->bindValue($i + 2, $address, \PDO::PARAM_STR);
@@ -68,7 +69,7 @@ class DatabaseL2 extends L2
     public function countGarbage()
     {
         try {
-            $sth = $this->dbh->prepare('SELECT COUNT(*) garbage FROM ' . $this->prefixTable('lcache_events') . ' WHERE "expiration" < :now');
+            $sth = $this->dbh->prepare('SELECT COUNT(*) garbage FROM ' . $this->prefixTable('lcache_events') . ' WHERE `expiration` < :now');
             $sth->bindValue(':now', $_SERVER['REQUEST_TIME'], \PDO::PARAM_INT);
             $sth->execute();
         } catch (\PDOException $e) {
@@ -82,11 +83,11 @@ class DatabaseL2 extends L2
 
     public function collectGarbage($item_limit = null)
     {
-        $sql = 'DELETE FROM ' . $this->prefixTable('lcache_events') . ' WHERE "expiration" < :now';
+        $sql = 'DELETE FROM ' . $this->prefixTable('lcache_events') . ' WHERE `expiration` < :now';
         // This is not supported by standard SQLite.
         // @codeCoverageIgnoreStart
         if (!is_null($item_limit)) {
-            $sql .= ' ORDER BY "event_id" LIMIT :item_limit';
+            $sql .= ' ORDER BY `event_id` LIMIT :item_limit';
         }
         // @codeCoverageIgnoreEnd
         try {
@@ -106,7 +107,7 @@ class DatabaseL2 extends L2
         return false;
     }
 
-    protected function queueDeletion(Address $address)
+    public function queueDeletion(Address $address)
     {
         assert(!$address->isEntireBin());
         $pattern = $address->serialize();
@@ -151,7 +152,7 @@ class DatabaseL2 extends L2
     public function getEntry(Address $address)
     {
         try {
-            $sth = $this->dbh->prepare('SELECT "event_id", "pool", "address", "value", "created", "expiration" FROM ' . $this->prefixTable('lcache_events') .' WHERE "address" = :address AND ("expiration" >= :now OR "expiration" IS NULL) ORDER BY "event_id" DESC LIMIT 1');
+            $sth = $this->dbh->prepare('SELECT `event_id`, `pool`, `address`, `value`, `created`, `expiration` FROM ' . $this->prefixTable('lcache_events') .' WHERE `address` = :address AND (`expiration` >= :now OR `expiration` IS NULL) ORDER BY `event_id` DESC LIMIT 1');
             $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
             $sth->bindValue(':now', $_SERVER['REQUEST_TIME'], \PDO::PARAM_INT);
             $sth->execute();
@@ -188,7 +189,7 @@ class DatabaseL2 extends L2
     // Returns the event entry. Currently used only for testing.
     public function getEvent($event_id)
     {
-        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->prefixTable('lcache_events') .' WHERE event_id = :event_id');
+        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->prefixTable('lcache_events') .' WHERE `event_id` = :event_id');
         $sth->bindValue(':event_id', $event_id, \PDO::PARAM_INT);
         $sth->execute();
         $event = $sth->fetchObject();
@@ -202,7 +203,7 @@ class DatabaseL2 extends L2
     public function exists(Address $address)
     {
         try {
-            $sth = $this->dbh->prepare('SELECT "event_id", ("value" IS NOT NULL) AS value_not_null, "value" FROM ' . $this->prefixTable('lcache_events') .' WHERE "address" = :address AND ("expiration" >= :now OR "expiration" IS NULL) ORDER BY "event_id" DESC LIMIT 1');
+            $sth = $this->dbh->prepare('SELECT `event_id`, (`value` IS NOT NULL) AS value_not_null, `value` FROM ' . $this->prefixTable('lcache_events') .' WHERE `address` = :address AND (`expiration` >= :now OR `expiration` IS NULL) ORDER BY `event_id` DESC LIMIT 1');
             $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
             $sth->bindValue(':now', $_SERVER['REQUEST_TIME'], \PDO::PARAM_INT);
             $sth->execute();
@@ -220,14 +221,14 @@ class DatabaseL2 extends L2
     public function debugDumpState()
     {
         echo PHP_EOL . PHP_EOL . 'Events:' . PHP_EOL;
-        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->prefixTable('lcache_events') . ' ORDER BY "event_id"');
+        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->prefixTable('lcache_events') . ' ORDER BY `event_id`');
         $sth->execute();
         while ($event = $sth->fetchObject()) {
             print_r($event);
         }
         echo PHP_EOL;
         echo 'Tags:' . PHP_EOL;
-        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->prefixTable('lcache_tags') . ' ORDER BY "tag"');
+        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->prefixTable('lcache_tags') . ' ORDER BY `tag`');
         $sth->execute();
         $tags_found = false;
         while ($event = $sth->fetchObject()) {
@@ -248,7 +249,7 @@ class DatabaseL2 extends L2
         }
 
         try {
-            $sth = $this->dbh->prepare('INSERT INTO ' . $this->prefixTable('lcache_events') . ' ("pool", "address", "value", "created", "expiration") VALUES (:pool, :address, :value, :now, :expiration)');
+            $sth = $this->dbh->prepare('INSERT INTO ' . $this->prefixTable('lcache_events') . ' (`pool`, `address`, `value`, `created`, `expiration`) VALUES (:pool, :address, :value, :now, :expiration)');
             $sth->bindValue(':pool', $pool, \PDO::PARAM_STR);
             $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
             $sth->bindValue(':value', $value, \PDO::PARAM_LOB);
@@ -265,7 +266,7 @@ class DatabaseL2 extends L2
         // deletions for shutdown.
         if ($address->isEntireBin() || $address->isEntireCache()) {
             $pattern = $address->serialize() . '%';
-            $sth = $this->dbh->prepare('DELETE FROM ' . $this->prefixTable('lcache_events') .' WHERE "event_id" < :new_event_id AND "address" LIKE :pattern');
+            $sth = $this->dbh->prepare('DELETE FROM ' . $this->prefixTable('lcache_events') .' WHERE `event_id` < :new_event_id AND `address` LIKE :pattern');
             $sth->bindValue(':new_event_id', $event_id, \PDO::PARAM_INT);
             $sth->bindValue(':pattern', $pattern, \PDO::PARAM_STR);
             $sth->execute();
@@ -280,7 +281,7 @@ class DatabaseL2 extends L2
         // @TODO: Turn into one query.
         foreach ($tags as $tag) {
             try {
-                $sth = $this->dbh->prepare('INSERT INTO ' . $this->prefixTable('lcache_tags') . ' ("tag", "event_id") VALUES (:tag, :new_event_id)');
+                $sth = $this->dbh->prepare('INSERT INTO ' . $this->prefixTable('lcache_tags') . ' (`tag`, `event_id`) VALUES (:tag, :new_event_id)');
                 $sth->bindValue(':tag', $tag, \PDO::PARAM_STR);
                 $sth->bindValue(':new_event_id', $event_id, \PDO::PARAM_INT);
                 $sth->execute();
@@ -303,7 +304,7 @@ class DatabaseL2 extends L2
     {
         try {
             // @TODO: Convert this to using a subquery to only match with the latest event_id.
-            $sth = $this->dbh->prepare('SELECT DISTINCT "address" FROM ' . $this->prefixTable('lcache_events') . ' e INNER JOIN ' . $this->prefixTable('lcache_tags') . ' t ON t.event_id = e.event_id WHERE "tag" = :tag');
+            $sth = $this->dbh->prepare('SELECT DISTINCT `address` FROM ' . $this->prefixTable('lcache_events') . ' e INNER JOIN ' . $this->prefixTable('lcache_tags') . ' t ON t.event_id = e.event_id WHERE `tag` = :tag');
             $sth->bindValue(':tag', $tag, \PDO::PARAM_STR);
             $sth->execute();
         } catch (\PDOException $e) {
@@ -323,7 +324,7 @@ class DatabaseL2 extends L2
     {
         // Find the matching keys and create tombstones for them.
         try {
-            $sth = $this->dbh->prepare('SELECT DISTINCT "address" FROM ' . $this->prefixTable('lcache_events') . ' e INNER JOIN ' . $this->prefixTable('lcache_tags') . ' t ON t.event_id = e.event_id WHERE "tag" = :tag');
+            $sth = $this->dbh->prepare('SELECT DISTINCT `address` FROM ' . $this->prefixTable('lcache_events') . ' e INNER JOIN ' . $this->prefixTable('lcache_tags') . ' t ON t.event_id = e.event_id WHERE `tag` = :tag');
             $sth->bindValue(':tag', $tag, \PDO::PARAM_STR);
             $sth->execute();
         } catch (\PDOException $e) {
@@ -357,7 +358,7 @@ class DatabaseL2 extends L2
         // to the current high-water mark.
         if (is_null($last_applied_event_id)) {
             try {
-                $sth = $this->dbh->prepare('SELECT "event_id" FROM ' . $this->prefixTable('lcache_events') . ' ORDER BY "event_id" DESC LIMIT 1');
+                $sth = $this->dbh->prepare('SELECT `event_id` FROM ' . $this->prefixTable('lcache_events') . ' ORDER BY `event_id` DESC LIMIT 1');
                 $sth->execute();
             } catch (\PDOException $e) {
                 $this->logSchemaIssueOrRethrow('Failed to initialize local event application status', $e);
@@ -374,7 +375,7 @@ class DatabaseL2 extends L2
 
         $applied = 0;
         try {
-            $sth = $this->dbh->prepare('SELECT "event_id", "pool", "address", "value", "created", "expiration" FROM ' . $this->prefixTable('lcache_events') . ' WHERE "event_id" > :last_applied_event_id AND "pool" <> :exclude_pool ORDER BY event_id');
+            $sth = $this->dbh->prepare('SELECT `event_id`, `pool`, `address`, `value`, `created`, `expiration` FROM ' . $this->prefixTable('lcache_events') . ' WHERE `event_id` > :last_applied_event_id AND `pool` <> :exclude_pool ORDER BY event_id');
             $sth->bindValue(':last_applied_event_id', $last_applied_event_id, \PDO::PARAM_INT);
             $sth->bindValue(':exclude_pool', $l1->getPool(), \PDO::PARAM_STR);
             $sth->execute();
