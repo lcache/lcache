@@ -4,6 +4,22 @@ namespace LCache;
 
 class StaticL2 extends L2
 {
+//    /**
+//     * @var int Shared static counter for the events managed by the driver.
+//     */
+//    private static $currentEventId = 0;
+//
+//    /**
+//     * @var array Shared static collection that will contain all of the events.
+//     */
+//    private static $allEvents = [];
+//
+//    /**
+//     * @var array
+//     *   Shared static collection that will contain for all managed cache tags.
+//     */
+//    private static $allTags = [];
+
     protected $events;
     protected $current_event_id;
     protected $hits;
@@ -12,11 +28,16 @@ class StaticL2 extends L2
 
     public function __construct()
     {
-        $this->events = array();
+//        // Share the data
+//        $this->current_event_id = &self::$currentEventId;
+//        $this->events = &self::$allEvents;
+//        $this->tags = &self::$allTags;
+
+        $this->tags = [];
+        $this->events = [];
         $this->current_event_id = 0;
         $this->hits = 0;
         $this->misses = 0;
-        $this->tags = [];
     }
 
     public function countGarbage()
@@ -44,7 +65,10 @@ class StaticL2 extends L2
         }
     }
 
-    // Returns an LCache\Entry
+
+    /**
+     * {inheritDock}
+     */
     public function getEntry(Address $address)
     {
         $events = array_filter($this->events, function (Entry $entry) use ($address) {
@@ -90,16 +114,16 @@ class StaticL2 extends L2
         }
         $this->events[$this->current_event_id] = new Entry($this->current_event_id, $pool, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
 
+        // TODO: Prunning older events to reduce memory driver needs. Check the
+        // equivalent method in DatabaseL2 for the idea to be implemented here.
+        // This will be needed for long-runing processes that use the driver.
+
         // Clear existing tags linked to the item. This is much more
         // efficient with database-style indexes.
         foreach ($this->tags as $tag => $addresses) {
-            $addresses_to_keep = [];
-            foreach ($addresses as $current_address) {
-                if ($address !== $current_address) {
-                    $addresses_to_keep[] = $current_address;
-                }
-            }
-            $this->tags[$tag] = $addresses_to_keep;
+            $this->tags[$tag] = array_filter($addresses, function($current) use ($address) {
+                return $address !== $current;
+            });
         }
 
         // Set the tags on the new item.
@@ -112,6 +136,38 @@ class StaticL2 extends L2
         }
 
         return $this->current_event_id;
+    }
+
+    /**
+     * Implemented based on the one in DatabaseL2 class.
+     *
+     * @see DatabaseL2::getEvent()
+     *
+     * @param int $eventId
+     * @return Entry
+     */
+    public function getEvent($eventId)
+    {
+        if (!isset($this->events[$eventId])) {
+            return null;
+        }
+        $event = clone $this->events[$eventId];
+        $event->value = unserialize($event->value);
+        return$event;
+    }
+
+    /**
+     * Implemented based on the one in DatabaseL2 class.
+     *
+     * @see DatabaseL2::pruneReplacedEvents()
+     *
+     * @return boolean
+     */
+    public function pruneReplacedEvents()
+    {
+        // No pruning needed in this driver.
+        // In the end of the request, everyhting is killed.
+        return true;
     }
 
     public function delete($pool, Address $address)

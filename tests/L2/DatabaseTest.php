@@ -8,6 +8,8 @@
 
 namespace LCache\L2;
 
+use LCache\Address;
+
 /**
  * Description of DatabaseTest
  *
@@ -15,51 +17,57 @@ namespace LCache\L2;
  */
 class DatabaseTest extends \LCache\L2CacheTest
 {
-    use \PHPUnit_Extensions_Database_TestCase_Trait {
-        \PHPUnit_Extensions_Database_TestCase_Trait::setUp as traitSetUp;
+    use \LCache\Utils\LCacheDBTestTrait;
+
+    protected function l2FactoryOptions()
+    {
+        $this->createSchema($this->dbPrefix);
+        return ['database', [
+            'handle' => $this->dbh,
+            'prefix' => $this->dbPrefix,
+        ]];
     }
 
-    /**
-     * Needed by PHPUnit_Extensions_Database_TestCase_Trait.
-     *
-     * @return PHPUnit_Extensions_Database_DB_IDatabaseConnection
-     */
-    protected function getConnection()
+    public function testDatabaseL2Prefix()
     {
-        $this->dbh = new \PDO('sqlite::memory:');
-        $this->dbh->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $connection = $this->createDefaultDBConnection($this->dbh, ':memory:');
-        return $connection;
+        $this->dbPrefix = 'myprefix_';
+        $myaddr = new Address('mybin', 'mykey');
+
+        $l2 = $this->createL2();
+
+        $l2->set('mypool', $myaddr, 'myvalue', null, ['mytag']);
+        $this->assertEquals('myvalue', $l2->get($myaddr));
     }
 
-    /**
-     * Needed by PHPUnit_Extensions_Database_TestCase_Trait.
-     *
-     * @return PHPUnit_Extensions_Database_DataSet_IDataSet
-     */
-    protected function getDataSet()
+    public function testCleanupAfterWrite()
     {
-        return new \PHPUnit_Extensions_Database_DataSet_DefaultDataSet();
-    }
+        $myaddr = new Address('mybin', 'mykey');
 
-    protected function setUp()
-    {
-        $this->traitSetUp();
-    }
+        // Write to the key with the first client.
+        $l2_client_a = $this->createL2();
+        $event_id_a = $l2_client_a->set('mypool', $myaddr, 'myvalue');
 
-    protected function createSchema($prefix = '')
-    {
-        $this->dbh->exec('PRAGMA foreign_keys = ON');
+        // Verify that the first event exists and has the right value.
+        $event = $l2_client_a->getEvent($event_id_a);
+        $this->assertEquals('myvalue', $event->value);
 
-        $this->dbh->exec('CREATE TABLE ' . $prefix . 'lcache_events("event_id" INTEGER PRIMARY KEY AUTOINCREMENT, "pool" TEXT NOT NULL, "address" TEXT, "value" BLOB, "expiration" INTEGER, "created" INTEGER NOT NULL)');
-        $this->dbh->exec('CREATE INDEX ' . $prefix . 'latest_entry ON ' . $prefix . 'lcache_events ("address", "event_id")');
+        // Use a second client. This gives us a fresh event_id_low_water,
+        // just like a new PHP request.
+        $l2_client_b = $this->createL2();
 
-        // @TODO: Set a proper primary key and foreign key relationship.
-        $this->dbh->exec('CREATE TABLE ' . $prefix . 'lcache_tags("tag" TEXT, "event_id" INTEGER, PRIMARY KEY ("tag", "event_id"), FOREIGN KEY("event_id") REFERENCES ' . $prefix . 'lcache_events("event_id") ON DELETE CASCADE)');
-        $this->dbh->exec('CREATE INDEX ' . $prefix . 'rewritten_entry ON ' . $prefix . 'lcache_tags ("event_id")');
-    }
+        // Write to the same key with the second client.
+        $event_id_b = $l2_client_b->set('mypool', $myaddr, 'myvalue2');
 
-    public function testItTest()
-    {
+        // Verify that the second event exists and has the right value.
+        $event = $l2_client_b->getEvent($event_id_b);
+        $this->assertEquals('myvalue2', $event->value);
+
+        // Call the same method as on destruction. This second client should
+        // now prune any writes to the key from earlier requests.
+        $l2_client_b->pruneReplacedEvents();
+
+        // Verify that the first event no longer exists.
+        $event = $l2_client_b->getEvent($event_id_a);
+        $this->assertNull($event);
     }
 }

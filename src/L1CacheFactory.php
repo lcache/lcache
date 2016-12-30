@@ -10,6 +10,9 @@ namespace LCache;
 /**
  * Class encapsulating the creation logic for all L1 cache driver instances.
  *
+ * @todo: Factor-out the pool generation logic. It should be accessible for L2
+ * factory implementations also. (maybe)
+ *
  * @author ndobromirov
  */
 class L1CacheFactory

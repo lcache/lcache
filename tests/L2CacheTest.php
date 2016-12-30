@@ -16,7 +16,17 @@ namespace LCache;
 abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
 {
 
-    abstract protected function createL2();
+    abstract protected function l2FactoryOptions();
+
+    /**
+     * @return L2
+     */
+    protected function createL2()
+    {
+        $callback = [new L2CacheFactory(), 'create'];
+
+        return call_user_func_array($callback, $this->l2FactoryOptions());
+    }
 
     /**
      * https://phpunit.de/manual/3.7/en/writing-tests-for-phpunit.html#writing-tests-for-phpunit.data-providers
@@ -28,8 +38,43 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         return ['apcu', 'static', 'sqlite'];
     }
 
-    public function l1Factory()
+    /**
+     *
+     * @param string $driverName
+     * @param string $customPool
+     * @return L1
+     */
+    public function createL1($driverName, $customPool = null)
     {
-        return new L1CacheFactory();
+        return (new L1CacheFactory())->create($driverName, $customPool);
+    }
+
+    public function testExists()
+    {
+        $l2 = $this->createL2();
+        $myaddr = new Address('mybin', 'mykey');
+
+        $l2->set('mypool', $myaddr, 'myvalue');
+        $this->assertTrue($l2->exists($myaddr));
+        $l2->delete('mypool', $myaddr);
+        $this->assertFalse($l2->exists($myaddr));
+    }
+
+    public function testEmptyCleanUp()
+    {
+        $l2 = $this->createL2();
+    }
+
+    public function testBatchDeletion()
+    {
+        $l2 = $this->createL2();
+
+        $myaddr = new Address('mybin', 'mykey');
+        $l2->set('mypool', $myaddr, 'myvalue');
+
+        $mybin = new Address('mybin', null);
+        $l2->delete('mypool', $mybin);
+
+        $this->assertNull($l2->get($myaddr));
     }
 }

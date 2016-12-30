@@ -7,6 +7,17 @@ namespace LCache;
  */
 abstract class LX
 {
+    /**
+     * Get a cache entry based on address instance.
+     *
+     * @param \LCache\Address $address
+     *   Address to lookup the entry.
+     * @return \LCache\Entry|null
+     *   The entry found or null (on cache miss).
+     *
+     * @throws UnserializationException
+     *   When the data stored in cache is in invalid format.
+     */
     abstract public function getEntry(Address $address);
     abstract public function getHits();
     abstract public function getMisses();

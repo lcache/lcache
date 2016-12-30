@@ -12,6 +12,16 @@ final class Entry
     public $expiration;
     public $tags;
 
+    /**
+     *
+     * @param type $event_id
+     * @param type $pool
+     * @param \LCache\Address $address
+     * @param type $value
+     * @param type $created
+     * @param type $expiration
+     * @param array $tags
+     */
     public function __construct($event_id, $pool, Address $address, $value, $created, $expiration = null, array $tags = [])
     {
         $this->event_id = $event_id;
