@@ -121,7 +121,7 @@ class StaticL2 extends L2
         // Clear existing tags linked to the item. This is much more
         // efficient with database-style indexes.
         foreach ($this->tags as $tag => $addresses) {
-            $this->tags[$tag] = array_filter($addresses, function($current) use ($address) {
+            $this->tags[$tag] = array_filter($addresses, function ($current) use ($address) {
                 return $address !== $current;
             });
         }

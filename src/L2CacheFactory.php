@@ -68,7 +68,8 @@ class L2CacheFactory
      * @return L2
      *   Concrete descendant of the L2 abstract.
      */
-    public function create($name, array $options = []) {
+    public function create($name, array $options = [])
+    {
         $factoryName = 'create' . $name;
         if (!method_exists($this, $factoryName)) {
             $factoryName = 'createStatic';
@@ -81,7 +82,8 @@ class L2CacheFactory
         return $l1CacheInstance;
     }
 
-    protected function createStatic($options) {
+    protected function createStatic($options)
+    {
         return new StaticL2();
     }
 
@@ -94,7 +96,8 @@ class L2CacheFactory
      * @param array $options
      * @return \LCache\DatabaseL2
      */
-    protected function createDatabase($options) {
+    protected function createDatabase($options)
+    {
         // Apply defaults.
         $options += ['prefix' => '', 'log' => false];
         return new DatabaseL2(

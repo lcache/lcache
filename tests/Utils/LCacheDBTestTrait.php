@@ -70,7 +70,7 @@ trait LCacheDBTestTrait
      */
     protected function createSchema($prefix = '')
     {
-        if (!$this->tablesCreated) {
+        if ($this->tablesCreated) {
             return;
         }
         $this->dbh->exec('PRAGMA foreign_keys = ON');
