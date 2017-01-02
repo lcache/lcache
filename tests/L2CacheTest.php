@@ -23,9 +23,10 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
      */
     protected function createL2()
     {
-        $callback = [new L2CacheFactory(), 'create'];
-
-        return call_user_func_array($callback, $this->l2FactoryOptions());
+        list ($name, $options) = $this->l2FactoryOptions();
+        $factory = new L2CacheFactory([$name => $options]);
+        $l2 = $factory->create($name);
+        return $l2;
     }
 
     /**

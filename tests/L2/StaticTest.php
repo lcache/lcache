@@ -18,6 +18,6 @@ class StaticTest extends \LCache\L2CacheTest
 
     protected function l2FactoryOptions()
     {
-        return ['static'];
+        return ['static', []];
     }
 }

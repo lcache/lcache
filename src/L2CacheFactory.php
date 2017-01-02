@@ -23,11 +23,14 @@ class L2CacheFactory
      * @see L2CacheFactory::setDriverOptions()
      *
      * @param array $driverOptions
-     *   Options keyed by driver name.
+     *   Options for each driver, keyed by driver name.
      */
     public function __construct(array $driverOptions = [])
     {
-        $this->setDriverOptions($driverOptions);
+        $this->options = [];
+        foreach ($driverOptions as $name => $options) {
+            $this->setDriverOptions($name, $options);
+        }
     }
 
     /**
@@ -35,13 +38,13 @@ class L2CacheFactory
      *
      * Allows the configuration of driver options after factory instantiation.
      *
-     * @param array $driverOptions
+     * @param array $options
      *   Options keyed by driver name.
      *   Example: ['driver_1' => ['option_1' => 'value_1', ...], ...]
      */
-    public function setDriverOptions($driverOptions)
+    public function setDriverOptions($name, $options)
     {
-        $this->options = $driverOptions;
+        $this->options[$name] = $options;
     }
 
     /**
@@ -52,9 +55,9 @@ class L2CacheFactory
      * @return array
      *   The aggregated configurations data for all drivers.
      */
-    public function getDriverOptions()
+    public function getDriverOptions($name)
     {
-        return $this->options;
+        return isset($this->options[$name]) ? $this->options[$name] : [];
     }
 
     /**
@@ -75,9 +78,7 @@ class L2CacheFactory
             $factoryName = 'createStatic';
         }
 
-        $defaults = isset($this->options[$name]) ? $this->options[$name] : [];
-        $driverOptions = array_merge($defaults, $options);
-
+        $driverOptions = array_merge($this->getDriverOptions($name), $options);
         $l1CacheInstance = call_user_func([$this, $factoryName], $driverOptions);
         return $l1CacheInstance;
     }
