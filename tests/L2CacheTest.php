@@ -77,4 +77,12 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
 
         $this->assertNull($l2->get($myaddr));
     }
+
+    public function testL2Factory()
+    {
+        $factory = new L2CacheFactory();
+        $staticL1 = $factory->create('static');
+        $invalidL1 = $factory->create('invalid_cache_driver');
+        $this->assertEquals(get_class($staticL1), get_class($invalidL1));
+    }
 }

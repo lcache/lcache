@@ -139,10 +139,11 @@ class StaticL2 extends L2
     }
 
     /**
-     * Implemented based on the one in DatabaseL2 class.
+     * Implemented based on the one in DatabaseL2 class (unused).
+     *
+     * @codeCoverageIgnore
      *
      * @see DatabaseL2::getEvent()
-     *
      * @param int $eventId
      * @return Entry
      */
@@ -157,9 +158,11 @@ class StaticL2 extends L2
     }
 
     /**
-     * Implemented based on the one in DatabaseL2 class.
+     * Implemented based on the one in DatabaseL2 class (unused).
      *
      * @see DatabaseL2::pruneReplacedEvents()
+     *
+     * @codeCoverageIgnore
      *
      * @return boolean
      */

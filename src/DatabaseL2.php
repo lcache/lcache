@@ -12,10 +12,20 @@ class DatabaseL2 extends L2
 
     /** @var \PDO Database handle object. */
     protected $dbh;
+
+    /** @var bool */
     protected $log_locally;
+
+    /** @var array List of errors that are logged. */
     protected $errors;
+
+    /** @var string */
     protected $table_prefix;
+
+    /** @var array Aggregated list of addresses to be deleted in bulk. */
     protected $address_deletion_patterns;
+
+    /** @var int The first event ID triggering a delete during the request. */
     protected $event_id_low_water;
 
     public function __construct($dbh, $table_prefix = '', $log_locally = false)
