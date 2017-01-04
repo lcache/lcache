@@ -57,7 +57,13 @@ class StaticL1 extends L1
     public function isNegativeCache(Address $address)
     {
         $local_key = $address->serialize();
-        return (isset($this->storage[$local_key]) && is_null($this->storage[$local_key]->value));
+
+        $is_negative_cache = isset($this->storage[$local_key])
+            && ($entry = $this->storage[$local_key])
+            && null === $entry->value
+            && !$entry->isExpired();
+
+        return $is_negative_cache;
     }
 
     public function getEntry(Address $address)

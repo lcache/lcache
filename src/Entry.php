@@ -56,4 +56,10 @@ final class Entry
         }
         return 0;
     }
+
+    public function isExpired()
+    {
+        return $this->expiration !== null
+            && $this->expiration < $_SERVER['REQUEST_TIME'];
+    }
 }
