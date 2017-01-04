@@ -287,6 +287,11 @@ class DatabaseL2 extends L2
 
     /**
      * @todo
+     *   Should we consider transactions here? We are doing 3 queries: 1. Add an
+     *   event, 2. Delete (if deemed so) and 3. Add tags (if any). All of that
+     *   should behave as a single operation in DB. If DB driver is not
+     *   supporting that - it should be emulated.
+     * @todo
      *   Consider having interface change here, so we do not have all this
      *   input parameters, but a single Entry instance instaead. It has
      *   everything already in it.
@@ -333,16 +338,23 @@ class DatabaseL2 extends L2
         }
 
         // Store any new cache tags.
-        // @TODO: Turn into one query.
-        foreach ($tags as $tag) {
+        if (!empty($tags)) {
             try {
+                // Unify tags to avoid duplicate keys.
+                $tags = array_keys(array_flip($tags));
+
+                // TODO: Consider splitting to multiple multi-row queries.
+                // This might be needed when inserting MANY tags for a key.
+
                 $sql = 'INSERT INTO ' . $this->tagsTable
                     . ' ("tag", "event_id")'
-                    . ' VALUES'
-                    . ' (:tag, :new_event_id)';
+                    . ' VALUES '
+                    . implode(',', array_fill(0, count($tags), '(?,?)'));
                 $sth = $this->dbh->prepare($sql);
-                $sth->bindValue(':tag', $tag, \PDO::PARAM_STR);
-                $sth->bindValue(':new_event_id', $event_id, \PDO::PARAM_INT);
+                foreach ($tags as $index => $tag) {
+                    $sth->bindValue($index * 2 + 1, $tag, \PDO::PARAM_STR);
+                    $sth->bindValue($index * 2 + 2, $event_id, \PDO::PARAM_INT);
+                }
                 $sth->execute();
             } catch (\PDOException $e) {
                 $this->logSchemaIssueOrRethrow('Failed to associate cache tags', $e);
@@ -359,6 +371,16 @@ class DatabaseL2 extends L2
         return $event_id;
     }
 
+    /**
+     * Initializes a generator for iterating over tag addresses one by one.
+     *
+     * @param string $tag
+     *   Tag to search the addresses for.
+     *
+     * @return \Generator|null
+     *   When a successfully execuded query is done an activated generator
+     *   instance is returned. Otherwise NULL.
+     */
     private function getAddressesForTagGenerator($tag)
     {
         try {
@@ -395,12 +417,12 @@ class DatabaseL2 extends L2
 
     public function deleteTag(L1 $l1, $tag)
     {
-        if (($generator = $this->getAddressesForTagGenerator($tag)) === null) {
+        if (($addressGenerator = $this->getAddressesForTagGenerator($tag)) === null) {
             return null;
         }
 
         $last_applied_event_id = null;
-        foreach ($generator as $address) {
+        foreach ($addressGenerator as $address) {
             $last_applied_event_id = $this->delete($l1->getPool(), $address);
             $l1->delete($last_applied_event_id, $address);
         }
