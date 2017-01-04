@@ -26,6 +26,12 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         return $this->createDefaultDBConnection($this->dbh, ':memory:');
     }
 
+    protected function setUp()
+    {
+        parent::setUp();
+        StaticL2::resetStorageState();
+    }
+
     protected function createSchema($prefix = '')
     {
         $this->dbh->exec('PRAGMA foreign_keys = ON');

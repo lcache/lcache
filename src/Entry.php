@@ -35,7 +35,7 @@ final class Entry
 
     /**
      * Return the Address for this entry.
-     * @return Address
+     * @return \LCache\Address
      */
     public function getAddress()
     {

@@ -268,12 +268,14 @@ class DatabaseL2 extends L2
         while ($event = $sth->fetchObject()) {
             print_r($event);
         }
+        unset($sth);
         echo PHP_EOL;
+
         echo 'Tags:' . PHP_EOL;
-        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->tagsTable . ' ORDER BY "tag"');
-        $sth->execute();
+        $sth2 = $this->dbh->prepare('SELECT * FROM ' . $this->tagsTable . ' ORDER BY "tag"');
+        $sth2->execute();
         $tags_found = false;
-        while ($event = $sth->fetchObject()) {
+        while ($event = $sth2->fetchObject()) {
             print_r($event);
             $tags_found = true;
         }

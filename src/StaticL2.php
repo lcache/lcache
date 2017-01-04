@@ -4,21 +4,22 @@ namespace LCache;
 
 class StaticL2 extends L2
 {
-//    /**
-//     * @var int Shared static counter for the events managed by the driver.
-//     */
-//    private static $currentEventId = 0;
-//
-//    /**
-//     * @var array Shared static collection that will contain all of the events.
-//     */
-//    private static $allEvents = [];
-//
-//    /**
-//     * @var array
-//     *   Shared static collection that will contain for all managed cache tags.
-//     */
-//    private static $allTags = [];
+    /**
+     * @var int Shared static counter for the events managed by the driver.
+     */
+    private static $currentEventId = 0;
+
+    /**
+     * @var array Shared static collection that will contain all of the events.
+     */
+    private static $allEvents = [];
+
+    /**
+     * @var array
+     *   Shared static collection that will contain for all managed cache tags.
+     */
+    private static $allTags = [];
+
 
     protected $events;
     protected $current_event_id;
@@ -28,16 +29,25 @@ class StaticL2 extends L2
 
     public function __construct()
     {
-//        // Share the data
-//        $this->current_event_id = &self::$currentEventId;
-//        $this->events = &self::$allEvents;
-//        $this->tags = &self::$allTags;
+        // Share the data
+        $this->current_event_id = &self::$currentEventId;
+        $this->events = &self::$allEvents;
+        $this->tags = &self::$allTags;
 
-        $this->tags = [];
-        $this->events = [];
-        $this->current_event_id = 0;
         $this->hits = 0;
         $this->misses = 0;
+    }
+
+    /**
+     * Testing utility.
+     *
+     * Used to reset the shared static state during a single proccess execution.
+     */
+    public static function resetStorageState()
+    {
+        static::$allTags = [];
+        static::$allEvents = [];
+        static::$currentEventId = 0;
     }
 
     public function countGarbage()
@@ -112,14 +122,22 @@ class StaticL2 extends L2
         if (!$value_is_serialized) {
             $value = serialize($value);
         }
+
+        // Prunning older events to reduce the driver's memory needs.
+        $addressEvents = array_filter($this->events, function (Entry $entry) use ($address) {
+            return $entry->getAddress()->isMatch($address);
+        });
+        foreach ($addressEvents as $event_to_delete) {
+            /* @var $event_to_delete Entry */
+            unset($this->events[$event_to_delete->event_id]);
+        }
+        unset($addressEvents, $event_to_delete);
+
+        // Add the new address event entry.
         $this->events[$this->current_event_id] = new Entry($this->current_event_id, $pool, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
 
-        // TODO: Prunning older events to reduce memory driver needs. Check the
-        // equivalent method in DatabaseL2 for the idea to be implemented here.
-        // This will be needed for long-runing processes that use the driver.
-
-        // Clear existing tags linked to the item. This is much more
-        // efficient with database-style indexes.
+        // Clear existing tags linked to the item.
+        // This is much more efficient with database-style indexes.
         foreach ($this->tags as $tag => $addresses) {
             $this->tags[$tag] = array_filter($addresses, function ($current) use ($address) {
                 return $address !== $current;

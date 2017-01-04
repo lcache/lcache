@@ -86,4 +86,37 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         $invalidL1 = $factory->create('invalid_cache_driver');
         $this->assertEquals(get_class($staticL1), get_class($invalidL1));
     }
+
+
+    public function testCleanupAfterWrite()
+    {
+        $myaddr = new Address('mybin', 'mykey');
+
+        // Write to the key with the first client.
+        $l2_client_a = $this->createL2();
+        $event_id_a = $l2_client_a->set('mypool', $myaddr, 'myvalue');
+
+        // Verify that the first event exists and has the right value.
+        $event = $l2_client_a->getEvent($event_id_a);
+        $this->assertEquals('myvalue', $event->value);
+
+        // Use a second client. This gives us a fresh event_id_low_water,
+        // just like a new PHP request.
+        $l2_client_b = $this->createL2();
+
+        // Write to the same key with the second client.
+        $event_id_b = $l2_client_b->set('mypool', $myaddr, 'myvalue2');
+
+        // Verify that the second event exists and has the right value.
+        $event = $l2_client_b->getEvent($event_id_b);
+        $this->assertEquals('myvalue2', $event->value);
+
+        // Call the same method as on destruction. This second client should
+        // now prune any writes to the key from earlier requests.
+        $l2_client_b->pruneReplacedEvents();
+
+        // Verify that the first event no longer exists.
+        $event = $l2_client_b->getEvent($event_id_a);
+        $this->assertNull($event);
+    }
 }

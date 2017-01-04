@@ -16,6 +16,12 @@ namespace LCache\L2;
 class StaticTest extends \LCache\L2CacheTest
 {
 
+    protected function setUp()
+    {
+        parent::setUp();
+        \LCache\StaticL2::resetStorageState();
+    }
+
     protected function l2FactoryOptions()
     {
         return ['static', []];

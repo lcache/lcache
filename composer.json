@@ -32,7 +32,8 @@
         "cbf": "phpcbf --standard=PSR2 -n src",
         "api": "PATH=$HOME/bin:$PATH sami.phar --ansi update sami-config.php",
         "sami-install": "mkdir -p $HOME/bin && curl --output $HOME/bin/sami.phar http://get.sensiolabs.org/sami.phar && chmod +x $HOME/bin/sami.phar",
-        "test": "phpunit"
+        "test": "phpunit",
+        "test-failing": "phpunit --group failing"
     },
     "extra": {
         "branch-alias": {
