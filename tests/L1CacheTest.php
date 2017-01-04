@@ -208,4 +208,15 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $l1->get($myaddr2);
         $this->assertEquals(-1, $l1->getKeyOverhead($myaddr2));
     }
+
+    public function testNegativeCache()
+    {
+        $delta = 10;
+        $l1 = $this->createL1();
+        $now = $_SERVER['REQUEST_TIME'];
+        $myaddr = new Address('mybin', 'mykey');
+
+        $this->assertTrue($l1->set(1, $myaddr, null, $now - $delta));
+        $this->assertFalse($l1->isNegativeCache($myaddr));
+    }
 }

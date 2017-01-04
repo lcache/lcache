@@ -62,4 +62,9 @@ class NullTest extends \LCache\L1CacheTest
     {
         // Not relevant for NullL1 class.
     }
+
+    public function testNegativeCache()
+    {
+        // Not relevant for NullL1 class.
+    }
 }
