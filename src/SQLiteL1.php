@@ -36,7 +36,14 @@ class SQLiteL1 extends L1
     {
         return [
             // Table creation.
-            'CREATE TABLE IF NOT EXISTS entries("address" TEXT PRIMARY KEY, "value" BLOB, "expiration" INTEGER, "created" INTEGER, "event_id" INTEGER NOT NULL DEFAULT 0, "reads" INTEGER NOT NULL DEFAULT 0, "writes" INTEGER NOT NULL DEFAULT 0)',
+            'CREATE TABLE IF NOT EXISTS entries('
+            . ' "address" TEXT PRIMARY KEY, '
+            . ' "value" BLOB, "expiration" INTEGER, '
+            . ' "created" INTEGER, '
+            . ' "event_id" INTEGER NOT NULL DEFAULT 0, '
+            . ' "reads" INTEGER NOT NULL DEFAULT 0, '
+            . ' "writes" INTEGER NOT NULL DEFAULT 0'
+            . ')',
 
             // Index creation.
             'CREATE INDEX IF NOT EXISTS expiration ON entries ("expiration")',
@@ -109,7 +116,11 @@ class SQLiteL1 extends L1
             $serialized_value = serialize($value);
         }
 
-        $sth = $this->dbh->prepare('INSERT OR IGNORE INTO entries ("address", "value", "expiration", "created", "event_id", "writes") VALUES (:address, :value, :expiration, :created, :event_id, 1)');
+        $sth = $this->dbh->prepare(''
+            . 'INSERT OR IGNORE INTO entries '
+            . '("address", "value", "expiration", "created", "event_id", "writes") '
+            . 'VALUES '
+            . '(:address, :value, :expiration, :created, :event_id, 1)');
         $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
         $sth->bindValue(':value', $serialized_value, \PDO::PARAM_LOB);
         $sth->bindValue(':expiration', $expiration, \PDO::PARAM_INT);
@@ -130,7 +141,15 @@ class SQLiteL1 extends L1
             // read (which creates a row with a read count of one) and then we
             // still miss L2 (which creates an L1 tombstone here), the update
             // goes through.
-            $sth = $this->dbh->prepare('UPDATE entries SET "value" = :value, "expiration" = :expiration, "created" = :created, "event_id" = :event_id ' . $bump_writes . ' WHERE "address" = :address AND ("event_id" < :event_id OR "event_id" = 0)');
+            $sth = $this->dbh->prepare(''
+                . 'UPDATE entries SET '
+                . '  "value" = :value, '
+                . '  "expiration" = :expiration, '
+                . '  "created" = :created, '
+                . '  "event_id" = :event_id '
+                . "  $bump_writes "
+                . 'WHERE "address" = :address '
+                . '  AND ("event_id" < :event_id OR "event_id" = 0)');
             $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
             $sth->bindValue(':value', $serialized_value, \PDO::PARAM_LOB);
             $sth->bindValue(':expiration', $expiration, \PDO::PARAM_INT);
@@ -144,7 +163,12 @@ class SQLiteL1 extends L1
 
     public function exists(Address $address)
     {
-        $sth = $this->dbh->prepare('SELECT COUNT(*) AS existing FROM entries WHERE "address" = :address AND ("expiration" >= :now OR "expiration" IS NULL) AND "value" IS NOT NULL');
+        $sth = $this->dbh->prepare(''
+            . 'SELECT COUNT(*) AS existing '
+            . 'FROM entries '
+            . 'WHERE "address" = :address '
+            . '  AND ("expiration" >= :now OR "expiration" IS NULL) '
+            . '  AND "value" IS NOT NULL');
         $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
         $sth->bindValue(':now', $_SERVER['REQUEST_TIME'], \PDO::PARAM_INT);
         $sth->execute();
@@ -154,7 +178,12 @@ class SQLiteL1 extends L1
 
     public function isNegativeCache(Address $address)
     {
-        $sth = $this->dbh->prepare('SELECT COUNT(*) AS entry_count FROM entries WHERE "address" = :address AND ("expiration" >= :now OR "expiration" IS NULL) AND "value" IS NULL');
+        $sth = $this->dbh->prepare(''
+            . 'SELECT COUNT(*) AS entry_count '
+            . 'FROM entries '
+            . 'WHERE "address" = :address '
+            . '  AND ("expiration" >= :now OR "expiration" IS NULL) '
+            . '  AND "value" IS NULL');
         $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
         $sth->bindValue(':now', $_SERVER['REQUEST_TIME'], \PDO::PARAM_INT);
         $sth->execute();
@@ -178,7 +207,11 @@ class SQLiteL1 extends L1
 
     public function getEntry(Address $address)
     {
-        $sth = $this->dbh->prepare('SELECT "value", "expiration", "reads", "writes", "created" FROM entries WHERE "address" = :address AND ("expiration" >= :now OR "expiration" IS NULL)');
+        $sth = $this->dbh->prepare(''
+            . 'SELECT "value", "expiration", "reads", "writes", "created" '
+            . 'FROM entries '
+            . 'WHERE "address" = :address '
+            . '  AND ("expiration" >= :now OR "expiration" IS NULL)');
         $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
         $sth->bindValue(':now', $_SERVER['REQUEST_TIME'], \PDO::PARAM_INT);
         $sth->execute();
@@ -189,13 +222,18 @@ class SQLiteL1 extends L1
         // record reads after they massively outweigh writes for an address.
         // @TODO: Make this adapt to overhead thresholds.
         if (false === $entry || $entry->reads < 10 * $entry->writes || $entry->reads < 10) {
-            $sth = $this->dbh->prepare('UPDATE entries SET "reads" = "reads" + 1 WHERE "address" = :address');
+            $sql = 'UPDATE entries SET "reads" = "reads" + 1 WHERE "address" = :address';
+            $sth = $this->dbh->prepare($sql);
             $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
             $sth->execute();
             if ($sth->rowCount() === 0) {
                 // Use a zero expiration so this row is only used for counts, not negative caching.
                 // Use the default event ID of zero to ensure any writes win over this stub.
-                $sth = $this->dbh->prepare('INSERT OR IGNORE INTO entries ("address", "expiration", "reads") VALUES (:address, 0, 1)');
+                $sth = $this->dbh->prepare(''
+                    . 'INSERT OR IGNORE INTO entries '
+                    . '("address", "expiration", "reads") '
+                    . 'VALUES '
+                    . '(:address, 0, 1)');
                 $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
                 $sth->execute();
             }
@@ -219,7 +257,8 @@ class SQLiteL1 extends L1
     {
         if ($address->isEntireCache() || $address->isEntireBin()) {
             $pattern = $address->serialize() . '%';
-            $sth = $this->dbh->prepare('DELETE FROM entries WHERE "address" LIKE :pattern');
+            $sql = 'DELETE FROM entries WHERE "address" LIKE :pattern';
+            $sth = $this->dbh->prepare($sql);
             $sth->bindValue('pattern', $pattern, \PDO::PARAM_STR);
             $sth->execute();
 
@@ -227,7 +266,8 @@ class SQLiteL1 extends L1
             return true;
         }
 
-        $sth = $this->dbh->prepare('DELETE FROM entries WHERE "address" = :address AND event_id < :event_id');
+        $sql = 'DELETE FROM entries WHERE "address" = :address AND event_id < :event_id';
+        $sth = $this->dbh->prepare($sql);
         $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
         $sth->bindValue(':event_id', $event_id, \PDO::PARAM_INT);
         $sth->execute();
