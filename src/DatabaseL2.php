@@ -359,7 +359,7 @@ class DatabaseL2 extends L2
         return $event_id;
     }
 
-    public function getAddressesForTag($tag)
+    private function getAddressesForTagGenerator($tag)
     {
         try {
             // @TODO: Convert this to using a subquery to only match with the latest event_id.
@@ -375,37 +375,32 @@ class DatabaseL2 extends L2
             $this->logSchemaIssueOrRethrow('Failed to find cache items associated with tag', $e);
             return null;
         }
-        $addresses = [];
-        while ($tag_entry = $sth->fetchObject()) {
-            $address = new Address();
-            $address->unserialize($tag_entry->address);
-            $addresses[] = $address;
+
+        return call_user_func(function () use ($sth) {
+            while ($tag_entry = $sth->fetchObject()) {
+                $address = new Address();
+                $address->unserialize($tag_entry->address);
+                yield $address;
+            }
+        });
+    }
+
+    public function getAddressesForTag($tag)
+    {
+        if (($generator = $this->getAddressesForTagGenerator($tag)) === null) {
+            return null;
         }
-        return $addresses;
+        return iterator_to_array($generator);
     }
 
     public function deleteTag(L1 $l1, $tag)
     {
-        // Find the matching keys and create tombstones for them.
-        try {
-            // TODO: Move the where condition to a join one to speed-up the query (benchmark with big DB).
-            $sql = 'SELECT DISTINCT "address"'
-                . ' FROM ' . $this->eventsTable . ' e'
-                . ' INNER JOIN ' . $this->tagsTable . ' t ON t.event_id = e.event_id'
-                . ' WHERE "tag" = :tag';
-
-            $sth = $this->dbh->prepare($sql);
-            $sth->bindValue(':tag', $tag, \PDO::PARAM_STR);
-            $sth->execute();
-        } catch (\PDOException $e) {
-            $this->logSchemaIssueOrRethrow('Failed to find cache items associated with tag', $e);
+        if (($generator = $this->getAddressesForTagGenerator($tag)) === null) {
             return null;
         }
 
         $last_applied_event_id = null;
-        while ($tag_entry = $sth->fetchObject()) {
-            $address = new Address();
-            $address->unserialize($tag_entry->address);
+        foreach ($generator as $address) {
             $last_applied_event_id = $this->delete($l1->getPool(), $address);
             $l1->delete($last_applied_event_id, $address);
         }
