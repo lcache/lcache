@@ -461,24 +461,28 @@ class DatabaseL2 extends L2
             return null;
         }
 
-        $applied = 0;
         try {
             $sql = 'SELECT "event_id", "pool", "address", "value", "created", "expiration"'
                 . ' FROM ' . $this->eventsTable
                 . ' WHERE "event_id" > :last_applied_event_id'
-                . ' AND "pool" <> :exclude_pool'
                 . ' ORDER BY event_id';
             $sth = $this->dbh->prepare($sql);
             $sth->bindValue(':last_applied_event_id', $last_applied_event_id, \PDO::PARAM_INT);
-            $sth->bindValue(':exclude_pool', $l1->getPool(), \PDO::PARAM_STR);
             $sth->execute();
         } catch (\PDOException $e) {
             $this->logSchemaIssueOrRethrow('Failed to fetch events', $e);
             return null;
         }
 
-        //while ($event = $sth->fetchObject('LCacheEntry')) {
+        $applied = 0;
         while ($event = $sth->fetchObject()) {
+            $last_applied_event_id = $event->event_id;
+
+            // Were created by the local L1.
+            if ($event->pool === $l1->getPool()) {
+                continue;
+            }
+
             $address = new Address();
             $address->unserialize($event->address);
             if (is_null($event->value)) {
@@ -492,7 +496,6 @@ class DatabaseL2 extends L2
                     $l1->setWithExpiration($event->event_id, $address, $unserialized_value, $event->created, $event->expiration);
                 }
             }
-            $last_applied_event_id = $event->event_id;
             $applied++;
         }
 

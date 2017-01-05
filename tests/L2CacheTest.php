@@ -29,6 +29,11 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         return $l2;
     }
 
+    protected function suportedL1Drivers()
+    {
+        return ['apcu', 'static', 'sqlite'];
+    }
+
     /**
      * https://phpunit.de/manual/3.7/en/writing-tests-for-phpunit.html#writing-tests-for-phpunit.data-providers
      *
@@ -36,7 +41,9 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
      */
     public function l1DriverNameProvider()
     {
-        return ['apcu', 'static', 'sqlite'];
+        return array_map(function ($name) {
+            return [$name];
+        }, $this->suportedL1Drivers());
     }
 
     /**
@@ -118,5 +125,33 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         // Verify that the first event no longer exists.
         $event = $l2_client_b->getEvent($event_id_a);
         $this->assertNull($event);
+    }
+
+    /**
+     * @dataProvider l1DriverNameProvider
+     */
+    public function testApplyEvents($driverName)
+    {
+        $l1_1 = $this->createL1($driverName);
+        $l1_2 = $this->createL1($driverName);
+        $l2 = $this->createL2();
+
+        // Empty L1 & L2.
+        $this->assertNull($l1_1->getLastAppliedEventID());
+        $this->assertNull($l1_2->getLastAppliedEventID());
+        $this->assertNull($l2->applyEvents($l1_1));
+        $this->assertNull($l2->applyEvents($l1_2));
+        $this->assertEquals(0, $l1_1->getLastAppliedEventID());
+        $this->assertEquals(0, $l1_2->getLastAppliedEventID());
+
+        // Two writes to L2, one from each L1.
+        $this->assertEquals(1, $l2->set($l1_1->getPool(), new Address('bin', 'key1'), 'test'));
+        $this->assertEquals(2, $l2->set($l1_2->getPool(), new Address('bin', 'key2'), 'test'));
+
+        // Validate state transfer.
+        $this->assertEquals(1, $l2->applyEvents($l1_1));
+        $this->assertEquals(1, $l2->applyEvents($l1_2));
+        $this->assertEquals(2, $l1_1->getLastAppliedEventID());
+        $this->assertEquals(2, $l1_2->getLastAppliedEventID());
     }
 }
