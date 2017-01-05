@@ -159,9 +159,6 @@ class StaticL2 extends L2
     /**
      * Implemented based on the one in DatabaseL2 class (unused).
      *
-     * @codeCoverageIgnore
-     *
-     * @see DatabaseL2::getEvent()
      * @param int $eventId
      * @return Entry
      */
@@ -172,22 +169,20 @@ class StaticL2 extends L2
         }
         $event = clone $this->events[$eventId];
         $event->value = unserialize($event->value);
-        return$event;
+        return $event;
     }
 
     /**
-     * Implemented based on the one in DatabaseL2 class (unused).
-     *
-     * @see DatabaseL2::pruneReplacedEvents()
-     *
-     * @codeCoverageIgnore
+     * Removes replaced events from storage.
      *
      * @return boolean
+     *   True on success.
      */
     public function pruneReplacedEvents()
     {
         // No pruning needed in this driver.
         // In the end of the request, everyhting is killed.
+        // Clean-up is sinchronous in the set method.
         return true;
     }
 
