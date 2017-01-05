@@ -42,22 +42,6 @@ abstract class L2 extends LX
     abstract public function set($pool, Address $address, $value = null, $expiration = null, array $tags = [], $value_is_serialized = false);
 
     /**
-     * Delete cache item from $pool on $address.
-     *
-     * Depending on Address's value it might be pool, bin or an item data to be
-     * deleted from the cache storage.
-     */
-    abstract public function delete($pool, Address $address);
-
-    /**
-     * Delete cache items marked by $tag.
-     *
-     * @var string $tag
-     *   Single tag name to use for looking up cache entries for deletition.
-     */
-    abstract public function deleteTag(L1 $l1, $tag);
-
-    /**
      * Prepares a list of Address instances associated with the provided tag.
      *
      * @var string $tag
@@ -75,4 +59,32 @@ abstract class L2 extends LX
      *   Number of expired items.
      */
     abstract public function countGarbage();
+
+    /**
+     * Delete cache items marked by $tag.
+     *
+     * @var string $tag
+     *   Single tag name to use for looking up cache entries for deletition.
+     */
+    abstract public function deleteTag(L1 $l1, $tag);
+
+    /**
+     * Delete cache item from $pool on $address.
+     *
+     * Depending on Address's value it might be pool, bin or an item data to be
+     * deleted from the cache storage.
+     *
+     * @param string $pool
+     *   Pool that the cache item was set in.
+     * @param \LCache\Address $address
+     *   Address instance that the cache item resides on.
+     *
+     * @return mixed
+     *   Event id of the operation.
+     */
+    public function delete($pool, Address $address)
+    {
+        $event_id = $this->set($pool, $address);
+        return $event_id;
+    }
 }

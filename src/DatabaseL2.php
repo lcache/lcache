@@ -365,12 +365,6 @@ class DatabaseL2 extends L2
         return $event_id;
     }
 
-    public function delete($pool, Address $address)
-    {
-        $event_id = $this->set($pool, $address);
-        return $event_id;
-    }
-
     /**
      * Initializes a generator for iterating over tag addresses one by one.
      *

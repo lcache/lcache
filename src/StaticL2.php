@@ -119,7 +119,7 @@ class StaticL2 extends L2
 
         // Serialize the value if it isn't already. We serialize the values
         // in static storage to make it more similar to other persistent stores.
-        if (!$value_is_serialized) {
+        if (!$value_is_serialized && !is_null($value)) {
             $value = serialize($value);
         }
 
@@ -184,14 +184,6 @@ class StaticL2 extends L2
         // In the end of the request, everyhting is killed.
         // Clean-up is sinchronous in the set method.
         return true;
-    }
-
-    public function delete($pool, Address $address)
-    {
-        if ($address->isEntireCache()) {
-            $this->events = array();
-        }
-        return $this->set($pool, $address, null, null, [], true);
     }
 
     public function getAddressesForTag($tag)
