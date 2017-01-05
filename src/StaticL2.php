@@ -207,12 +207,13 @@ class StaticL2 extends L2
     public function deleteTag(L1 $l1, $tag)
     {
         // Materialize the tag deletion as individual key deletions.
+        $event_id = null;
         foreach ($this->getAddressesForTag($tag) as $address) {
             $event_id = $this->delete($l1->getPool(), $address);
             $l1->delete($event_id, $address);
         }
         unset($this->tags[$tag]);
-        return $this->current_event_id;
+        return $event_id;
     }
 
     public function applyEvents(L1 $l1)

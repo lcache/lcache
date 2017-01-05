@@ -426,13 +426,11 @@ class DatabaseL2 extends L2
             $last_applied_event_id = $this->delete($l1->getPool(), $address);
             $l1->delete($last_applied_event_id, $address);
         }
-
-        // Delete the tag, which has now been invalidated.
-        // @TODO: Move to a transaction, collect the list of deleted keys,
-        // or delete individual tag/key pairs in the loop above.
-        //$sth = $this->dbh->prepare('DELETE FROM ' . $this->tagsTable . ' WHERE "tag" = :tag');
-        //$sth->bindValue(':tag', $tag, PDO::PARAM_STR);
-        //$sth->execute();
+        // We have the possibility to delete many addreses one by one. Any
+        // consecuitive tag delete will atempt to delete them again, if not
+        // prunned explicitly here. By deleting the stale / old events, we use
+        // the DB's ON DELETE CASCADE to clear the relaed tags also.
+        $this->pruneReplacedEvents();
 
         return $last_applied_event_id;
     }

@@ -154,4 +154,32 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(2, $l1_1->getLastAppliedEventID());
         $this->assertEquals(2, $l1_2->getLastAppliedEventID());
     }
+
+    /**
+     * @dataProvider l1DriverNameProvider
+     */
+    public function testDeleteTag($driverName)
+    {
+        $tag = 'test-tag';
+        $value = 'test';
+        $address = new Address('bin', 'key1');
+
+        $l1 = $this->createL1($driverName);
+        $l2 = $this->createL2();
+
+        // Init.
+        $event_id = $l2->set('some-pool', $address, $value, null, [$tag]);
+        $l1->set($event_id, $address, $value);
+        $this->assertEquals(1, $event_id);
+        $this->assertEquals($l1->get($address), $l2->get($address));
+
+        // Delete a single address, getting a new event id for it.
+        $this->assertEquals(2, $l2->deleteTag($l1, $tag));
+
+        // L1 data is cleared.
+        $this->assertNull($l1->get($address));
+
+        // Nothing more to delete for the tag.
+        $this->assertNull($l2->deleteTag($l1, $tag));
+    }
 }
