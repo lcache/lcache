@@ -123,25 +123,28 @@ class StaticL2 extends L2
             $value = serialize($value);
         }
 
+        // Add the new address event entry.
+        $this->events[$this->current_event_id] = new Entry($this->current_event_id, $pool, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
+
         // Prunning older events to reduce the driver's memory needs.
         $addressEvents = array_filter($this->events, function (Entry $entry) use ($address) {
             return $entry->getAddress()->isMatch($address);
         });
         foreach ($addressEvents as $event_to_delete) {
             /* @var $event_to_delete Entry */
-            unset($this->events[$event_to_delete->event_id]);
+            if ($event_to_delete->event_id < $this->current_event_id) {
+                unset($this->events[$event_to_delete->event_id]);
+            }
         }
         unset($addressEvents, $event_to_delete);
 
-        // Add the new address event entry.
-        $this->events[$this->current_event_id] = new Entry($this->current_event_id, $pool, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
-
         // Clear existing tags linked to the item.
         // This is much more efficient with database-style indexes.
+        $filter = function ($current) use ($address) {
+            return $address !== $current;
+        };
         foreach ($this->tags as $tag => $addresses) {
-            $this->tags[$tag] = array_filter($addresses, function ($current) use ($address) {
-                return $address !== $current;
-            });
+            $this->tags[$tag] = array_filter($addresses, $filter);
         }
 
         // Set the tags on the new item.
@@ -195,8 +198,9 @@ class StaticL2 extends L2
     {
         // Materialize the tag deletion as individual key deletions.
         $event_id = null;
+        $pool = $l1->getPool();
         foreach ($this->getAddressesForTag($tag) as $address) {
-            $event_id = $this->delete($l1->getPool(), $address);
+            $event_id = $this->delete($pool, $address);
             $l1->delete($event_id, $address);
         }
         unset($this->tags[$tag]);

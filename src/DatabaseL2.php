@@ -303,6 +303,7 @@ class DatabaseL2 extends L2
             $value = serialize($value);
         }
 
+        // Add the event to storage.
         try {
             $sql = 'INSERT INTO ' . $this->eventsTable
                 . ' ("pool", "address", "value", "created", "expiration")'
@@ -345,15 +346,15 @@ class DatabaseL2 extends L2
 
                 // TODO: Consider splitting to multiple multi-row queries.
                 // This might be needed when inserting MANY tags for a key.
-
                 $sql = 'INSERT INTO ' . $this->tagsTable
                     . ' ("tag", "event_id")'
                     . ' VALUES '
                     . implode(',', array_fill(0, count($tags), '(?,?)'));
                 $sth = $this->dbh->prepare($sql);
-                foreach ($tags as $index => $tag) {
-                    $sth->bindValue($index * 2 + 1, $tag, \PDO::PARAM_STR);
-                    $sth->bindValue($index * 2 + 2, $event_id, \PDO::PARAM_INT);
+                foreach ($tags as $index => $tag_name) {
+                    $offset = $index << 1;
+                    $sth->bindValue($offset + 1, $tag_name, \PDO::PARAM_STR);
+                    $sth->bindValue($offset + 2, $event_id, \PDO::PARAM_INT);
                 }
                 $sth->execute();
             } catch (\PDOException $e) {
