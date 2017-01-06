@@ -36,75 +36,52 @@ abstract class StateL1Test extends \PHPUnit_Framework_TestCase
     {
         $state = $this->getInstance();
         $this->assertTrue($state instanceof StateL1Interface);
-        return $state;
-    }
-
-    /**
-     * @depends testCreation
-     */
-    public function testEmpty(StateL1Interface $state)
-    {
         $this->assertEquals(0, $state->getHits());
         $this->assertEquals(0, $state->getMisses());
         $this->assertNull($state->getLastAppliedEventID());
         return $state;
     }
 
-    /**
-     * @depends testEmpty
-     */
-    public function testHits(StateL1Interface $state)
+    public function testHitMissClear()
     {
+        $state = $this->getInstance();
+
+        // Hits.
         $this->assertTrue($state->recordHit());
         $this->assertEquals(1, $state->getHits());
-        return $state;
-    }
 
-    /**
-     * @depends testEmpty
-     */
-    public function testMisses(StateL1Interface $state)
-    {
+        // Miss.
         $this->assertTrue($state->recordMiss());
         $this->assertEquals(1, $state->getMisses());
-        return $state;
-    }
 
-    /**
-     * @depends testHits
-     * @depends testMisses
-     */
-    public function testClear(StateL1Interface $state)
-    {
+        // Clear them
         $this->assertTrue($state->clear());
         $this->assertEquals(0, $state->getHits());
         $this->assertEquals(0, $state->getMisses());
     }
 
-    /**
-     * @depends testEmpty
-     */
-    public function testSettingEventId(StateL1Interface $state)
+    public function testSettingEventId()
     {
-        $this->assertTrue($state->setLastAppliedEventID(2));
-        return $state;
-    }
+        $state = $this->getInstance();
 
-    /**
-     * @depends testSettingEventId
-     */
-    public function testSettingEqualEventId(StateL1Interface $state)
-    {
-        $this->assertTrue($state->setLastAppliedEventID(2));
-        return $state;
-    }
+        // No changes when invalid input (smaller).
+        $this->assertFalse($state->setLastAppliedEventID(-1));
+        $this->assertNull($state->getLastAppliedEventID());
 
-    /**
-     * @depends testSettingEqualEventId
-     */
-    public function testSettingOldEventId(StateL1Interface $state)
-    {
+        // Allows init with zero.
+        $this->assertTrue($state->setLastAppliedEventID(0));
+        $this->assertEquals(0, $state->getLastAppliedEventID());
+
+        // Allows to set newer events.
+        $this->assertTrue($state->setLastAppliedEventID(2));
+        $this->assertEquals(2, $state->getLastAppliedEventID());
+
+        // Allows setting same events.
+        $this->assertTrue($state->setLastAppliedEventID(2));
+        $this->assertEquals(2, $state->getLastAppliedEventID());
+
+        // Does not allow for setting older events in.
         $this->assertFalse($state->setLastAppliedEventID(1));
-        return $state;
+        $this->assertEquals(2, $state->getLastAppliedEventID());
     }
 }

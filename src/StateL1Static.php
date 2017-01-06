@@ -79,8 +79,11 @@ class StateL1Static implements StateL1Interface
      */
     public function setLastAppliedEventID($eventId)
     {
-        return $this->getLastAppliedEventID() <= $eventId
-            && ($this->last_applied_event_id = $eventId);
+        if ($eventId < (int) $this->getLastAppliedEventID()) {
+            return false;
+        }
+        $this->last_applied_event_id = $eventId;
+        return true;
     }
 
     /**
