@@ -70,12 +70,16 @@ final class Address implements \Serializable
      */
     public function isMatch(Address $address)
     {
-        if (!is_null($address->getBin()) && !is_null($this->bin) && $address->getBin() !== $this->bin) {
+        $bin = $address->getBin();
+        if (!(null === $bin || null === $this->bin || $bin === $this->bin)) {
             return false;
         }
-        if (!is_null($address->getKey()) && !is_null($this->key) && $address->getKey() !== $this->key) {
+
+        $key =  $address->getKey();
+        if (!(null === $key || null === $this->key || $key === $this->key)) {
             return false;
         }
+
         return true;
     }
 
