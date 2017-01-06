@@ -157,6 +157,11 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
      */
     public function testApplyEvents($driverName)
     {
+        // Init.
+        $value1 = 'test1';
+        $value2 = 'test2';
+        $address1 = new Address('bin', 'key1');
+        $address2 = new Address('bin', 'key2');
         $l1_1 = $this->createL1($driverName);
         $l1_2 = $this->createL1($driverName);
         $l2 = $this->createL2();
@@ -170,14 +175,18 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(0, $l1_2->getLastAppliedEventID());
 
         // Two writes to L2, one from each L1.
-        $this->assertEquals(1, $l2->set($l1_1->getPool(), new Address('bin', 'key1'), 'test'));
-        $this->assertEquals(2, $l2->set($l1_2->getPool(), new Address('bin', 'key2'), 'test'));
+        $this->assertEquals(1, $l2->set($l1_1->getPool(), $address1, $value1));
+        $this->assertEquals(2, $l2->set($l1_2->getPool(), $address2, $value2));
 
-        // Validate state transfer.
+        // Validate state transfer L1.1 -> L1.2.
         $this->assertEquals(1, $l2->applyEvents($l1_1));
-        $this->assertEquals(1, $l2->applyEvents($l1_2));
         $this->assertEquals(2, $l1_1->getLastAppliedEventID());
+        $this->assertEquals($value2, $l1_1->get($address2));
+
+        // Validate state transfer L1.2 -> L112.
+        $this->assertEquals(1, $l2->applyEvents($l1_2));
         $this->assertEquals(2, $l1_2->getLastAppliedEventID());
+        $this->assertEquals($value1, $l1_2->get($address1));
     }
 
     /**
