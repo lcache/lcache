@@ -69,8 +69,6 @@ interface StateL1Interface
 
     /**
      * Clears the collected statistical data.
-     *
-     * @todo: Should the last applied event be cleared as well?
      */
     public function clear();
 }

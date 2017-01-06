@@ -40,6 +40,18 @@ class DatabaseTest extends \LCache\L2CacheTest
     }
 
     /**
+     * Marked as failing, as it differs from the base implementation.
+     *
+     * @see DatabaseTest::helperTestGarbageCollection()
+     *
+     * @group failing
+     */
+    public function testGarbageCollection()
+    {
+        parent::testGarbageCollection();
+    }
+
+    /**
      * @todo Think about how to comply with the base implementation of this.
      */
     protected function helperTestGarbageCollection(\LCache\L2 $l2)

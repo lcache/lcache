@@ -38,6 +38,8 @@ class APCuTest extends \LCache\L1CacheTest
     }
 
     /**
+     * Marked as failing, as it differs from the base implementation.
+     *
      * @group failing
      */
     public function testNegativeCache()

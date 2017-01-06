@@ -66,9 +66,10 @@ class DatabaseL2 extends L2
                 . " WHERE " . implode(' OR ', $conditions);
             $sth = $this->dbh->prepare($sql);
             foreach (array_keys($this->address_delete_queue) as $i => $address) {
+                $offset = $i << 1;
                 $event_id = $this->address_delete_queue[$address];
-                $sth->bindValue($i * 2 + 1, $event_id, \PDO::PARAM_INT);
-                $sth->bindValue($i * 2 + 2, $address, \PDO::PARAM_STR);
+                $sth->bindValue($offset + 1, $event_id, \PDO::PARAM_INT);
+                $sth->bindValue($offset + 2, $address, \PDO::PARAM_STR);
             }
             $sth->execute();
         } catch (\PDOException $e) {
@@ -304,10 +305,6 @@ class DatabaseL2 extends L2
      *   event, 2. Delete (if deemed so) and 3. Add tags (if any). All of that
      *   should behave as a single operation in DB. If DB driver is not
      *   supporting that - it should be emulated.
-     * @todo
-     *   Consider having interface change here, so we do not have all this
-     *   input parameters, but a single Entry instance instaead. It has
-     *   everything already in it.
      */
     public function set($pool, Address $address, $value = null, $expiration = null, array $tags = [], $value_is_serialized = false)
     {
@@ -359,6 +356,7 @@ class DatabaseL2 extends L2
 
                 // TODO: Consider splitting to multiple multi-row queries.
                 // This might be needed when inserting MANY tags for a key.
+                // If so, have a configurable constant to do the splitting on.
                 $sql = 'INSERT INTO ' . $this->tagsTable
                     . ' ("tag", "event_id")'
                     . ' VALUES '
@@ -393,7 +391,7 @@ class DatabaseL2 extends L2
     {
         try {
             // @TODO: Convert this to using a subquery to only match with the latest event_id.
-            // TODO: Move the where condition to a join one to speed-up the query (benchmark with big DB).
+            // @TODO: Move the where condition to a join one to speed-up the query (benchmark with big DB).
             $sql = 'SELECT DISTINCT "address"'
                 . ' FROM ' . $this->eventsTable . ' e'
                 . ' INNER JOIN ' . $this->tagsTable . ' t ON t.event_id = e.event_id'

@@ -10,9 +10,6 @@ namespace LCache;
 /**
  * Class encapsulating the creation logic for all L1 cache driver instances.
  *
- * @todo: Factor-out the pool generation logic. It should be accessible for L2
- * factory implementations also. (maybe)
- *
  * @author ndobromirov
  */
 class L1CacheFactory
@@ -28,7 +25,7 @@ class L1CacheFactory
      * @param string $customPool
      *   Pool ID to use for the data separation.
      *
-     * @return L1
+     * @return \LCache\L1
      *   Concrete instance that confirms to an L1 interface.
      */
     public function create($driverName = null, $customPool = null)
@@ -39,7 +36,6 @@ class L1CacheFactory
 
         $factoryName = 'create' . $driver;
         if (!method_exists($this, $factoryName)) {
-            // TODO: Decide on better fallback (if needed).
             $factoryName = 'createStatic';
         }
 
