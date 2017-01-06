@@ -117,7 +117,8 @@ class StateL1APCu implements StateL1Interface
      */
     public function setLastAppliedEventID($eventId)
     {
-        return apcu_store($this->statusKeyLastAppliedEventId, $eventId);
+        return $this->getLastAppliedEventID() <= $eventId
+            && apcu_store($this->statusKeyLastAppliedEventId, $eventId);
     }
 
     /**
@@ -125,7 +126,8 @@ class StateL1APCu implements StateL1Interface
      */
     public function clear()
     {
-        apcu_store($this->statusKeyHits, 0);
-        apcu_store($this->statusKeyMisses, 0);
+        $hits = apcu_store($this->statusKeyHits, 0);
+        $misses = apcu_store($this->statusKeyMisses, 0);
+        return $hits && $misses;
     }
 }

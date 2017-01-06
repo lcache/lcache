@@ -38,6 +38,7 @@ class StateL1Static implements StateL1Interface
     public function recordHit()
     {
         $this->hits++;
+        return true;
     }
 
     /**
@@ -46,6 +47,7 @@ class StateL1Static implements StateL1Interface
     public function recordMiss()
     {
         $this->misses++;
+        return true;
     }
 
     /**
@@ -77,8 +79,8 @@ class StateL1Static implements StateL1Interface
      */
     public function setLastAppliedEventID($eventId)
     {
-        $this->last_applied_event_id = $eventId;
-        return true;
+        return $this->getLastAppliedEventID() <= $eventId
+            && ($this->last_applied_event_id = $eventId);
     }
 
     /**
@@ -87,5 +89,6 @@ class StateL1Static implements StateL1Interface
     public function clear()
     {
         $this->hits = $this->misses = 0;
+        return true;
     }
 }

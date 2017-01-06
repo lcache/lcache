@@ -22,6 +22,9 @@ interface StateL1Interface
 {
     /**
      * Records a cache-hit event in the driver.
+     *
+     * @return bool
+     *   TRUE on success.
      */
     public function recordHit();
 
@@ -35,6 +38,9 @@ interface StateL1Interface
 
     /**
      * Records a cache-miss event in the driver.
+     *
+     * @return bool
+     *   TRUE on success.
      */
     public function recordMiss();
 
@@ -49,11 +55,17 @@ interface StateL1Interface
     /**
      * Stores the last applied cache mutation event id in the L1 cache.
      *
-     * This is needed, so on consecuitive requests, we should apply all events
-     * newer than this one.
+     * This is needed, so on consecuitive requests we can incrementally update
+     * the storage data. Clients should apply all events newer than this one.
+     * When an older event is passed, it will be ignored.
      *
      * @param int $eventId
      *   Event ID to store for future reference.
+     *
+     * @return bool
+     *   TRUE on successful assignment, FALSE when any of the following happens:
+     *   - Failed to write the state to the storage.
+     *   - Client atempted to write older event than the already stored one.
      */
     public function setLastAppliedEventID($eventId);
 
@@ -69,6 +81,9 @@ interface StateL1Interface
 
     /**
      * Clears the collected statistical data.
+     *
+     * @return bool
+     *   TRUE on success, FALSE otherwise.
      */
     public function clear();
 }
