@@ -110,7 +110,9 @@ class DatabaseL2 extends L2
             . ' WHERE "expiration" < :now';
         // This is not supported by standard SQLite.
         // @codeCoverageIgnoreStart
-        if (!is_null($item_limit)) {
+        $addLimit = !is_null($item_limit)
+            && $this->dbh->getAttribute(\PDO::ATTR_DRIVER_NAME) !== 'sqlite';
+        if ($addLimit) {
             $sql .= ' ORDER BY "event_id" LIMIT :item_limit';
         }
         // @codeCoverageIgnoreEnd
@@ -119,7 +121,7 @@ class DatabaseL2 extends L2
             $sth->bindValue(':now', $this->now(), \PDO::PARAM_INT);
             // This is not supported by standard SQLite.
             // @codeCoverageIgnoreStart
-            if (!is_null($item_limit)) {
+            if ($addLimit) {
                 $sth->bindValue(':item_limit', $item_limit, \PDO::PARAM_INT);
             }
             // @codeCoverageIgnoreEnd
