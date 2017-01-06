@@ -130,7 +130,7 @@ class DatabaseL2 extends L2
         } catch (\PDOException $e) {
             $this->logSchemaIssueOrRethrow('Failed to collect garbage', $e);
         }
-        return false;
+        return 0;
     }
 
     protected function queueDeletion($eventId, Address $address)

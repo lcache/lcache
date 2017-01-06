@@ -214,17 +214,24 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         $l2 = $this->createL2();
         $expre = $_SERVER['REQUEST_TIME'] - 10;
 
+        $this->assertEquals(0, $l2->countGarbage());
+        $this->assertEquals(0, $l2->collectGarbage());
+
         $this->assertEquals(1, $l2->set('some-pool', new Address('bin', 'key1'), $value, $expre));
         $this->assertEquals(2, $l2->set('some-pool', new Address('bin', 'key2'), $value, $expre));
         $this->assertEquals(2, $l2->countGarbage());
 
-        // TODO: Think about how to implement this test for DatabaseL2.
-//        // Clean single stale item.
-//        $this->assertEquals(1, $l2->collectGarbage(1));
-//        $this->assertEquals(1, $l2->countGarbage());
+        $this->helperTestGarbageCollection($l2);
+    }
+
+    protected function helperTestGarbageCollection(\LCache\L2 $l2)
+    {
+        // Clean single stale item.
+        $this->assertEquals(1, $l2->collectGarbage(1));
+        $this->assertEquals(1, $l2->countGarbage());
 
         // Clean the rest.
-        $this->assertEquals(2, $l2->collectGarbage());
+        $this->assertEquals(1, $l2->collectGarbage());
         $this->assertEquals(0, $l2->countGarbage());
     }
 }

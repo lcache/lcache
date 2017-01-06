@@ -38,4 +38,13 @@ class DatabaseTest extends \LCache\L2CacheTest
         $l2->set('mypool', $myaddr, 'myvalue', null, ['mytag']);
         $this->assertEquals('myvalue', $l2->get($myaddr));
     }
+
+    /**
+     * @todo Think about how to comply with the base implementation of this.
+     */
+    protected function helperTestGarbageCollection(\LCache\L2 $l2)
+    {
+        $this->assertEquals(2, $l2->collectGarbage());
+        $this->assertEquals(0, $l2->countGarbage());
+    }
 }
