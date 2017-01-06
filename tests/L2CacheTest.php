@@ -54,7 +54,8 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
      */
     public function createL1($driverName, $customPool = null)
     {
-        return (new L1CacheFactory())->create($driverName, $customPool);
+        $state = new StateL1Factory();
+        return (new L1CacheFactory($state))->create($driverName, $customPool);
     }
 
     public function testExistsHitMiss()

@@ -13,7 +13,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
      */
     protected function l1Factory()
     {
-        return new L1CacheFactory();
+        return new L1CacheFactory(new StateL1Factory());
     }
 
     /**

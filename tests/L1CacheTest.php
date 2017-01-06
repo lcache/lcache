@@ -36,7 +36,8 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
      */
     protected function createL1($pool = null)
     {
-        return (new L1CacheFactory())->create($this->driverName(), $pool);
+        $state = new StateL1Factory();
+        return (new L1CacheFactory($state))->create($this->driverName(), $pool);
     }
 
     public function testSetGetDelete()
