@@ -35,7 +35,7 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * https://phpunit.de/manual/3.7/en/writing-tests-for-phpunit.html#writing-tests-for-phpunit.data-providers
+     * Data provider for L1 driver names.
      *
      * @return array
      */
@@ -181,5 +181,24 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
 
         // Nothing more to delete for the tag.
         $this->assertNull($l2->deleteTag($l1, $tag));
+    }
+
+    public function testGarbageCollection()
+    {
+        $value = 'test';
+        $l2 = $this->createL2();
+        $expre = $_SERVER['REQUEST_TIME'] - 10;
+
+        $this->assertEquals(1, $l2->set('some-pool', new Address('bin', 'key1'), $value, $expre));
+        $this->assertEquals(2, $l2->set('some-pool', new Address('bin', 'key2'), $value, $expre));
+        $this->assertEquals(2, $l2->countGarbage());
+
+        // Clean single stale item.
+        $this->assertEquals(1, $l2->collectGarbage(1));
+        $this->assertEquals(1, $l2->countGarbage());
+
+        // Clean the rest.
+        $this->assertEquals(1, $l2->collectGarbage());
+        $this->assertEquals(0, $l2->countGarbage());
     }
 }

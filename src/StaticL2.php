@@ -73,6 +73,7 @@ class StaticL2 extends L2
                 break;
             }
         }
+        return $deleted;
     }
 
 
