@@ -57,15 +57,40 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         return (new L1CacheFactory())->create($driverName, $customPool);
     }
 
-    public function testExists()
+    public function testExistsHitMiss()
     {
         $l2 = $this->createL2();
         $myaddr = new Address('mybin', 'mykey');
 
+        $this->assertEquals(0, $l2->getHits());
+        $this->assertEquals(0, $l2->getMisses());
+
         $l2->set('mypool', $myaddr, 'myvalue');
         $this->assertTrue($l2->exists($myaddr));
+        $this->assertEquals(1, $l2->getHits());
+
         $l2->delete('mypool', $myaddr);
         $this->assertFalse($l2->exists($myaddr));
+        $this->assertEquals(1, $l2->getMisses());
+    }
+
+    public function testGetEntryHitMiss()
+    {
+        $l2 = $this->createL2();
+        $myaddr = new Address('mybin', 'mykey');
+
+        $this->assertEquals(0, $l2->getHits());
+        $this->assertEquals(0, $l2->getMisses());
+
+        $l2->set('mypool', $myaddr, 'myvalue');
+        $data = $l2->getEntry($myaddr);
+
+        $this->assertTrue($data instanceof Entry);
+        $this->assertEquals(1, $l2->getHits());
+
+        $l2->delete('mypool', $myaddr);
+        $this->assertFalse($l2->get($myaddr) instanceof Entry);
+        $this->assertEquals(1, $l2->getMisses());
     }
 
     public function testEmptyCleanUp()

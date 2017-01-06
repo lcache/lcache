@@ -175,7 +175,9 @@ class DatabaseL2 extends L2
         return $this->errors;
     }
 
-    // Returns an LCache\Entry
+    /**
+     * {inheritDock}
+     */
     public function getEntry(Address $address)
     {
         try {
@@ -193,16 +195,10 @@ class DatabaseL2 extends L2
             $this->logSchemaIssueOrRethrow('Failed to search database for cache item', $e);
             return null;
         }
-        //$last_matching_entry = $sth->fetchObject('LCacheEntry');
         $last_matching_entry = $sth->fetchObject();
 
-        if (false === $last_matching_entry) {
-            $this->misses++;
-            return null;
-        }
-
-        // If last event was a deletion, miss.
-        if (is_null($last_matching_entry->value)) {
+        // No entry or the last one was a deletion - miss.
+        if (false === $last_matching_entry || is_null($last_matching_entry->value)) {
             $this->misses++;
             return null;
         }
@@ -214,9 +210,17 @@ class DatabaseL2 extends L2
             throw new UnserializationException($address, $last_matching_entry->value);
         }
 
-        $last_matching_entry->value = $unserialized_value;
+        // Prepare correct result object.
+        $entry = new \LCache\Entry(
+            $last_matching_entry->event_id,
+            $last_matching_entry->pool,
+            clone $address,
+            $unserialized_value,
+            $last_matching_entry->created
+        );
+
         $this->hits++;
-        return $last_matching_entry;
+        return $entry;
     }
 
     // Returns the event entry. Currently used only for testing.
@@ -239,7 +243,7 @@ class DatabaseL2 extends L2
     public function exists(Address $address)
     {
         try {
-            $sql = 'SELECT "event_id", ("value" IS NOT NULL) AS value_not_null, "value" '
+            $sql = 'SELECT ("value" IS NOT NULL) AS value_not_null '
                 . ' FROM ' . $this->eventsTable
                 . ' WHERE "address" = :address'
                 . ' AND ("expiration" >= :now OR "expiration" IS NULL)'
@@ -254,7 +258,14 @@ class DatabaseL2 extends L2
             return null;
         }
         $result = $sth->fetchObject();
-        return ($result !== false && $result->value_not_null);
+
+        $exists = ($result !== false && $result->value_not_null);
+
+        // To comply wiht the LX interface that expects to use LX::get for the
+        // implementation, here we need to handle the hit/miss manually.
+        $this->{($exists ? 'hits' : 'misses')}++;
+
+        return $exists;
     }
 
     /**

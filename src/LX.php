@@ -10,6 +10,10 @@ abstract class LX
     /**
      * Get a cache entry based on address instance.
      *
+     * Note that the Entry objet might be incomplete. Depending on driver
+     * implementation the tags property might be empty (null), as it could be
+     * non-optimal to load the tags with the entry object.
+     *
      * @param \LCache\Address $address
      *   Address to lookup the entry.
      * @return \LCache\Entry|null

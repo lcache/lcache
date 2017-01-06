@@ -20,9 +20,11 @@ final class Entry
      * @param type $value
      * @param type $created
      * @param type $expiration
-     * @param array $tags
+     * @param array|null $tags
+     *   List of tag names for the entry object.
+     *   Null, when loaded from some storage implementations.
      */
-    public function __construct($event_id, $pool, Address $address, $value, $created, $expiration = null, array $tags = [])
+    public function __construct($event_id, $pool, Address $address, $value, $created, $expiration = null, array $tags = null)
     {
         $this->event_id = $event_id;
         $this->pool = $pool;
