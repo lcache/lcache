@@ -27,10 +27,11 @@ class NullTest extends \LCache\L1CacheTest
 
     /**
      * @group L1
+     * @dataProvider stateDriverProvider
      */
-    public function testHitMiss()
+    public function testHitMiss($state)
     {
-        $cache = $this->createL1();
+        $cache = $this->createL1($state);
         $myaddr = new Address('mybin', 'mykey');
 
         $cache->set(1, $myaddr, 'myvalue');
@@ -42,10 +43,11 @@ class NullTest extends \LCache\L1CacheTest
 
     /**
      * @group L1
+     * @dataProvider stateDriverProvider
      */
-    public function testStateStorage()
+    public function testStateStorage($state)
     {
-        $lastEventId = $this->createL1()->getLastAppliedEventID();
+        $lastEventId = $this->createL1($state)->getLastAppliedEventID();
         $this->assertEquals(PHP_INT_MAX, $lastEventId);
     }
 

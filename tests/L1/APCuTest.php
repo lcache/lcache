@@ -42,10 +42,11 @@ class APCuTest extends \LCache\L1CacheTest
      *
      * @group L1
      * @group failing
+     * @dataProvider stateDriverProvider
      */
-    public function testNegativeCache()
+    public function testNegativeCache($state)
     {
         // TODO: Uncomment and run: composer test-failing
-//        parent::testNegativeCache();
+//        parent::testNegativeCache($state);
     }
 }
