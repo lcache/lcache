@@ -28,6 +28,9 @@ class DatabaseTest extends \LCache\L2CacheTest
         ]];
     }
 
+    /**
+     * @group L2
+     */
     public function testDatabaseL2Prefix()
     {
         $this->dbPrefix = 'myprefix_';
@@ -44,6 +47,7 @@ class DatabaseTest extends \LCache\L2CacheTest
      *
      * @see DatabaseTest::helperTestGarbageCollection()
      *
+     * @group L2
      * @group failing
      */
     public function testGarbageCollection()

@@ -40,6 +40,9 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         return (new L1CacheFactory($state))->create($this->driverName(), $pool);
     }
 
+    /**
+     * @group L1
+     */
     public function testSetGetDelete()
     {
         $event_id = 1;
@@ -93,6 +96,9 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(42, $entry->created);
     }
 
+    /**
+     * @group L1
+     */
     public function testPreventRollback()
     {
         $l1 = $this->createL1();
@@ -111,6 +117,9 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('myvalue', $l1->get($myaddr));
     }
 
+    /**
+     * @group L1
+     */
     public function testFullDelete()
     {
         $event_id = 1;
@@ -125,6 +134,9 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, $l1->getMisses());
     }
 
+    /**
+     * @group L1
+     */
     public function testExpiration()
     {
         $event_id = 1;
@@ -138,6 +150,9 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, $l1->getMisses());
     }
 
+    /**
+     * @group L1
+     */
     public function testExists()
     {
         $l1 = $this->createL1();
@@ -149,6 +164,9 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($l1->exists($myaddr));
     }
 
+    /**
+     * @group L1
+     */
     public function testPoolIDs()
     {
         // Test unique ID generation.
@@ -160,6 +178,9 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('localhost-80', $this->createL1()->getPool());
     }
 
+    /**
+     * @group L1
+     */
     public function testPoolSharing()
     {
         $value = 'myvalue';
@@ -174,6 +195,9 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($value, $this->createL1($poolName)->get($myaddr));
     }
 
+    /**
+     * @group L1
+     */
     public function testHitMiss()
     {
         $event_id = 1;
@@ -189,6 +213,9 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($hits + 1, $l1->getHits());
     }
 
+    /**
+     * @group L1
+     */
     public function testStateStorage()
     {
         $event_id = 1;
@@ -210,6 +237,9 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(-1, $l1->getKeyOverhead($myaddr2));
     }
 
+    /**
+     * @group L1
+     */
     public function testNegativeCache()
     {
         $delta = 10;

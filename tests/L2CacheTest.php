@@ -58,6 +58,9 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         return (new L1CacheFactory($state))->create($driverName, $customPool);
     }
 
+    /**
+     * @group L2
+     */
     public function testExistsHitMiss()
     {
         $l2 = $this->createL2();
@@ -75,6 +78,9 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, $l2->getMisses());
     }
 
+    /**
+     * @group L2
+     */
     public function testGetEntryHitMiss()
     {
         $l2 = $this->createL2();
@@ -94,11 +100,17 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, $l2->getMisses());
     }
 
+    /**
+     * @group L2
+     */
     public function testEmptyCleanUp()
     {
         $l2 = $this->createL2();
     }
 
+    /**
+     * @group L2
+     */
     public function testBatchDeletion()
     {
         $l2 = $this->createL2();
@@ -112,6 +124,9 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertNull($l2->get($myaddr));
     }
 
+    /**
+     * @group L2
+     */
     public function testL2Factory()
     {
         $factory = new L2CacheFactory();
@@ -120,7 +135,9 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(get_class($staticL1), get_class($invalidL1));
     }
 
-
+    /**
+     * @group L2
+     */
     public function testCleanupAfterWrite()
     {
         $myaddr = new Address('mybin', 'mykey');
@@ -154,6 +171,7 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @group L2
      * @dataProvider l1DriverNameProvider
      */
     public function testApplyEvents($driverName)
@@ -191,6 +209,7 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @group L2
      * @dataProvider l1DriverNameProvider
      */
     public function testDeleteTag($driverName)
@@ -218,6 +237,9 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertNull($l2->deleteTag($l1, $tag));
     }
 
+    /**
+     * @group L2
+     */
     public function testGarbageCollection()
     {
         $value = 'test';
@@ -234,6 +256,11 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         $this->helperTestGarbageCollection($l2);
     }
 
+    /**
+     * @see testGarbageCollection
+     *
+     * @param \LCache\L2 $l2
+     */
     protected function helperTestGarbageCollection(\LCache\L2 $l2)
     {
         // Clean single stale item.

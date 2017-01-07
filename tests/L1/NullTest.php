@@ -25,6 +25,9 @@ class NullTest extends \LCache\L1CacheTest
         return 'null';
     }
 
+    /**
+     * @group L1
+     */
     public function testHitMiss()
     {
         $cache = $this->createL1();
@@ -37,32 +40,50 @@ class NullTest extends \LCache\L1CacheTest
         $this->assertEquals(1, $cache->getMisses());
     }
 
+    /**
+     * @group L1
+     */
     public function testStateStorage()
     {
         $lastEventId = $this->createL1()->getLastAppliedEventID();
         $this->assertEquals(PHP_INT_MAX, $lastEventId);
     }
 
+    /**
+     * @group L1
+     */
     public function testSetGetDelete()
     {
         // Not relevant for NullL1 class.
     }
 
+    /**
+     * @group L1
+     */
     public function testPreventRollback()
     {
         // Not relevant for NullL1 class.
     }
 
+    /**
+     * @group L1
+     */
     public function testExists()
     {
         // Not relevant for NullL1 class.
     }
 
+    /**
+     * @group L1
+     */
     public function testPoolSharing()
     {
         // Not relevant for NullL1 class.
     }
 
+    /**
+     * @group L1
+     */
     public function testNegativeCache()
     {
         // Not relevant for NullL1 class.

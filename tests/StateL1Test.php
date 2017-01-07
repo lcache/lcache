@@ -24,6 +24,9 @@ abstract class StateL1Test extends \PHPUnit_Framework_TestCase
         return (new StateL1Factory())->create($driver, $pool);
     }
 
+    /**
+     * @group state
+     */
     public function testL1StateFactory()
     {
         $staticL1 = $this->getInstance('static');
@@ -31,7 +34,9 @@ abstract class StateL1Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals(get_class($staticL1), get_class($invalidL1));
     }
 
-
+    /**
+     * @group state
+     */
     public function testCreation()
     {
         $state = $this->getInstance();
@@ -39,9 +44,11 @@ abstract class StateL1Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals(0, $state->getHits());
         $this->assertEquals(0, $state->getMisses());
         $this->assertNull($state->getLastAppliedEventID());
-        return $state;
     }
 
+    /**
+     * @group state
+     */
     public function testHitMissClear()
     {
         $state = $this->getInstance();
@@ -60,6 +67,9 @@ abstract class StateL1Test extends \PHPUnit_Framework_TestCase
         $this->assertEquals(0, $state->getMisses());
     }
 
+    /**
+     * @group state
+     */
     public function testSettingEventId()
     {
         $state = $this->getInstance();
