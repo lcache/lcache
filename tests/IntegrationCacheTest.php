@@ -35,7 +35,10 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
     {
         $data = [
             'static' => [],
-            'database' => ['handle' => $this->dbh],
+            'database' => [
+                'handle' => $this->dbh,
+                'log' => $this->dbErrorsLog,
+            ],
         ];
         return $name ? $data[$name] : $data;
     }
@@ -92,42 +95,45 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         return $pool;
     }
 
-    public function layersProvider()
+    public function l1Provider()
     {
-        $allL1 = $this->supportedL1Drivers();
-        $allL2 = array_keys($this->supportedL2Drivers());
+        $result = [];
+        foreach ($this->supportedL1Drivers() as $l1) {
+            $result["L1 driver: $l1"] = [$l1];
+        }
+        return $result;
+    }
 
+    public function poolProvider()
+    {
         $results = [];
+        $allL1 = $this->supportedL1Drivers();
         foreach ($allL1 as $l1) {
-            foreach ($allL2 as $l2) {
+            foreach (array_keys($this->supportedL2Drivers()) as $l2) {
                 $results["Integrating L1:$l1 and L2:$l2"] = [$l1, $l2];
             }
         }
-
         return $results;
     }
 
     public function twoPoolsProvider()
     {
-        $allL1 = $this->supportedL1Drivers();
-        $allL2 = array_keys($this->supportedL2Drivers());
-
         $results = [];
+        $allL1 = $this->supportedL1Drivers();
         foreach ($allL1 as $l11) {
             foreach ($allL1 as $l12) {
-                foreach ($allL2 as $l2) {
+                foreach (array_keys($this->supportedL2Drivers()) as $l2) {
                     $name = "Pool-1 L1:$l11-L2:$l2 and Pool-2 L1:$l12-L2:$l2";
                     $results[$name] = [$l2, $l11, $l12];
                 }
             }
         }
-
         return $results;
     }
 
     /**
      * @group integration
-     * @dataProvider layersProvider
+     * @dataProvider poolProvider
      */
     public function testNewPoolSynchronization($l1Name, $l2Name)
     {
@@ -155,7 +161,7 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @group integration
-     * @dataProvider layersProvider
+     * @dataProvider poolProvider
      */
     public function testCreation($l1Name, $l2Name)
     {
@@ -175,7 +181,7 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @group integration
-     * @dataProvider layersProvider
+     * @dataProvider poolProvider
      */
     public function testTombstone($l1Name, $l2Name)
     {
@@ -370,5 +376,42 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals([$myaddr2], array_values(array_filter($found_addresses, function ($addr) use ($myaddr2) {
             return $addr->serialize() === $myaddr2->serialize();
         })));
+    }
+
+    /**
+     * @group integration
+     * @dataProvider l1Provider
+     */
+    public function testBrokenDatabaseFallback($l1)
+    {
+        $this->dbErrorsLog = true;
+
+        $myaddr = new Address('mybin', 'mykey');
+        $myaddr2 = new Address('mybin', 'mykey2');
+        $pool = $this->createPool($l1, 'database');
+
+        // Break the schema and try operations.
+        $this->dbh->exec('DROP TABLE lcache_tags');
+        $this->assertNull($pool->set($myaddr, 'myvalue', null, ['mytag']));
+//        $this->assertGreaterThanOREqual(1, count($l2->getErrors()));
+        $this->assertNull($pool->deleteTag('mytag'));
+        $pool->synchronize();
+
+        // Break
+        $this->dbh->exec('DROP TABLE lcache_events');
+        $this->assertNull($pool->synchronize());
+        $this->assertNull($pool->get($myaddr2));
+        $this->assertNull($pool->exists($myaddr2));
+        $this->assertNull($pool->set($myaddr, 'myvalue'));
+        $this->assertNull($pool->delete($myaddr));
+        $this->assertNull($pool->delete(new Address()));
+        $this->assertNull($pool->getAddressesForTag('mytag'));
+
+        // Try applying events to an uninitialized L1.
+        $pool2 = $this->createPool($l1, 'database');
+        $this->assertNull($pool2->synchronize());
+
+        // Try garbage collection routines.
+        $this->assertEquals(0, $pool->collectGarbage());
     }
 }

@@ -30,6 +30,8 @@ trait LCacheDBTestTrait
     /** @var string Optional tables prefix to be used for the DB table names. */
     protected $dbPrefix;
 
+    protected $dbErrorsLog = false;
+
     /**
      * Needed by PHPUnit_Extensions_Database_TestCase_Trait.
      *
@@ -61,6 +63,7 @@ trait LCacheDBTestTrait
         $this->phpUnitDbTraitSetUp();
         $this->tablesCreated = false;
         $this->dbPrefix = '';
+        $this->dbErrorsLog = false;
     }
 
     /**

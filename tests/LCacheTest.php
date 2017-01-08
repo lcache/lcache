@@ -51,42 +51,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(get_class($staticL1), get_class($invalidL1));
     }
 
-    public function testBrokenDatabaseFallback()
-    {
-        $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh, '', true);
-        $l1 = $this->l1Factory()->create('static', 'first');
-        $pool = new Integrated($l1, $l2);
-
-        $myaddr = new Address('mybin', 'mykey');
-
-        // Break the schema and try operations.
-        $this->dbh->exec('DROP TABLE lcache_tags');
-        $this->assertNull($pool->set($myaddr, 'myvalue', null, ['mytag']));
-        $this->assertGreaterThanOREqual(1, count($l2->getErrors()));
-        $this->assertNull($pool->deleteTag('mytag'));
-        $pool->synchronize();
-
-        $myaddr2 = new Address('mybin', 'mykey2');
-
-        $this->dbh->exec('DROP TABLE lcache_events');
-        $this->assertNull($pool->synchronize());
-        $this->assertNull($pool->get($myaddr2));
-        $this->assertNull($pool->exists($myaddr2));
-        $this->assertNull($pool->set($myaddr, 'myvalue'));
-        $this->assertNull($pool->delete($myaddr));
-        $this->assertNull($pool->delete(new Address()));
-        $this->assertNull($l2->getAddressesForTag('mytag'));
-
-        // Try applying events to an uninitialized L1.
-        $this->assertNull($l2->applyEvents($this->l1Factory()->create('static')));
-
-        // Try garbage collection routines.
-        $pool->collectGarbage();
-        $count = $l2->countGarbage();
-        $this->assertNull($count);
-    }
-
     public function testDatabaseL2SyncWithNoWrites()
     {
         $this->createSchema();

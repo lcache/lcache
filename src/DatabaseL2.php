@@ -336,14 +336,19 @@ class DatabaseL2 extends L2
         // Handle bin and larger deletions immediately. Queue individual key
         // deletions for shutdown.
         if ($address->isEntireBin() || $address->isEntireCache()) {
-            $sql = 'DELETE FROM ' . $this->eventsTable
-                . ' WHERE "event_id" < :new_event_id'
-                . ' AND "address" LIKE :pattern';
-            $pattern = $address->serialize() . '%';
-            $sth = $this->dbh->prepare($sql);
-            $sth->bindValue(':new_event_id', $event_id, \PDO::PARAM_INT);
-            $sth->bindValue(':pattern', $pattern, \PDO::PARAM_STR);
-            $sth->execute();
+            try {
+                $sql = 'DELETE FROM ' . $this->eventsTable
+                    . ' WHERE "event_id" < :new_event_id'
+                    . ' AND "address" LIKE :pattern';
+                $pattern = $address->serialize() . '%';
+                $sth = $this->dbh->prepare($sql);
+                $sth->bindValue(':new_event_id', $event_id, \PDO::PARAM_INT);
+                $sth->bindValue(':pattern', $pattern, \PDO::PARAM_STR);
+                $sth->execute();
+            } catch (\PDOException $e) {
+                $this->logSchemaIssueOrRethrow('Failed to store cache event', $e);
+                return null;
+            }
         } else {
             $this->queueDeletion($event_id, $address);
         }
