@@ -51,14 +51,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(get_class($staticL1), get_class($invalidL1));
     }
 
-    public function testPoolIntegrated()
-    {
-        $l2 = new StaticL2();
-        $l1 = $this->l1Factory()->create('apcu', 'first');
-        $pool = new Integrated($l1, $l2);
-        $this->assertEquals('first', $pool->getPool());
-    }
-
     protected function performFailedUnserializationTest($l2)
     {
         $l1 = $this->l1Factory()->create('static');

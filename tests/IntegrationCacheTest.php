@@ -87,11 +87,15 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
      * @param type $threshold
      * @return Integrated
      */
-    public function createPool($l1Name, $l2Name, $threshold = null)
+    public function createPool($l1Name, $l2Name, array $options = [])
     {
-        $l1 = $this->createL1($l1Name);
+        $options += [
+            'l1-pool' => null,
+            'integrated-threshold' => null,
+        ];
+        $l1 = $this->createL1($l1Name, $options['l1-pool']);
         $l2 = $this->createL2($l2Name);
-        $pool = $this->getDriverInstance($l1, $l2, $threshold);
+        $pool = $this->getDriverInstance($l1, $l2, $options['integrated-threshold']);
         return $pool;
     }
 
@@ -438,5 +442,16 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($pool->exists($myaddr));
         $this->assertNotNull($pool->delete($myaddr));
         $this->assertFalse($pool->exists($myaddr));
+    }
+
+    /**
+     * @group integration
+     * @dataProvider poolProvider
+     */
+    public function testPoolValueAccessor($l1, $l2)
+    {
+        $poolName = 'test-pool-name';
+        $pool = $this->createPool($l1, $l2, ['l1-pool' => $poolName]);
+        $this->assertEquals($poolName, $pool->getPool());
     }
 }
