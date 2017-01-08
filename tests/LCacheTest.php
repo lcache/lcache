@@ -217,60 +217,9 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->performHitSetCounterTest($this->l1Factory()->create('sqlite'));
     }
 
-    protected function performExcessiveOverheadSkippingTest($l1)
-    {
-        $pool = new Integrated($l1, new StaticL2(), 2);
-        $myaddr = new Address('mybin', 'mykey');
-
-        // These should go through entirely.
-        $this->assertNotNull($pool->set($myaddr, 'myvalue1'));
-        $this->assertNotNull($pool->set($myaddr, 'myvalue2'));
-
-        // This should return an event_id but delete the item.
-        $this->assertEquals(2, $l1->getKeyOverhead($myaddr));
-        $this->assertFalse($l1->isNegativeCache($myaddr));
-        $this->assertNotNull($pool->set($myaddr, 'myvalue3'));
-        $this->assertFalse($pool->exists($myaddr));
-
-        // A few more sets to offset the existence check, which some L1s may
-        // treat as a hit. This should put us firmly in excessive territory.
-        $pool->set($myaddr, 'myvalue4');
-        $pool->set($myaddr, 'myvalue5');
-        $pool->set($myaddr, 'myvalue6');
-
-        // Now, with the local negative cache, these shouldn't even return
-        // an event_id.
-        $this->assertNull($pool->set($myaddr, 'myvalueA1'));
-        $this->assertNull($pool->set($myaddr, 'myvalueA2'));
-
-        // Test a lot of sets but with enough hits to drop below the threshold.
-        $myaddr2 = new Address('mybin', 'mykey2');
-        $this->assertNotNull($pool->set($myaddr2, 'myvalue'));
-        $this->assertNotNull($pool->set($myaddr2, 'myvalue'));
-        $this->assertEquals('myvalue', $pool->get($myaddr2));
-        $this->assertEquals('myvalue', $pool->get($myaddr2));
-        $this->assertNotNull($pool->set($myaddr2, 'myvalue'));
-        $this->assertNotNull($pool->set($myaddr2, 'myvalue'));
-    }
-
-    public function testStaticL1ExcessiveOverheadSkipping()
-    {
-        $this->performExcessiveOverheadSkippingTest($this->l1Factory()->create('static'));
-    }
-
-    public function testAPCuL1ExcessiveOverheadSkipping()
-    {
-        $this->performExcessiveOverheadSkippingTest($this->l1Factory()->create('apcu', 'overhead'));
-    }
-
-    public function testSQLiteL1ExcessiveOverheadSkipping()
-    {
-        $this->performExcessiveOverheadSkippingTest($this->l1Factory()->create('sqlite'));
-    }
-
     /**
-    * @return PHPUnit_Extensions_Database_DataSet_IDataSet
-    */
+     * @return PHPUnit_Extensions_Database_DataSet_IDataSet
+     */
     protected function getDataSet()
     {
         return new \PHPUnit_Extensions_Database_DataSet_DefaultDataSet();

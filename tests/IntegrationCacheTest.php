@@ -474,4 +474,44 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('value', $pool->get($myaddr));
         $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $pool->getEntry($myaddr)->expiration);
     }
+
+    /**
+     * @group integration
+     * @dataProvider poolProvider
+     */
+    public function testExcessiveOverheadSkipping($l1, $l2)
+    {
+        $pool = $this->createPool($l1, $l2, ['integrated-threshold' => 2]);
+        $myaddr = new Address('mybin', 'mykey');
+
+        // These should go through entirely.
+        $this->assertNotNull($pool->set($myaddr, 'myvalue1'));
+        $this->assertNotNull($pool->set($myaddr, 'myvalue2'));
+
+        // This should return an event_id but delete the item.
+        $this->assertEquals(2, $pool->getL1()->getKeyOverhead($myaddr));
+        $this->assertFalse($pool->getL1()->isNegativeCache($myaddr));
+        $this->assertNotNull($pool->set($myaddr, 'myvalue3'));
+        $this->assertFalse($pool->exists($myaddr));
+
+        // A few more sets to offset the existence check, which some L1s may
+        // treat as a hit. This should put us firmly in excessive territory.
+        $pool->set($myaddr, 'myvalue4');
+        $pool->set($myaddr, 'myvalue5');
+        $pool->set($myaddr, 'myvalue6');
+
+        // Now, with the local negative cache, these shouldn't even return
+        // an event_id.
+        $this->assertNull($pool->set($myaddr, 'myvalueA1'));
+        $this->assertNull($pool->set($myaddr, 'myvalueA2'));
+
+        // Test a lot of sets but with enough hits to drop below the threshold.
+        $myaddr2 = new Address('mybin', 'mykey2');
+        $this->assertNotNull($pool->set($myaddr2, 'myvalue'));
+        $this->assertNotNull($pool->set($myaddr2, 'myvalue'));
+        $this->assertEquals('myvalue', $pool->get($myaddr2));
+        $this->assertEquals('myvalue', $pool->get($myaddr2));
+        $this->assertNotNull($pool->set($myaddr2, 'myvalue'));
+        $this->assertNotNull($pool->set($myaddr2, 'myvalue'));
+    }
 }

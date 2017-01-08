@@ -167,6 +167,16 @@ final class Integrated
         return $this->l1->getLastAppliedEventID();
     }
 
+    /**
+     * Accessor needed for tests.
+     *
+     * @return L1
+     */
+    public function getL1()
+    {
+        return $this->l1;
+    }
+
     public function getPool()
     {
         return $this->l1->getPool();
