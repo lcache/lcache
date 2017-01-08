@@ -112,41 +112,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->performCaughtUnserializationOnGetTest($l2);
     }
 
-    public function performGarbageCollectionTest($l2)
-    {
-        $pool = new Integrated($this->l1Factory()->create('static'), $l2);
-        $myaddr = new Address('mybin', 'mykey');
-        $this->assertEquals(0, $l2->countGarbage());
-        $pool->set($myaddr, 'myvalue', -1);
-        $this->assertEquals(1, $l2->countGarbage());
-        $pool->collectGarbage();
-        $this->assertEquals(0, $l2->countGarbage());
-    }
-
-    public function testDatabaseL2GarbageCollection()
-    {
-        $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh);
-        $this->performGarbageCollectionTest($l2);
-    }
-
-    public function testStaticL2GarbageCollection()
-    {
-        $l2 = new StaticL2();
-        $this->performGarbageCollectionTest($l2);
-
-        // Test item limits.
-        $pool = new Integrated($this->l1Factory()->create('static'), $l2);
-        $myaddr2 = new Address('mybin', 'mykey2');
-        $myaddr3 = new Address('mybin', 'mykey3');
-        $pool->collectGarbage();
-        $pool->set($myaddr2, 'myvalue', -1);
-        $pool->set($myaddr3, 'myvalue', -1);
-        $this->assertEquals(2, $l2->countGarbage());
-        $pool->collectGarbage(1);
-        $this->assertEquals(1, $l2->countGarbage());
-    }
-
     /**
      * @return PHPUnit_Extensions_Database_DataSet_IDataSet
      */

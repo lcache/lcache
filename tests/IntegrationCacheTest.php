@@ -110,10 +110,22 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
 
     public function poolProvider()
     {
+        return $this->poolProviderHelper($this->supportedL2Drivers());
+    }
+
+    public function poolProviderForLimitedGarbageCollecionSupport()
+    {
+        $allL2 = $this->supportedL2Drivers();
+        unset($allL2['database']);
+        return $this->poolProviderHelper($allL2);
+    }
+
+    protected function poolProviderHelper($customL2)
+    {
         $results = [];
         $allL1 = $this->supportedL1Drivers();
-        foreach ($allL1 as $l1) {
-            foreach (array_keys($this->supportedL2Drivers()) as $l2) {
+        foreach (array_keys($customL2) as $l2) {
+            foreach ($allL1 as $l1) {
                 $results["Integrating L1:$l1 and L2:$l2"] = [$l1, $l2];
             }
         }
@@ -124,9 +136,9 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
     {
         $results = [];
         $allL1 = $this->supportedL1Drivers();
-        foreach ($allL1 as $l11) {
-            foreach ($allL1 as $l12) {
-                foreach (array_keys($this->supportedL2Drivers()) as $l2) {
+        foreach (array_keys($this->supportedL2Drivers()) as $l2) {
+            foreach ($allL1 as $l11) {
+                foreach ($allL1 as $l12) {
                     $name = "Pool-1 L1:$l11-L2:$l2 and Pool-2 L1:$l12-L2:$l2";
                     $results[$name] = [$l2, $l11, $l12];
                 }
@@ -555,5 +567,39 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
 
         $pool->getL2()->set('anypool', $myaddr, $invalid_object, null, [], true);
         $pool->get($myaddr);
+    }
+
+    /**
+     * @group integration
+     * @dataProvider poolProvider
+     */
+    public function testGarbageCollection($l1, $l2)
+    {
+        $pool = $this->createPool($l1, $l2);
+        $myaddr = new Address('mybin', 'mykey');
+
+        $this->assertEquals(0, $pool->getL2()->countGarbage());
+        $pool->set($myaddr, 'myvalue', -1);
+        $this->assertEquals(1, $pool->getL2()->countGarbage());
+        $pool->collectGarbage();
+        $this->assertEquals(0, $pool->getL2()->countGarbage());
+    }
+
+    /**
+     * @group integration
+     * @dataProvider poolProviderForLimitedGarbageCollecionSupport
+     */
+    public function testLimitedGarbageCollection($l1, $l2)
+    {
+        $pool = $this->createPool($l1, $l2);
+        $myaddr1 = new Address('mybin', 'mykey1');
+        $myaddr2 = new Address('mybin', 'mykey2');
+
+        $this->assertEquals(0, $pool->collectGarbage());
+        $pool->set($myaddr1, 'myvalue', -1);
+        $pool->set($myaddr2, 'myvalue', -1);
+        $this->assertEquals(2, $pool->getL2()->countGarbage());
+        $pool->collectGarbage(1);
+        $this->assertEquals(1, $pool->getL2()->countGarbage());
     }
 }
