@@ -47,7 +47,7 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
 
     public function createL1Factory($state)
     {
-        return new L1CacheFactory($state);;
+        return new L1CacheFactory($state);
     }
 
     /**
@@ -139,14 +139,20 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
      * @group integration
      * @dataProvider layersProvider
      */
-    protected function testCreation($l1Name, $l2Name)
+    public function testCreation($l1Name, $l2Name)
     {
         $pool = $this->createPool($l1Name, $l2Name);
 
+        // Empty L1 state.
         $this->assertEquals(0, $pool->getHitsL1());
-        $this->assertEquals(0, $pool->getHitsL2());
         $this->assertEquals(0, $pool->getMissesL1());
+        $this->assertNull($pool->getLastAppliedEventID());
+        $this->assertEquals(0, $pool->collectGarbageL1());
+
+        // Empty L2 state.
+        $this->assertEquals(0, $pool->getHitsL2());
         $this->assertEquals(0, $pool->getMissesL2());
+        $this->assertEquals(0, $pool->collectGarbageL2());
     }
 
     /**

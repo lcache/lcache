@@ -169,12 +169,7 @@ final class Integrated
 
     public function collectGarbage($item_limit = null)
     {
-        $clearedL1 = $this->collectGarbageL1($item_limit);
-        $clearedL2 = $this->collectGarbageL2($item_limit);
-        if ($clearedL1 === false || $clearedL2 === false) {
-            return false;
-        }
-        return (object) ['l1' => $clearedL1, 'l2' => $clearedL2];
+        return $this->l2->collectGarbage($item_limit);
     }
 
     public function collectGarbageL1($item_limit = null)
@@ -184,6 +179,6 @@ final class Integrated
 
     public function collectGarbageL2($item_limit = null)
     {
-        return $this->l2->collectGarbage($item_limit);
+        return $this->collectGarbage($item_limit);
     }
 }
