@@ -409,7 +409,7 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         // Break the schema and try operations.
         $this->dbh->exec('DROP TABLE lcache_tags');
         $this->assertNull($pool->set($myaddr, 'myvalue', null, ['mytag']));
-//        $this->assertGreaterThanOREqual(1, count($l2->getErrors()));
+        $this->assertGreaterThanOREqual(1, count($pool->getL2()->getErrors()));
         $this->assertNull($pool->deleteTag('mytag'));
         $pool->synchronize();
 
@@ -422,6 +422,7 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         $this->assertNull($pool->delete($myaddr));
         $this->assertNull($pool->delete(new Address()));
         $this->assertNull($pool->getAddressesForTag('mytag'));
+        $this->assertNull($pool->getL2()->countGarbage());
 
         // Try applying events to an uninitialized L1.
         $pool2 = $this->createPool($l1, 'database');
