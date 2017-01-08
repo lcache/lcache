@@ -296,4 +296,19 @@ abstract class L2CacheTest extends \PHPUnit_Framework_TestCase
         $l2->set('mypool', $myaddr, 'myvalue', -1);
         $this->assertNull($l2->get($myaddr));
     }
+
+    /**
+     * @group L2
+     */
+    public function testReread()
+    {
+        $l2 = $this->createL2();
+        $myaddr = new Address('mybin', 'mykey');
+
+        $l2->set('mypool', $myaddr, 'myvalue');
+        $this->assertEquals('myvalue', $l2->get($myaddr));
+        $this->assertEquals('myvalue', $l2->get($myaddr));
+        $this->assertEquals('myvalue', $l2->get($myaddr));
+        $this->assertEquals('myvalue', $l2->get($myaddr));
+    }
 }

@@ -51,17 +51,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(get_class($staticL1), get_class($invalidL1));
     }
 
-    public function testStaticL2Reread()
-    {
-        $l2 = new StaticL2();
-        $myaddr = new Address('mybin', 'mykey');
-        $l2->set('mypool', $myaddr, 'myvalue');
-        $this->assertEquals('myvalue', $l2->get($myaddr));
-        $this->assertEquals('myvalue', $l2->get($myaddr));
-        $this->assertEquals('myvalue', $l2->get($myaddr));
-        $this->assertEquals('myvalue', $l2->get($myaddr));
-    }
-
     protected function performSynchronizationTest($central, $first_l1, $second_l1)
     {
         // Create two integrated pools with independent L1s.
