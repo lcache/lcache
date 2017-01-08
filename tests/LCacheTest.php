@@ -44,72 +44,8 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->dbh->exec('CREATE INDEX ' . $prefix . 'rewritten_entry ON ' . $prefix . 'lcache_tags ("event_id")');
     }
 
-    public function testL1Factory()
+    public function testTemporary()
     {
-        $staticL1 = $this->l1Factory()->create('static');
-        $invalidL1 = $this->l1Factory()->create('invalid_cache_driver');
-        $this->assertEquals(get_class($staticL1), get_class($invalidL1));
-    }
-
-    protected function performFailedUnserializationTest($l2)
-    {
-        $l1 = $this->l1Factory()->create('static');
-        $pool = new Integrated($l1, $l2);
-        $myaddr = new Address('mybin', 'mykey');
-
-        $invalid_object = 'O:10:"HelloWorl":0:{}';
-
-        // Set the L1's high water mark.
-        $pool->set($myaddr, 'valid');
-        $changes = $pool->synchronize();
-        $this->assertNull($changes);  // Just initialized event high water mark.
-        $this->assertEquals(1, $l1->getLastAppliedEventID());
-
-        // Put an invalid object into the L2 and synchronize again.
-        $l2->set('anotherpool', $myaddr, $invalid_object, null, [], true);
-        $changes = $pool->synchronize();
-        $this->assertEquals(1, $changes);
-        $this->assertEquals(2, $l1->getLastAppliedEventID());
-
-        // The sync should delete the item from the L1, causing it to miss.
-        $this->assertNull($l1->get($myaddr));
-        $this->assertEquals(0, $l1->getHits());
-        $this->assertEquals(1, $l1->getMisses());
-    }
-
-    protected function performCaughtUnserializationOnGetTest($l2)
-    {
-        $l1 = $this->l1Factory()->create('static');
-        $pool = new Integrated($l1, $l2);
-        $invalid_object = 'O:10:"HelloWorl":0:{}';
-        $myaddr = new Address('mybin', 'performCaughtUnserializationOnGetTest');
-        $l2->set('anypool', $myaddr, $invalid_object, null, [], true);
-        try {
-            $pool->get($myaddr);
-            $this->assertTrue(false);  // Should not reach here.
-        } catch (UnserializationException $e) {
-            $this->assertEquals($invalid_object, $e->getSerializedData());
-
-            // The text of the exception should include the class name, bin, and key.
-            $this->assertRegExp('/^' . preg_quote('LCache\UnserializationException: Cache') . '/', strval($e));
-            $this->assertRegExp('/bin "' . preg_quote($myaddr->getBin()) . '"/', strval($e));
-            $this->assertRegExp('/key "' . preg_quote($myaddr->getKey()) . '"/', strval($e));
-        }
-    }
-
-    public function testDatabaseL2FailedUnserialization()
-    {
-        $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh);
-        $this->performFailedUnserializationTest($l2);
-        $this->performCaughtUnserializationOnGetTest($l2);
-    }
-
-    public function testStaticL2FailedUnserialization()
-    {
-        $l2 = new StaticL2();
-        $this->performFailedUnserializationTest($l2);
-        $this->performCaughtUnserializationOnGetTest($l2);
     }
 
     /**

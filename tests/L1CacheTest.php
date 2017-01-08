@@ -57,6 +57,17 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
      * @group L1
      * @dataProvider stateDriverProvider
      */
+    public function testL1Factory($state)
+    {
+        $staticL1 = $this->createL1($state, 'static');
+        $invalidL1 = $this->createL1($state, 'invalid_cache_driver');
+        $this->assertEquals(get_class($staticL1), get_class($invalidL1));
+    }
+
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
     public function testSetGetDelete($state)
     {
         $event_id = 1;

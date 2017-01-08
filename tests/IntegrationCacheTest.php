@@ -602,4 +602,59 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         $pool->collectGarbage(1);
         $this->assertEquals(1, $pool->getL2()->countGarbage());
     }
+
+    /**
+     * @group integration
+     * @dataProvider poolProvider
+     */
+    public function testCaughtUnserializationOnGet($l1, $l2)
+    {
+        $pool = $this->createPool($l1, $l2);
+        $invalid_object = 'O:10:"HelloWorl":0:{}';
+        $myaddr = new Address('mybin', 'performCaughtUnserializationOnGetTest');
+
+        // Set a broken Item directly.
+        $pool->getL2()->set('anypool', $myaddr, $invalid_object, null, [], true);
+        try {
+            $pool->get($myaddr);
+
+            // Should not reach here.
+            $this->assertTrue(false);
+        } catch (UnserializationException $e) {
+            $this->assertEquals($invalid_object, $e->getSerializedData());
+
+            // The text of the exception should include the class name, bin, and key.
+            $this->assertRegExp('/^' . preg_quote('LCache\UnserializationException: Cache') . '/', strval($e));
+            $this->assertRegExp('/bin "' . preg_quote($myaddr->getBin()) . '"/', strval($e));
+            $this->assertRegExp('/key "' . preg_quote($myaddr->getKey()) . '"/', strval($e));
+        }
+    }
+
+    /**
+     * @group integration
+     * @dataProvider poolProvider
+     */
+    public function testFailedUnserialization($l1, $l2)
+    {
+        $pool = $this->createPool($l1, $l2);
+        $myaddr = new Address('mybin', 'mykey');
+        $invalid_object = 'O:10:"HelloWorl":0:{}';
+
+        // Set the L1's high water mark.
+        $pool->set($myaddr, 'valid');
+        $changes = $pool->synchronize();
+        $this->assertNull($changes);  // Just initialized event high water mark.
+        $this->assertEquals(1, $pool->getLastAppliedEventID());
+
+        // Put an invalid object into the L2 and synchronize again.
+        $pool->getL2()->set('anotherpool', $myaddr, $invalid_object, null, [], true);
+        $changes = $pool->synchronize();
+        $this->assertEquals(1, $changes);
+        $this->assertEquals(2, $pool->getLastAppliedEventID());
+
+        // The sync should delete the item from the L1, causing it to miss.
+        $this->assertNull($pool->getL1()->get($myaddr));
+        $this->assertEquals(0, $pool->getHitsL1());
+        $this->assertEquals(1, $pool->getMissesL1());
+    }
 }
