@@ -142,7 +142,12 @@ final class Integrated
         return $this->l2->getHits();
     }
 
-    public function getMisses()
+    public function getMissesL1()
+    {
+        return $this->l1->getMisses();
+    }
+
+    public function getMissesL2()
     {
         return $this->l2->getMisses();
     }
@@ -158,6 +163,21 @@ final class Integrated
     }
 
     public function collectGarbage($item_limit = null)
+    {
+        $clearedL1 = $this->collectGarbageL1($item_limit);
+        $clearedL2 = $this->collectGarbageL2($item_limit);
+        if ($clearedL1 === false || $clearedL2 === false) {
+            return false;
+        }
+        return (object) ['l1' => $clearedL1, 'l2' => $clearedL2];
+    }
+
+    public function collectGarbageL1($item_limit = null)
+    {
+        return $this->l1->collectGarbage($item_limit);
+    }
+
+    public function collectGarbageL2($item_limit = null)
     {
         return $this->l2->collectGarbage($item_limit);
     }

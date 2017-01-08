@@ -79,49 +79,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals('myvalue', $l2->get($myaddr));
     }
 
-    protected function performTombstoneTest($l1)
-    {
-        // This test is not for L1 - this tests integratino logick.
-        $central = new Integrated($l1, new StaticL2());
-
-        $dne = new Address('mypool', 'mykey-dne');
-        $this->assertNull($central->get($dne));
-
-        $tombstone = $central->getEntry($dne, true);
-        $this->assertNotNull($tombstone);
-        $this->assertNull($tombstone->value);
-        // The L1 should return the tombstone entry so the integrated cache
-        // can avoid rewriting it.
-        $tombstone = $l1->getEntry($dne);
-        $this->assertNotNull($tombstone);
-        $this->assertNull($tombstone->value);
-
-        // The tombstone should also count as non-existence.
-        $this->assertFalse($central->exists($dne));
-
-        // This is a no-op for most L1 implementations, but it should not
-        // return false, regardless.
-        $this->assertTrue(false !== $l1->collectGarbage());
-    }
-
-    public function testStaticL1Tombstone()
-    {
-        $l1 = $this->l1Factory()->create('static');
-        $this->performTombstoneTest($l1);
-    }
-
-    public function testAPCuL1Tombstone()
-    {
-        $l1 = $this->l1Factory()->create('apcu', 'testAPCuL1Tombstone');
-        $this->performTombstoneTest($l1);
-    }
-
-    public function testSQLiteL1Tombstone()
-    {
-        $l1 = $this->l1Factory()->create('sqlite');
-        $this->performTombstoneTest($l1);
-    }
-
     protected function performSynchronizationTest($central, $first_l1, $second_l1)
     {
         // Create two integrated pools with independent L1s.
@@ -135,13 +92,13 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals('myvalue', $pool1->get($myaddr));
         $this->assertEquals(1, $pool1->getHitsL1());
         $this->assertEquals(0, $pool1->getHitsL2());
-        $this->assertEquals(0, $pool1->getMisses());
+        $this->assertEquals(0, $pool1->getMissesL2());
 
         // Read the entry in Pool 2.
         $this->assertEquals('myvalue', $pool2->get($myaddr));
         $this->assertEquals(0, $pool2->getHitsL1());
         $this->assertEquals(1, $pool2->getHitsL2());
-        $this->assertEquals(0, $pool2->getMisses());
+        $this->assertEquals(0, $pool2->getMissesL2());
 
         // Initialize Pool 2 synchronization.
         $changes = $pool2->synchronize();
@@ -228,13 +185,13 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals('myvalue', $pool1->get($myaddr));
         $this->assertEquals(1, $pool1->getHitsL1());
         $this->assertEquals(0, $pool1->getHitsL2());
-        $this->assertEquals(0, $pool1->getMisses());
+        $this->assertEquals(0, $pool1->getMissesL2());
 
         // Read the entry in Pool 2.
         $this->assertEquals('myvalue', $pool2->get($myaddr));
         $this->assertEquals(0, $pool2->getHitsL1());
         $this->assertEquals(1, $pool2->getHitsL2());
-        $this->assertEquals(0, $pool2->getMisses());
+        $this->assertEquals(0, $pool2->getMissesL2());
 
 
         // Initialize Pool 2 synchronization.

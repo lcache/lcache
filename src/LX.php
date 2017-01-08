@@ -73,8 +73,9 @@ abstract class LX
      * @param int $item_limit
      *   Maximum number of items to remove. Defaults clear as much as possible.
      *
-     * @return int
+     * @return int|false
      *   Number of items cleared from the cache storage.
+     *   False on error in the clean-up process.
      */
     public function collectGarbage($item_limit = null)
     {

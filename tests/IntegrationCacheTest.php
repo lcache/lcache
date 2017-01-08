@@ -77,6 +77,13 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
 
     abstract protected function getDriverInstance(L1 $l1, L2 $l2, $threshold = null);
 
+    /**
+     *
+     * @param type $l1Name
+     * @param type $l2Name
+     * @param type $threshold
+     * @return Integrated
+     */
     public function createPool($l1Name, $l2Name, $threshold = null)
     {
         $l1 = $this->createL1($l1Name);
@@ -126,5 +133,52 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         $pool2 = $this->createPool($l1Name, $l2Name);
         $this->assertNull($pool2->synchronize());
         $this->assertEquals($pool1->getLastAppliedEventID(), $pool2->getLastAppliedEventID());
+    }
+
+    /**
+     * @group integration
+     * @dataProvider layersProvider
+     */
+    protected function testCreation($l1Name, $l2Name)
+    {
+        $pool = $this->createPool($l1Name, $l2Name);
+
+        $this->assertEquals(0, $pool->getHitsL1());
+        $this->assertEquals(0, $pool->getHitsL2());
+        $this->assertEquals(0, $pool->getMissesL1());
+        $this->assertEquals(0, $pool->getMissesL2());
+    }
+
+    /**
+     * @group integration
+     * @dataProvider layersProvider
+     */
+    public function testTombstone($l1Name, $l2Name)
+    {
+        $pool = $this->createPool($l1Name, $l2Name);
+        $address = new Address('mypool', 'mykey-dne');
+
+        // This should create a tombstone, after missing both L1 and L2.
+        $this->assertNull($pool->get($address));
+        $this->assertEquals(1, $pool->getMissesL1());
+        $this->assertEquals(1, $pool->getMissesL2());
+        $this->assertEquals(0, $pool->getHitsL1());
+        $this->assertEquals(0, $pool->getHitsL2());
+
+        // Forecully get it and assert only a HIT in L1.
+        $tombstone = $pool->getEntry($address, true);
+        $this->assertNotNull($tombstone);
+        $this->assertNull($tombstone->value);
+        $this->assertEquals(1, $pool->getMissesL1());
+        $this->assertEquals(1, $pool->getMissesL2());
+        $this->assertEquals(1, $pool->getHitsL1());
+        $this->assertEquals(0, $pool->getHitsL2());
+
+        // The tombstone should also count as non-existence.
+        $this->assertFalse($pool->exists($address));
+
+        // This is a no-op for most L1 implementations, but it should not
+        // return false, regardless.
+        $this->assertTrue(false !== $pool->collectGarbage());
     }
 }

@@ -70,9 +70,10 @@ class SQLiteL1 extends L1
 
     protected function pruneExpiredEntries()
     {
-        $sth = $this->dbh->prepare('DELETE FROM entries WHERE expiration < :now');
-        $sth->bindValue(':now', $_SERVER['REQUEST_TIME'], \PDO::PARAM_INT);
         try {
+            $sql = 'DELETE FROM entries WHERE expiration < :now';
+            $sth = $this->dbh->prepare($sql);
+            $sth->bindValue(':now', $_SERVER['REQUEST_TIME'], \PDO::PARAM_INT);
             $sth->execute();
         // @codeCoverageIgnoreStart
         } catch (\PDOException $e) {
