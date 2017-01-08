@@ -302,4 +302,73 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         $pool2->synchronize();
         $this->assertNull($pool2->get($myaddr));
     }
+
+    /**
+     * @group integration
+     * @dataProvider twoPoolsProvider
+     */
+    public function testTaggedSynchronization($central, $first_l1, $second_l1)
+    {
+        // Create two integrated pools with independent L1s.
+        $pool1 = $this->createPool($first_l1, $central);
+        $pool2 = $this->createPool($second_l1, $central);
+
+        $myaddr = new Address('mybin', 'mykey');
+
+        // Test deleting a tag that doesn't exist yet.
+        $pool1->deleteTag('mytag');
+
+        // Set and get an entry in Pool 1.
+        $pool1->set($myaddr, 'myvalue', null, ['mytag']);
+        $this->assertEquals([$myaddr], $pool1->getAddressesForTag('mytag'));
+        $this->assertEquals('myvalue', $pool1->get($myaddr));
+        $this->assertEquals(1, $pool1->getHitsL1());
+        $this->assertEquals(0, $pool1->getHitsL2());
+        $this->assertEquals(0, $pool1->getMisses());
+
+        // Read the entry in Pool 2.
+        $this->assertEquals('myvalue', $pool2->get($myaddr));
+        $this->assertEquals(0, $pool2->getHitsL1());
+        $this->assertEquals(1, $pool2->getHitsL2());
+        $this->assertEquals(0, $pool2->getMisses());
+
+
+        // Initialize Pool 2 synchronization.
+        $pool2->synchronize();
+
+        // Delete the tag. The item should now be missing from Pool 1.
+        $pool1->deleteTag('mytag'); // TKTK
+        $this->assertNull($pool1->get($myaddr));
+        $this->assertEquals(1, $pool1->getMissesL1());
+        $this->assertEquals(1, $pool1->getMissesL2());
+
+
+        // Pool 2 should hit its L1 again with the tag-deleted item.
+        // Synchronizing should fix it.
+        $this->assertEquals('myvalue', $pool2->get($myaddr));
+        $applied = $pool2->synchronize();
+        $this->assertEquals(1, $applied);
+        $this->assertNull($pool2->get($myaddr));
+
+        // Ensure the addition of a second tag still works for deletion.
+        $myaddr2 = new Address('mybin', 'mykey2');
+        $pool1->set($myaddr2, 'myvalue', null, ['mytag']);
+        $pool1->set($myaddr2, 'myvalue', null, ['mytag', 'mytag2']);
+        $pool1->deleteTag('mytag2');
+        $this->assertNull($pool1->get($myaddr2));
+
+        // Ensure updating a second item with a tag doesn't remove it from the
+        // first.
+        $pool1->delete(new Address());
+        $pool1->set($myaddr, 'myvalue', null, ['mytag', 'mytag2']);
+        $pool1->set($myaddr2, 'myvalue', null, ['mytag', 'mytag2']);
+        $pool1->set($myaddr, 'myvalue', null, ['mytag']);
+
+        // The function getAddressesForTag() may return additional addresses,
+        // but it should always return at least the current tagged address.
+        $found_addresses = $pool2->getAddressesForTag('mytag2');
+        $this->assertEquals([$myaddr2], array_values(array_filter($found_addresses, function ($addr) use ($myaddr2) {
+            return $addr->serialize() === $myaddr2->serialize();
+        })));
+    }
 }

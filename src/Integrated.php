@@ -103,6 +103,11 @@ final class Integrated
         return $entry->value;
     }
 
+    public function getAddressesFortag($tag)
+    {
+        return $this->l2->getAddressesForTag($tag);
+    }
+
     public function exists(Address $address)
     {
         $exists = $this->l1->exists($address);
