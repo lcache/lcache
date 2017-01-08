@@ -107,6 +107,24 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         return $results;
     }
 
+    public function twoPoolsProvider()
+    {
+        $allL1 = $this->supportedL1Drivers();
+        $allL2 = array_keys($this->supportedL2Drivers());
+
+        $results = [];
+        foreach ($allL1 as $l11) {
+            foreach ($allL1 as $l12) {
+                foreach ($allL2 as $l2) {
+                    $name = "Pool-1 L1:$l11-L2:$l2 and Pool-2 L1:$l12-L2:$l2";
+                    $results[$name] = [$l2, $l11, $l12];
+                }
+            }
+        }
+
+        return $results;
+    }
+
     /**
      * @group integration
      * @dataProvider layersProvider
@@ -186,5 +204,76 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         // This is a no-op for most L1 implementations, but it should not
         // return false, regardless.
         $this->assertTrue(false !== $pool->collectGarbage());
+    }
+
+    /**
+     * @group integration
+     * @dataProvider twoPoolsProvider
+     */
+    public function testSynchronization($central, $l1First, $l1Second)
+    {
+        // Create two integrated pools with independent L1s.
+        $pool1 = $this->createPool($l1First, $central);
+        $pool2 = $this->createPool($l1Second, $central);
+
+        $myaddr = new Address('mybin', 'mykey');
+
+        // Set and get an entry in Pool 1.
+        $pool1->set($myaddr, 'myvalue');
+        $this->assertEquals('myvalue', $pool1->get($myaddr));
+        $this->assertEquals(1, $pool1->getHitsL1());
+        $this->assertEquals(0, $pool1->getHitsL2());
+        $this->assertEquals(0, $pool1->getMisses());
+
+        // Read the entry in Pool 2.
+        $this->assertEquals('myvalue', $pool2->get($myaddr));
+        $this->assertEquals(0, $pool2->getHitsL1());
+        $this->assertEquals(1, $pool2->getHitsL2());
+        $this->assertEquals(0, $pool2->getMisses());
+
+        // Initialize Pool 2 synchronization.
+        $changes = $pool2->synchronize();
+        $this->assertNull($changes);
+        $this->assertEquals(1, $pool2->getLastAppliedEventID());
+
+        // Alter the item in Pool 1. Pool 2 should hit its L1 again
+        // with the out-of-date item. Synchronizing should fix it.
+        $pool1->set($myaddr, 'myvalue2');
+        $this->assertEquals('myvalue', $pool2->get($myaddr));
+        $applied = $pool2->synchronize();
+        $this->assertEquals(1, $applied);
+        $this->assertEquals('myvalue2', $pool2->get($myaddr));
+
+        // Delete the item in Pool 1. Pool 2 should hit its L1 again
+        // with the now-deleted item. Synchronizing should fix it.
+        $pool1->delete($myaddr);
+        $this->assertEquals('myvalue2', $pool2->get($myaddr));
+        $applied = $pool2->synchronize();
+        $this->assertEquals(1, $applied);
+        $this->assertNull($pool2->get($myaddr));
+
+        // Try to get an entry that has never existed.
+        $myaddr_nonexistent = new Address('mybin', 'mykeynonexistent');
+        $this->assertNull($pool1->get($myaddr_nonexistent));
+
+        // Test out bins and clearing.
+        $mybin1_mykey = new Address('mybin1', 'mykey');
+        $mybin1 = new Address('mybin1');
+        $mybin2_mykey = new Address('mybin2', 'mykey');
+        $pool1->set($mybin1_mykey, 'myvalue1');
+        $pool1->set($mybin2_mykey, 'myvalue2');
+        $pool2->synchronize();
+        $pool1->delete($mybin1);
+
+        // The deleted bin should be evident in pool1 but not in pool2.
+        $this->assertNull($pool1->get($mybin1_mykey));
+        $this->assertEquals('myvalue2', $pool1->get($mybin2_mykey));
+        $this->assertEquals('myvalue1', $pool2->get($mybin1_mykey));
+        $this->assertEquals('myvalue2', $pool2->get($mybin2_mykey));
+
+        // Synchronizing should propagate the bin clearing to pool2.
+        $pool2->synchronize();
+        $this->assertNull($pool2->get($mybin1_mykey));
+        $this->assertEquals('myvalue2', $pool2->get($mybin2_mykey));
     }
 }

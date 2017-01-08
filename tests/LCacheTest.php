@@ -51,73 +51,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(get_class($staticL1), get_class($invalidL1));
     }
 
-    protected function performSynchronizationTest($central, $first_l1, $second_l1)
-    {
-        // Create two integrated pools with independent L1s.
-        $pool1 = new Integrated($first_l1, $central);
-        $pool2 = new Integrated($second_l1, $central);
-
-        $myaddr = new Address('mybin', 'mykey');
-
-        // Set and get an entry in Pool 1.
-        $pool1->set($myaddr, 'myvalue');
-        $this->assertEquals('myvalue', $pool1->get($myaddr));
-        $this->assertEquals(1, $pool1->getHitsL1());
-        $this->assertEquals(0, $pool1->getHitsL2());
-        $this->assertEquals(0, $pool1->getMisses());
-
-        // Read the entry in Pool 2.
-        $this->assertEquals('myvalue', $pool2->get($myaddr));
-        $this->assertEquals(0, $pool2->getHitsL1());
-        $this->assertEquals(1, $pool2->getHitsL2());
-        $this->assertEquals(0, $pool2->getMisses());
-
-        // Initialize Pool 2 synchronization.
-        $changes = $pool2->synchronize();
-        $this->assertNull($changes);
-        $this->assertEquals(1, $second_l1->getLastAppliedEventID());
-
-        // Alter the item in Pool 1. Pool 2 should hit its L1 again
-        // with the out-of-date item. Synchronizing should fix it.
-        $pool1->set($myaddr, 'myvalue2');
-        $this->assertEquals('myvalue', $pool2->get($myaddr));
-        $applied = $pool2->synchronize();
-        $this->assertEquals(1, $applied);
-        $this->assertEquals('myvalue2', $pool2->get($myaddr));
-
-        // Delete the item in Pool 1. Pool 2 should hit its L1 again
-        // with the now-deleted item. Synchronizing should fix it.
-        $pool1->delete($myaddr);
-        $this->assertEquals('myvalue2', $pool2->get($myaddr));
-        $applied = $pool2->synchronize();
-        $this->assertEquals(1, $applied);
-        $this->assertNull($pool2->get($myaddr));
-
-        // Try to get an entry that has never existed.
-        $myaddr_nonexistent = new Address('mybin', 'mykeynonexistent');
-        $this->assertNull($pool1->get($myaddr_nonexistent));
-
-        // Test out bins and clearing.
-        $mybin1_mykey = new Address('mybin1', 'mykey');
-        $mybin1 = new Address('mybin1');
-        $mybin2_mykey = new Address('mybin2', 'mykey');
-        $pool1->set($mybin1_mykey, 'myvalue1');
-        $pool1->set($mybin2_mykey, 'myvalue2');
-        $pool2->synchronize();
-        $pool1->delete($mybin1);
-
-        // The deleted bin should be evident in pool1 but not in pool2.
-        $this->assertNull($pool1->get($mybin1_mykey));
-        $this->assertEquals('myvalue2', $pool1->get($mybin2_mykey));
-        $this->assertEquals('myvalue1', $pool2->get($mybin1_mykey));
-        $this->assertEquals('myvalue2', $pool2->get($mybin2_mykey));
-
-        // Synchronizing should propagate the bin clearing to pool2.
-        $pool2->synchronize();
-        $this->assertNull($pool2->get($mybin1_mykey));
-        $this->assertEquals('myvalue2', $pool2->get($mybin2_mykey));
-    }
-
     protected function performClearSynchronizationTest($central, $first_l1, $second_l1)
     {
         // Create two integrated pools with independent L1s.
@@ -209,12 +142,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertTrue($found);
     }
 
-    public function testSynchronizationStatic()
-    {
-        $central = new StaticL2();
-        $this->performSynchronizationTest($central, $this->l1Factory()->create('static'), $this->l1Factory()->create('static'));
-    }
-
     public function testTaggedSynchronizationStatic()
     {
         $central = new StaticL2();
@@ -238,11 +165,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
         if ($run_test) {
             $central = new StaticL2();
-            $this->performSynchronizationTest(
-                $central,
-                $this->l1Factory()->create('apcu', 'testSynchronizationAPCu1'),
-                $this->l1Factory()->create('apcu', 'testSynchronizationAPCu2')
-            );
 
             // Because of how APCu only offers full cache clears, we test against a static cache for the other L1.
             $this->performClearSynchronizationTest(
@@ -263,11 +185,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     public function testSynchronizationSQLiteL1()
     {
         $central = new StaticL2();
-        $this->performSynchronizationTest(
-            $central,
-            $this->l1Factory()->create('sqlite'),
-            $this->l1Factory()->create('sqlite')
-        );
 
         $this->performClearSynchronizationTest(
             $central,
@@ -290,11 +207,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     {
         $this->createSchema();
         $central = new DatabaseL2($this->dbh);
-        $this->performSynchronizationTest(
-            $central,
-            $this->l1Factory()->create('static', 'testSynchronizationDatabase1'),
-            $this->l1Factory()->create('static', 'testSynchronizationDatabase2')
-        );
         $this->performClearSynchronizationTest(
             $central,
             $this->l1Factory()->create('static', 'testSynchronizationDatabase1a'),
