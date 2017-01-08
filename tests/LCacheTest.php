@@ -178,46 +178,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     }
 
     /**
-     * @todo Is this still needed, or it can be deleted.
-     *   Same tests are implemented against all L1 drivers directly in
-     *   L1CacheTest::testStateStorage().
-     */
-    protected function performHitSetCounterTest($l1)
-    {
-        $pool = new Integrated($l1, new StaticL2());
-        $myaddr = new Address('mybin', 'mykey');
-
-        $this->assertEquals(0, $l1->getKeyOverhead($myaddr));
-        $pool->set($myaddr, 'myvalue');
-        $this->assertEquals(1, $l1->getKeyOverhead($myaddr));
-        $pool->get($myaddr);
-        $this->assertEquals(0, $l1->getKeyOverhead($myaddr));
-        $pool->set($myaddr, 'myvalue2');
-        $this->assertEquals(1, $l1->getKeyOverhead($myaddr));
-
-        // An unknown get should create negative overhead, generally
-        // in anticipation of a set.
-        $myaddr2 = new Address('mybin', 'mykey2');
-        $pool->get($myaddr2);
-        $this->assertEquals(-1, $l1->getKeyOverhead($myaddr2));
-    }
-
-    public function testStaticL1Counters()
-    {
-        $this->performHitSetCounterTest($this->l1Factory()->create('static'));
-    }
-
-    public function testAPCuL1Counters()
-    {
-        $this->performHitSetCounterTest($this->l1Factory()->create('apcu', 'counters'));
-    }
-
-    public function testSQLiteL1Counters()
-    {
-        $this->performHitSetCounterTest($this->l1Factory()->create('sqlite'));
-    }
-
-    /**
      * @return PHPUnit_Extensions_Database_DataSet_IDataSet
      */
     protected function getDataSet()

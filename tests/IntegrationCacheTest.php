@@ -514,4 +514,31 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         $this->assertNotNull($pool->set($myaddr2, 'myvalue'));
         $this->assertNotNull($pool->set($myaddr2, 'myvalue'));
     }
+
+    /**
+     * $this overlaps with L1CacheTest::testStateStorage().
+     *
+     * @group integration
+     * @dataProvider poolProvider
+     */
+    public function testHitSetCounter($l1, $l2)
+    {
+        $myaddr = new Address('mybin', 'mykey');
+        $pool = $this->createPool($l1, $l2);
+        $l1Driver = $pool->getL1();
+
+        $this->assertEquals(0, $l1Driver->getKeyOverhead($myaddr));
+        $pool->set($myaddr, 'myvalue');
+        $this->assertEquals(1, $l1Driver->getKeyOverhead($myaddr));
+        $pool->get($myaddr);
+        $this->assertEquals(0, $l1Driver->getKeyOverhead($myaddr));
+        $pool->set($myaddr, 'myvalue2');
+        $this->assertEquals(1, $l1Driver->getKeyOverhead($myaddr));
+
+        // An unknown get should create negative overhead, generally
+        // in anticipation of a set.
+        $myaddr2 = new Address('mybin', 'mykey2');
+        $this->assertNull($pool->get($myaddr2));
+        $this->assertEquals(-1, $l1Driver->getKeyOverhead($myaddr2));
+    }
 }
