@@ -18,7 +18,7 @@ namespace LCache\Utils;
 trait LCacheDBTestTrait
 {
     use \PHPUnit_Extensions_Database_TestCase_Trait {
-        \PHPUnit_Extensions_Database_TestCase_Trait::setUp as dbTraitSetUp;
+        \PHPUnit_Extensions_Database_TestCase_Trait::setUp as phpUnitDbTraitSetUp;
     }
 
     /** @var \PDO */
@@ -58,7 +58,7 @@ trait LCacheDBTestTrait
      */
     protected function setUp()
     {
-        $this->dbTraitSetUp();
+        $this->phpUnitDbTraitSetUp();
         $this->tablesCreated = false;
         $this->dbPrefix = '';
     }
