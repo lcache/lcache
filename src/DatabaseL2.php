@@ -4,27 +4,49 @@ namespace LCache;
 
 class DatabaseL2 extends L2
 {
+    /** @var int */
     protected $hits;
+
+    /** @var int */
     protected $misses;
+
+    /** @var \PDO Database handle object. */
     protected $dbh;
+
+    /** @var bool */
     protected $log_locally;
+
+    /** @var array List of errors that are logged. */
     protected $errors;
+
+    /** @var string */
     protected $table_prefix;
-    protected $address_deletion_patterns;
-    protected $event_id_low_water;
+
+    /** @var array Aggregated list of addresses to be deleted in bulk. */
+    protected $address_delete_queue;
+
+    protected $tagsTable;
+    protected $eventsTable;
 
     public function __construct($dbh, $table_prefix = '', $log_locally = false)
     {
         $this->hits = 0;
         $this->misses = 0;
+        $this->errors = [];
+        $this->address_delete_queue = [];
+
         $this->dbh = $dbh;
         $this->log_locally = $log_locally;
-        $this->errors = array();
         $this->table_prefix = $table_prefix;
-        $this->address_deletion_patterns = [];
-        $this->event_id_low_water = null;
+
+        $this->tagsTable = $this->prefixTable('lcache_tags');
+        $this->eventsTable = $this->prefixTable('lcache_events');
     }
 
+    private function now()
+    {
+        return $_SERVER['REQUEST_TIME'];
+    }
 
     protected function prefixTable($base_name)
     {
@@ -34,20 +56,20 @@ class DatabaseL2 extends L2
     public function pruneReplacedEvents()
     {
         // No deletions, nothing to do.
-        if (empty($this->address_deletion_patterns)) {
+        if (empty($this->address_delete_queue)) {
             return true;
         }
-
-        // De-dupe the deletion patterns.
         // @TODO: Have bin deletions replace key deletions?
-        $deletions = array_values(array_unique($this->address_deletion_patterns));
-
-        $filler = implode(',', array_fill(0, count($deletions), '?'));
         try {
-            $sth = $this->dbh->prepare('DELETE FROM ' . $this->prefixTable('lcache_events') .' WHERE "event_id" < ? AND "address" IN ('. $filler .')');
-            $sth->bindValue(1, $this->event_id_low_water, \PDO::PARAM_INT);
-            foreach ($deletions as $i => $address) {
-                $sth->bindValue($i + 2, $address, \PDO::PARAM_STR);
+            $conditions = array_fill(0, count($this->address_delete_queue), '("event_id" < ? and "address" = ?)');
+            $sql = "DELETE FROM {$this->eventsTable}"
+                . " WHERE " . implode(' OR ', $conditions);
+            $sth = $this->dbh->prepare($sql);
+            foreach (array_keys($this->address_delete_queue) as $i => $address) {
+                $offset = $i << 1;
+                $event_id = $this->address_delete_queue[$address];
+                $sth->bindValue($offset + 1, $event_id, \PDO::PARAM_INT);
+                $sth->bindValue($offset + 2, $address, \PDO::PARAM_STR);
             }
             $sth->execute();
         } catch (\PDOException $e) {
@@ -56,7 +78,7 @@ class DatabaseL2 extends L2
         }
 
         // Clear the queue.
-        $this->address_deletion_patterns = [];
+        $this->address_delete_queue = [];
         return true;
     }
 
@@ -68,8 +90,11 @@ class DatabaseL2 extends L2
     public function countGarbage()
     {
         try {
-            $sth = $this->dbh->prepare('SELECT COUNT(*) garbage FROM ' . $this->prefixTable('lcache_events') . ' WHERE "expiration" < :now');
-            $sth->bindValue(':now', $_SERVER['REQUEST_TIME'], \PDO::PARAM_INT);
+            $sql = 'SELECT COUNT(*) garbage'
+                . ' FROM ' . $this->eventsTable
+                . ' WHERE "expiration" < :now';
+            $sth = $this->dbh->prepare($sql);
+            $sth->bindValue(':now', $this->now(), \PDO::PARAM_INT);
             $sth->execute();
         } catch (\PDOException $e) {
             $this->logSchemaIssueOrRethrow('Failed to count garbage', $e);
@@ -82,19 +107,22 @@ class DatabaseL2 extends L2
 
     public function collectGarbage($item_limit = null)
     {
-        $sql = 'DELETE FROM ' . $this->prefixTable('lcache_events') . ' WHERE "expiration" < :now';
+        $sql = 'DELETE FROM ' . $this->eventsTable
+            . ' WHERE "expiration" < :now';
         // This is not supported by standard SQLite.
         // @codeCoverageIgnoreStart
-        if (!is_null($item_limit)) {
+        $addLimit = !is_null($item_limit)
+            && $this->dbh->getAttribute(\PDO::ATTR_DRIVER_NAME) !== 'sqlite';
+        if ($addLimit) {
             $sql .= ' ORDER BY "event_id" LIMIT :item_limit';
         }
         // @codeCoverageIgnoreEnd
         try {
             $sth = $this->dbh->prepare($sql);
-            $sth->bindValue(':now', $_SERVER['REQUEST_TIME'], \PDO::PARAM_INT);
+            $sth->bindValue(':now', $this->now(), \PDO::PARAM_INT);
             // This is not supported by standard SQLite.
             // @codeCoverageIgnoreStart
-            if (!is_null($item_limit)) {
+            if ($addLimit) {
                 $sth->bindValue(':item_limit', $item_limit, \PDO::PARAM_INT);
             }
             // @codeCoverageIgnoreEnd
@@ -103,21 +131,24 @@ class DatabaseL2 extends L2
         } catch (\PDOException $e) {
             $this->logSchemaIssueOrRethrow('Failed to collect garbage', $e);
         }
-        return false;
+        return 0;
     }
 
-    protected function queueDeletion(Address $address)
+    protected function queueDeletion($eventId, Address $address)
     {
         assert(!$address->isEntireBin());
-        $pattern = $address->serialize();
-        $this->address_deletion_patterns[] = $pattern;
+        // Key by the address, so we will have the last write event ID for a
+        // given address in the end of the request.
+        $this->address_delete_queue[$address->serialize()] = $eventId;
     }
 
     protected function logSchemaIssueOrRethrow($description, $pdo_exception)
     {
-        $log_only = array(/* General error */ 'HY000',
-                      /* Unknown column */ '42S22',
-                      /* Base table for view not found */ '42S02');
+        $log_only = [
+            'HY000' /* General error */,
+            '42S22' /* Unknown column */,
+            '42S02' /* Base table for view not found */,
+        ];
 
         if (in_array($pdo_exception->getCode(), $log_only, true)) {
             $text = 'LCache Database: ' . $description . ' : ' . $pdo_exception->getMessage();
@@ -147,28 +178,30 @@ class DatabaseL2 extends L2
         return $this->errors;
     }
 
-    // Returns an LCache\Entry
+    /**
+     * {inheritDock}
+     */
     public function getEntry(Address $address)
     {
         try {
-            $sth = $this->dbh->prepare('SELECT "event_id", "pool", "address", "value", "created", "expiration" FROM ' . $this->prefixTable('lcache_events') .' WHERE "address" = :address AND ("expiration" >= :now OR "expiration" IS NULL) ORDER BY "event_id" DESC LIMIT 1');
+            $sql = 'SELECT "event_id", "pool", "address", "value", "created", "expiration" '
+                . ' FROM ' . $this->eventsTable
+                . ' WHERE "address" = :address '
+                . ' AND ("expiration" >= :now OR "expiration" IS NULL) '
+                . ' ORDER BY "event_id" DESC '
+                . ' LIMIT 1';
+            $sth = $this->dbh->prepare($sql);
             $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
-            $sth->bindValue(':now', $_SERVER['REQUEST_TIME'], \PDO::PARAM_INT);
+            $sth->bindValue(':now', $this->now(), \PDO::PARAM_INT);
             $sth->execute();
         } catch (\PDOException $e) {
             $this->logSchemaIssueOrRethrow('Failed to search database for cache item', $e);
             return null;
         }
-        //$last_matching_entry = $sth->fetchObject('LCacheEntry');
         $last_matching_entry = $sth->fetchObject();
 
-        if (false === $last_matching_entry) {
-            $this->misses++;
-            return null;
-        }
-
-        // If last event was a deletion, miss.
-        if (is_null($last_matching_entry->value)) {
+        // No entry or the last one was a deletion - miss.
+        if (false === $last_matching_entry || is_null($last_matching_entry->value)) {
             $this->misses++;
             return null;
         }
@@ -180,15 +213,26 @@ class DatabaseL2 extends L2
             throw new UnserializationException($address, $last_matching_entry->value);
         }
 
-        $last_matching_entry->value = $unserialized_value;
+        // Prepare correct result object.
+        $entry = new \LCache\Entry(
+            $last_matching_entry->event_id,
+            $last_matching_entry->pool,
+            clone $address,
+            $unserialized_value,
+            $last_matching_entry->created
+        );
+
         $this->hits++;
-        return $last_matching_entry;
+        return $entry;
     }
 
     // Returns the event entry. Currently used only for testing.
     public function getEvent($event_id)
     {
-        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->prefixTable('lcache_events') .' WHERE event_id = :event_id');
+        $sql = 'SELECT *'
+            . ' FROM ' . $this->eventsTable
+            . ' WHERE event_id = :event_id';
+        $sth = $this->dbh->prepare($sql);
         $sth->bindValue(':event_id', $event_id, \PDO::PARAM_INT);
         $sth->execute();
         $event = $sth->fetchObject();
@@ -202,16 +246,29 @@ class DatabaseL2 extends L2
     public function exists(Address $address)
     {
         try {
-            $sth = $this->dbh->prepare('SELECT "event_id", ("value" IS NOT NULL) AS value_not_null, "value" FROM ' . $this->prefixTable('lcache_events') .' WHERE "address" = :address AND ("expiration" >= :now OR "expiration" IS NULL) ORDER BY "event_id" DESC LIMIT 1');
+            $sql = 'SELECT ("value" IS NOT NULL) AS value_not_null '
+                . ' FROM ' . $this->eventsTable
+                . ' WHERE "address" = :address'
+                . ' AND ("expiration" >= :now OR "expiration" IS NULL)'
+                . ' ORDER BY "event_id" DESC'
+                . ' LIMIT 1';
+            $sth = $this->dbh->prepare($sql);
             $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
-            $sth->bindValue(':now', $_SERVER['REQUEST_TIME'], \PDO::PARAM_INT);
+            $sth->bindValue(':now', $this->now(), \PDO::PARAM_INT);
             $sth->execute();
         } catch (\PDOException $e) {
             $this->logSchemaIssueOrRethrow('Failed to search database for cache item existence', $e);
             return null;
         }
         $result = $sth->fetchObject();
-        return ($result !== false && $result->value_not_null);
+
+        $exists = ($result !== false && $result->value_not_null);
+
+        // To comply wiht the LX interface that expects to use LX::get for the
+        // implementation, here we need to handle the hit/miss manually.
+        $this->{($exists ? 'hits' : 'misses')}++;
+
+        return $exists;
     }
 
     /**
@@ -220,17 +277,19 @@ class DatabaseL2 extends L2
     public function debugDumpState()
     {
         echo PHP_EOL . PHP_EOL . 'Events:' . PHP_EOL;
-        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->prefixTable('lcache_events') . ' ORDER BY "event_id"');
+        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->eventsTable . ' ORDER BY "event_id"');
         $sth->execute();
         while ($event = $sth->fetchObject()) {
             print_r($event);
         }
+        unset($sth);
         echo PHP_EOL;
+
         echo 'Tags:' . PHP_EOL;
-        $sth = $this->dbh->prepare('SELECT * FROM ' . $this->prefixTable('lcache_tags') . ' ORDER BY "tag"');
-        $sth->execute();
+        $sth2 = $this->dbh->prepare('SELECT * FROM ' . $this->tagsTable . ' ORDER BY "tag"');
+        $sth2->execute();
         $tags_found = false;
-        while ($event = $sth->fetchObject()) {
+        while ($event = $sth2->fetchObject()) {
             print_r($event);
             $tags_found = true;
         }
@@ -240,20 +299,33 @@ class DatabaseL2 extends L2
         echo PHP_EOL;
     }
 
+    /**
+     * @todo
+     *   Should we consider transactions here? We are doing 3 queries: 1. Add an
+     *   event, 2. Delete (if deemed so) and 3. Add tags (if any). All of that
+     *   should behave as a single operation in DB. If DB driver is not
+     *   supporting that - it should be emulated.
+     */
     public function set($pool, Address $address, $value = null, $expiration = null, array $tags = [], $value_is_serialized = false)
     {
         // Support pre-serialized values for testing purposes.
-        if (!$value_is_serialized) {
-            $value = is_null($value) ? null : serialize($value);
+        if (!$value_is_serialized && !is_null($value)) {
+            $value = serialize($value);
         }
 
+        // Add the event to storage.
         try {
-            $sth = $this->dbh->prepare('INSERT INTO ' . $this->prefixTable('lcache_events') . ' ("pool", "address", "value", "created", "expiration") VALUES (:pool, :address, :value, :now, :expiration)');
+            $sql = 'INSERT INTO ' . $this->eventsTable
+                . ' ("pool", "address", "value", "created", "expiration")'
+                . ' VALUES'
+                . ' (:pool, :address, :value, :now, :expiration)';
+
+            $sth = $this->dbh->prepare($sql);
             $sth->bindValue(':pool', $pool, \PDO::PARAM_STR);
             $sth->bindValue(':address', $address->serialize(), \PDO::PARAM_STR);
             $sth->bindValue(':value', $value, \PDO::PARAM_LOB);
             $sth->bindValue(':expiration', $expiration, \PDO::PARAM_INT);
-            $sth->bindValue(':now', $_SERVER['REQUEST_TIME'], \PDO::PARAM_INT);
+            $sth->bindValue(':now', $this->now(), \PDO::PARAM_INT);
             $sth->execute();
         } catch (\PDOException $e) {
             $this->logSchemaIssueOrRethrow('Failed to store cache event', $e);
@@ -264,25 +336,37 @@ class DatabaseL2 extends L2
         // Handle bin and larger deletions immediately. Queue individual key
         // deletions for shutdown.
         if ($address->isEntireBin() || $address->isEntireCache()) {
+            $sql = 'DELETE FROM ' . $this->eventsTable
+                . ' WHERE "event_id" < :new_event_id'
+                . ' AND "address" LIKE :pattern';
             $pattern = $address->serialize() . '%';
-            $sth = $this->dbh->prepare('DELETE FROM ' . $this->prefixTable('lcache_events') .' WHERE "event_id" < :new_event_id AND "address" LIKE :pattern');
+            $sth = $this->dbh->prepare($sql);
             $sth->bindValue(':new_event_id', $event_id, \PDO::PARAM_INT);
             $sth->bindValue(':pattern', $pattern, \PDO::PARAM_STR);
             $sth->execute();
         } else {
-            if (is_null($this->event_id_low_water)) {
-                $this->event_id_low_water = $event_id;
-            }
-            $this->queueDeletion($address);
+            $this->queueDeletion($event_id, $address);
         }
 
         // Store any new cache tags.
-        // @TODO: Turn into one query.
-        foreach ($tags as $tag) {
+        if (!empty($tags)) {
             try {
-                $sth = $this->dbh->prepare('INSERT INTO ' . $this->prefixTable('lcache_tags') . ' ("tag", "event_id") VALUES (:tag, :new_event_id)');
-                $sth->bindValue(':tag', $tag, \PDO::PARAM_STR);
-                $sth->bindValue(':new_event_id', $event_id, \PDO::PARAM_INT);
+                // Unify tags to avoid duplicate keys.
+                $tags = array_keys(array_flip($tags));
+
+                // TODO: Consider splitting to multiple multi-row queries.
+                // This might be needed when inserting MANY tags for a key.
+                // If so, have a configurable constant to do the splitting on.
+                $sql = 'INSERT INTO ' . $this->tagsTable
+                    . ' ("tag", "event_id")'
+                    . ' VALUES '
+                    . implode(',', array_fill(0, count($tags), '(?,?)'));
+                $sth = $this->dbh->prepare($sql);
+                foreach ($tags as $index => $tag_name) {
+                    $offset = $index << 1;
+                    $sth->bindValue($offset + 1, $tag_name, \PDO::PARAM_STR);
+                    $sth->bindValue($offset + 2, $event_id, \PDO::PARAM_INT);
+                }
                 $sth->execute();
             } catch (\PDOException $e) {
                 $this->logSchemaIssueOrRethrow('Failed to associate cache tags', $e);
@@ -293,58 +377,66 @@ class DatabaseL2 extends L2
         return $event_id;
     }
 
-    public function delete($pool, Address $address)
+    /**
+     * Initializes a generator for iterating over tag addresses one by one.
+     *
+     * @param string $tag
+     *   Tag to search the addresses for.
+     *
+     * @return \Generator|null
+     *   When a successfully execuded query is done an activated generator
+     *   instance is returned. Otherwise NULL.
+     */
+    private function getAddressesForTagGenerator($tag)
     {
-        $event_id = $this->set($pool, $address);
-        return $event_id;
+        try {
+            // @TODO: Convert this to using a subquery to only match with the latest event_id.
+            // @TODO: Move the where condition to a join one to speed-up the query (benchmark with big DB).
+            $sql = 'SELECT DISTINCT "address"'
+                . ' FROM ' . $this->eventsTable . ' e'
+                . ' INNER JOIN ' . $this->tagsTable . ' t ON t.event_id = e.event_id'
+                . ' WHERE "tag" = :tag';
+            $sth = $this->dbh->prepare($sql);
+            $sth->bindValue(':tag', $tag, \PDO::PARAM_STR);
+            $sth->execute();
+        } catch (\PDOException $e) {
+            $this->logSchemaIssueOrRethrow('Failed to find cache items associated with tag', $e);
+            return null;
+        }
+
+        return call_user_func(function () use ($sth) {
+            while ($tag_entry = $sth->fetchObject()) {
+                $address = new Address();
+                $address->unserialize($tag_entry->address);
+                yield $address;
+            }
+        });
     }
 
     public function getAddressesForTag($tag)
     {
-        try {
-            // @TODO: Convert this to using a subquery to only match with the latest event_id.
-            $sth = $this->dbh->prepare('SELECT DISTINCT "address" FROM ' . $this->prefixTable('lcache_events') . ' e INNER JOIN ' . $this->prefixTable('lcache_tags') . ' t ON t.event_id = e.event_id WHERE "tag" = :tag');
-            $sth->bindValue(':tag', $tag, \PDO::PARAM_STR);
-            $sth->execute();
-        } catch (\PDOException $e) {
-            $this->logSchemaIssueOrRethrow('Failed to find cache items associated with tag', $e);
+        if (($generator = $this->getAddressesForTagGenerator($tag)) === null) {
             return null;
         }
-        $addresses = [];
-        while ($tag_entry = $sth->fetchObject()) {
-            $address = new Address();
-            $address->unserialize($tag_entry->address);
-            $addresses[] = $address;
-        }
-        return $addresses;
+        return iterator_to_array($generator);
     }
 
     public function deleteTag(L1 $l1, $tag)
     {
-        // Find the matching keys and create tombstones for them.
-        try {
-            $sth = $this->dbh->prepare('SELECT DISTINCT "address" FROM ' . $this->prefixTable('lcache_events') . ' e INNER JOIN ' . $this->prefixTable('lcache_tags') . ' t ON t.event_id = e.event_id WHERE "tag" = :tag');
-            $sth->bindValue(':tag', $tag, \PDO::PARAM_STR);
-            $sth->execute();
-        } catch (\PDOException $e) {
-            $this->logSchemaIssueOrRethrow('Failed to find cache items associated with tag', $e);
+        if (($addressGenerator = $this->getAddressesForTagGenerator($tag)) === null) {
             return null;
         }
 
         $last_applied_event_id = null;
-        while ($tag_entry = $sth->fetchObject()) {
-            $address = new Address();
-            $address->unserialize($tag_entry->address);
+        foreach ($addressGenerator as $address) {
             $last_applied_event_id = $this->delete($l1->getPool(), $address);
             $l1->delete($last_applied_event_id, $address);
         }
-
-        // Delete the tag, which has now been invalidated.
-        // @TODO: Move to a transaction, collect the list of deleted keys,
-        // or delete individual tag/key pairs in the loop above.
-        //$sth = $this->dbh->prepare('DELETE FROM ' . $this->prefixTable('lcache_tags') . ' WHERE "tag" = :tag');
-        //$sth->bindValue(':tag', $tag, PDO::PARAM_STR);
-        //$sth->execute();
+        // We have the possibility to delete many addreses one by one. Any
+        // consecuitive tag delete will atempt to delete them again, if not
+        // prunned explicitly here. By deleting the stale / old events, we use
+        // the DB's ON DELETE CASCADE to clear the relaed tags also.
+        $this->pruneReplacedEvents();
 
         return $last_applied_event_id;
     }
@@ -357,34 +449,44 @@ class DatabaseL2 extends L2
         // to the current high-water mark.
         if (is_null($last_applied_event_id)) {
             try {
-                $sth = $this->dbh->prepare('SELECT "event_id" FROM ' . $this->prefixTable('lcache_events') . ' ORDER BY "event_id" DESC LIMIT 1');
+                $sql = 'SELECT "event_id"'
+                    . ' FROM ' . $this->eventsTable
+                    . ' ORDER BY "event_id" DESC'
+                    . ' LIMIT 1';
+                $sth = $this->dbh->prepare($sql);
                 $sth->execute();
             } catch (\PDOException $e) {
                 $this->logSchemaIssueOrRethrow('Failed to initialize local event application status', $e);
                 return null;
             }
             $last_event = $sth->fetchObject();
-            if (false === $last_event) {
-                $l1->setLastAppliedEventID(0);
-            } else {
-                $l1->setLastAppliedEventID($last_event->event_id);
-            }
+            $value = false === $last_event ? 0 : (int) $last_event->event_id;
+            $l1->setLastAppliedEventID($value);
             return null;
         }
 
-        $applied = 0;
         try {
-            $sth = $this->dbh->prepare('SELECT "event_id", "pool", "address", "value", "created", "expiration" FROM ' . $this->prefixTable('lcache_events') . ' WHERE "event_id" > :last_applied_event_id AND "pool" <> :exclude_pool ORDER BY event_id');
+            $sql = 'SELECT "event_id", "pool", "address", "value", "created", "expiration"'
+                . ' FROM ' . $this->eventsTable
+                . ' WHERE "event_id" > :last_applied_event_id'
+                . ' ORDER BY event_id';
+            $sth = $this->dbh->prepare($sql);
             $sth->bindValue(':last_applied_event_id', $last_applied_event_id, \PDO::PARAM_INT);
-            $sth->bindValue(':exclude_pool', $l1->getPool(), \PDO::PARAM_STR);
             $sth->execute();
         } catch (\PDOException $e) {
             $this->logSchemaIssueOrRethrow('Failed to fetch events', $e);
             return null;
         }
 
-        //while ($event = $sth->fetchObject('LCacheEntry')) {
+        $applied = 0;
         while ($event = $sth->fetchObject()) {
+            $last_applied_event_id = $event->event_id;
+
+            // Were created by the local L1.
+            if ($event->pool === $l1->getPool()) {
+                continue;
+            }
+
             $address = new Address();
             $address->unserialize($event->address);
             if (is_null($event->value)) {
@@ -395,13 +497,9 @@ class DatabaseL2 extends L2
                     // Delete the L1 entry, if any, when we fail to unserialize.
                     $l1->delete($event->event_id, $address);
                 } else {
-                    $event->value = $unserialized_value;
-                    $address = new Address();
-                    $address->unserialize($event->address);
-                    $l1->setWithExpiration($event->event_id, $address, $event->value, $event->created, $event->expiration);
+                    $l1->setWithExpiration($event->event_id, $address, $unserialized_value, $event->created, $event->expiration);
                 }
             }
-            $last_applied_event_id = $event->event_id;
             $applied++;
         }
 

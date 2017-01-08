@@ -1,9 +1,8 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * @file
+ * Test file for the Null L1 driver in LCache library.
  */
 
 namespace LCache\L1;
@@ -11,21 +10,28 @@ namespace LCache\L1;
 use LCache\Address;
 
 /**
- * Description of NullTest
+ * NullTest concrete implementation.
  *
  * @author ndobromirov
  */
 class NullTest extends \LCache\L1CacheTest
 {
 
+    /**
+     * {@inheritDoc}
+     */
     protected function driverName()
     {
         return 'null';
     }
 
-    public function testHitMiss()
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
+    public function testHitMiss($state)
     {
-        $cache = $this->createL1();
+        $cache = $this->createL1($state);
         $myaddr = new Address('mybin', 'mykey');
 
         $cache->set(1, $myaddr, 'myvalue');
@@ -35,28 +41,52 @@ class NullTest extends \LCache\L1CacheTest
         $this->assertEquals(1, $cache->getMisses());
     }
 
-    public function testStateStorage()
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
+    public function testStateStorage($state)
     {
-        $lastEventId = $this->createL1()->getLastAppliedEventID();
+        $lastEventId = $this->createL1($state)->getLastAppliedEventID();
         $this->assertEquals(PHP_INT_MAX, $lastEventId);
     }
 
+    /**
+     * @group L1
+     */
     public function testSetGetDelete()
     {
         // Not relevant for NullL1 class.
     }
 
+    /**
+     * @group L1
+     */
     public function testPreventRollback()
     {
         // Not relevant for NullL1 class.
     }
 
+    /**
+     * @group L1
+     */
     public function testExists()
     {
         // Not relevant for NullL1 class.
     }
 
+    /**
+     * @group L1
+     */
     public function testPoolSharing()
+    {
+        // Not relevant for NullL1 class.
+    }
+
+    /**
+     * @group L1
+     */
+    public function testNegativeCache()
     {
         // Not relevant for NullL1 class.
     }

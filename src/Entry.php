@@ -12,7 +12,19 @@ final class Entry
     public $expiration;
     public $tags;
 
-    public function __construct($event_id, $pool, Address $address, $value, $created, $expiration = null, array $tags = [])
+    /**
+     *
+     * @param type $event_id
+     * @param type $pool
+     * @param \LCache\Address $address
+     * @param type $value
+     * @param type $created
+     * @param type $expiration
+     * @param array|null $tags
+     *   List of tag names for the entry object.
+     *   Null, when loaded from some storage implementations.
+     */
+    public function __construct($event_id, $pool, Address $address, $value, $created, $expiration = null, array $tags = null)
     {
         $this->event_id = $event_id;
         $this->pool = $pool;
@@ -25,7 +37,7 @@ final class Entry
 
     /**
      * Return the Address for this entry.
-     * @return Address
+     * @return \LCache\Address
      */
     public function getAddress()
     {
@@ -45,5 +57,11 @@ final class Entry
             return $this->expiration - $_SERVER['REQUEST_TIME'];
         }
         return 0;
+    }
+
+    public function isExpired()
+    {
+        return $this->expiration !== null
+            && $this->expiration < $_SERVER['REQUEST_TIME'];
     }
 }

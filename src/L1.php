@@ -39,6 +39,14 @@ abstract class L1 extends LX
         return $this->pool;
     }
 
+    /**
+     *
+     * @param int $event_id
+     * @param \LCache\Address $address
+     * @param mixed|null $value
+     * @param int $expiration
+     * @return bool|null
+     */
     public function set($event_id, Address $address, $value = null, $expiration = null)
     {
         return $this->setWithExpiration($event_id, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);

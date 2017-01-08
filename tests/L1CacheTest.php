@@ -28,21 +28,50 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
     /**
      * Utility factory method for L1 concretes.
      *
+     * @param string $state
+     *   State driver name to create. Default to NULL, that is the default
+     *   driver for a given L1 cache implementation.
      * @param string $pool
      *   Cache pool to use for data during the tests.
      *
      * @return L1
      *   One of the L1 concrete descendants.
      */
-    protected function createL1($pool = null)
+    protected function createL1($state = null, $pool = null)
     {
-        return (new L1CacheFactory())->create($this->driverName(), $pool);
+        $stateFactory = new StateL1Factory($state);
+        $l1Factory = new L1CacheFactory($stateFactory);
+        $l1 = $l1Factory->create($this->driverName(), $pool);
+        return $l1;
     }
 
-    public function testSetGetDelete()
+    public function stateDriverProvider()
+    {
+        return [
+            'State APCu' => ['apcu'],
+            'State static' => ['static'],
+        ];
+    }
+
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
+    public function testL1Factory($state)
+    {
+        $staticL1 = $this->createL1($state, 'static');
+        $invalidL1 = $this->createL1($state, 'invalid_cache_driver');
+        $this->assertEquals(get_class($staticL1), get_class($invalidL1));
+    }
+
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
+    public function testSetGetDelete($state)
     {
         $event_id = 1;
-        $l1 = $this->createL1();
+        $l1 = $this->createL1($state);
         $myaddr = new Address('mybin', 'mykey');
 
         // Validate emptyness.
@@ -92,9 +121,13 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(42, $entry->created);
     }
 
-    public function testPreventRollback()
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
+    public function testPreventRollback($state)
     {
-        $l1 = $this->createL1();
+        $l1 = $this->createL1($state);
 
         $myaddr = new Address('mybin', 'mykey');
         $current_event_id = $l1->getLastAppliedEventID();
@@ -110,10 +143,14 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('myvalue', $l1->get($myaddr));
     }
 
-    public function testFullDelete()
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
+    public function testFullDelete($state)
     {
         $event_id = 1;
-        $l1 = $this->createL1();
+        $l1 = $this->createL1($state);
         $myaddr = new Address('mybin', 'mykey');
 
         // Set an entry and clear the storage.
@@ -124,22 +161,30 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, $l1->getMisses());
     }
 
-    public function testExpiration()
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
+    public function testExpiration($state)
     {
         $event_id = 1;
-        $l1 = $this->createL1();
+        $l1 = $this->createL1($state);
         $myaddr = new Address('mybin', 'mykey');
 
-        // Set and get an entry.
+        // Setting expired item does nothing.
         $l1->set($event_id++, $myaddr, 'myvalue', -1);
         $this->assertNull($l1->get($myaddr));
         $this->assertEquals(0, $l1->getHits());
         $this->assertEquals(1, $l1->getMisses());
     }
 
-    public function testExists()
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
+    public function testExists($state)
     {
-        $l1 = $this->createL1();
+        $l1 = $this->createL1($state);
         $myaddr = new Address('mybin', 'mykey');
 
         $l1->set(1, $myaddr, 'myvalue');
@@ -148,35 +193,47 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($l1->exists($myaddr));
     }
 
-    public function testPoolIDs()
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
+    public function testPoolIDs($state)
     {
         // Test unique ID generation.
-        $this->assertNotNull($this->createL1()->getPool());
+        $this->assertNotNull($this->createL1($state)->getPool());
 
         // Test host-based generation.
         $_SERVER['SERVER_ADDR'] = 'localhost';
         $_SERVER['SERVER_PORT'] = '80';
-        $this->assertEquals('localhost-80', $this->createL1()->getPool());
+        $this->assertEquals('localhost-80', $this->createL1($state)->getPool());
     }
 
-    public function testPoolSharing()
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
+    public function testPoolSharing($state)
     {
         $value = 'myvalue';
         $myaddr = new Address('mybin', 'mykey');
         $poolName = uniqid('', true) . '-' . mt_rand();
 
         // Initialize a value in cache.
-        $this->createL1($poolName)->set(1, $myaddr, $value);
+        $this->createL1($state, $poolName)->set(1, $myaddr, $value);
 
         // Opening a second instance of the same pool should work.
         // Reading from the second handle should show the same value.
-        $this->assertEquals($value, $this->createL1($poolName)->get($myaddr));
+        $this->assertEquals($value, $this->createL1($state, $poolName)->get($myaddr));
     }
 
-    public function testHitMiss()
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
+    public function testHitMiss($state)
     {
         $event_id = 1;
-        $l1 = $this->createL1();
+        $l1 = $this->createL1($state);
         $myaddr = new Address('mybin', 'mykey');
         list($hits, $misses) = [$l1->getHits(), $l1->getMisses()];
 
@@ -188,10 +245,14 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($hits + 1, $l1->getHits());
     }
 
-    public function testStateStorage()
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
+    public function testStateStorage($state)
     {
         $event_id = 1;
-        $l1 = $this->createL1();
+        $l1 = $this->createL1($state);
         $myaddr = new Address('mybin', 'mykey');
 
         $this->assertEquals(0, $l1->getKeyOverhead($myaddr));
@@ -207,5 +268,20 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $myaddr2 = new Address('mybin', 'mykey2');
         $l1->get($myaddr2);
         $this->assertEquals(-1, $l1->getKeyOverhead($myaddr2));
+    }
+
+    /**
+     * @group L1
+     * @dataProvider stateDriverProvider
+     */
+    public function testNegativeCache($state)
+    {
+        $delta = 10;
+        $l1 = $this->createL1($state);
+        $now = $_SERVER['REQUEST_TIME'];
+        $myaddr = new Address('mybin', 'mykey');
+
+        $this->assertTrue($l1->set(1, $myaddr, null, $now - $delta));
+        $this->assertFalse($l1->isNegativeCache($myaddr));
     }
 }

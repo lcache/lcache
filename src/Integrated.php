@@ -2,10 +2,21 @@
 
 namespace LCache;
 
-final class Integrated
+class Integrated
 {
+    /** @var L1 Managed L1 instance. */
     protected $l1;
+
+    /** @var L2 Managed L2 instance. */
     protected $l2;
+
+    /**
+     * @var int|null
+     *   Defaults to NULL - disable the management logic for this functionality.
+     *   Key overhead tuning parameter. Used to handle the auto-banning of keys
+     *   with excessive write operations against them - degrading the overall
+     *   library / cache efficiency.
+     */
     protected $overhead_threshold;
 
     public function __construct(L1 $l1, L2 $l2, $overhead_threshold = null)
@@ -17,13 +28,13 @@ final class Integrated
 
     public function set(Address $address, $value, $ttl_or_expiration = null, array $tags = [])
     {
+        $now = $_SERVER['REQUEST_TIME'];
+
         $expiration = null;
         if (!is_null($ttl_or_expiration)) {
-            if ($ttl_or_expiration < $_SERVER['REQUEST_TIME']) {
-                $expiration = $_SERVER['REQUEST_TIME'] + $ttl_or_expiration;
-            } else {
-                $expiration = $ttl_or_expiration;
-            }
+            $expiration = (int) $ttl_or_expiration;
+            // Consider any stale cache as TTL input.
+            $expiration += ($expiration < $now ? $now : 0);
         }
 
         if (!is_null($this->overhead_threshold)) {
@@ -44,8 +55,8 @@ final class Integrated
                 // in L1 for a number of minutes equivalent to the number of
                 // excessive sets over the threshold, plus one minute.
                 if (!is_null($event_id)) {
-                    $expiration = $_SERVER['REQUEST_TIME'] + ($excess + 1) * 60;
-                    $this->l1->setWithExpiration($event_id, $address, null, $_SERVER['REQUEST_TIME'], $expiration);
+                    $expiration = $now + ($excess + 1) * 60;
+                    $this->l1->setWithExpiration($event_id, $address, null, $now, $expiration);
                 }
                 return $event_id;
             }
@@ -90,6 +101,11 @@ final class Integrated
             return null;
         }
         return $entry->value;
+    }
+
+    public function getAddressesFortag($tag)
+    {
+        return $this->l2->getAddressesForTag($tag);
     }
 
     public function exists(Address $address)

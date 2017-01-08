@@ -14,18 +14,38 @@ namespace LCache;
  */
 class L1CacheFactory
 {
+    /** @var StateL1Factory */
+    private $state;
+
     /**
-     * L1 cache drivers const
+     * Factory class constructor.
+     *
+     * @param \LCache\StateL1Factory $state
+     *   Factory to be used for creation of the related internal state manager
+     *   instances for the different L1 drivers.
+     */
+    public function __construct(StateL1Factory $state)
+    {
+        $this->state = $state;
+    }
+
+    /**
+     * L1 cache drivers construction method.
      *
      * @todo Change the return value to L1CacheInterface
      *
      * @param string $driverName
-     *   Name of the L1 driver implementation to create. One of the DRIVER_*
-     *   class constants.
+     *   Name of the L1 driver implementation to create. Invalid driver names
+     *   passed here will be ignored and the static will be used as a fallback
+     *   implementation. Currently available drivers are:
+     *   - apcu
+     *   - static
+     *   - sqlite
+     *   - null
      * @param string $customPool
      *   Pool ID to use for the data separation.
      *
-     * @return L1
+     * @return \LCache\L1
      *   Concrete instance that confirms to an L1 interface.
      */
     public function create($driverName = null, $customPool = null)
@@ -36,7 +56,6 @@ class L1CacheFactory
 
         $factoryName = 'create' . $driver;
         if (!method_exists($this, $factoryName)) {
-            // TODO: Decide on better fallback (if needed).
             $factoryName = 'createStatic';
         }
 
@@ -52,7 +71,7 @@ class L1CacheFactory
      */
     protected function createAPCu($pool)
     {
-        return new APCuL1($pool, new StateL1APCu($pool));
+        return new APCuL1($pool, $this->state->create('apcu', $pool));
     }
 
     /**
@@ -63,7 +82,7 @@ class L1CacheFactory
      */
     protected function createNull($pool)
     {
-        return new NullL1($pool, new StateL1Static());
+        return new NullL1($pool, $this->state->create('null', $pool));
     }
 
     /**
@@ -74,7 +93,7 @@ class L1CacheFactory
      */
     protected function createStatic($pool)
     {
-        return new StaticL1($pool, new StateL1Static());
+        return new StaticL1($pool, $this->state->create('static', $pool));
     }
 
     /**
@@ -85,11 +104,9 @@ class L1CacheFactory
      */
     protected function createSQLite($pool)
     {
-        $hasApcu = function_exists('apcu_fetch');
-        // TODO: Maybe implement StateL1SQLite class instead of NULL one.
-        $state = $hasApcu ? new StateL1APCu("sqlite-$pool") : new StateL1Static();
-        $cache = new SQLiteL1($pool, $state);
-        return $cache;
+        $stateDriver = function_exists('apcu_fetch') ? 'apcu' : 'sqlite';
+        $state = $this->state->create($stateDriver, "sqlite-$pool");
+        return new SQLiteL1($pool, $state);
     }
 
     /**

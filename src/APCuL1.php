@@ -121,7 +121,6 @@ class APCuL1 extends L1
         $localKey = $this->getLocalKey($address);
 
         if ($address->isEntireCache() || $address->isEntireBin()) {
-            $localKey = $this->getLocalKey($address);
             $pattern = '/^' . preg_quote($localKey) . '.*/';
             $matching = $this->getIterator($pattern, APC_ITER_KEY);
             assert(!is_null($matching), 'Iterator instantiation failed.');
