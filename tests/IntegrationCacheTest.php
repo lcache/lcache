@@ -99,4 +99,32 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
 
         return $results;
     }
+
+    /**
+     * @group integration
+     * @dataProvider layersProvider
+     */
+    public function testNewPoolSynchronization($l1Name, $l2Name)
+    {
+        $myaddr = new Address('mybin', 'mykey');
+
+        // Initialize sync for Pool 1.
+        $pool1 = $this->createPool($l1Name, $l2Name);
+        $this->assertNull($pool1->synchronize());
+        $current_event_id = $pool1->getLastAppliedEventID();
+        $this->assertEquals(0, $current_event_id);
+
+        // Add a new entry to Pool 1. The last applied event should be our
+        // change. However, because the event is from the same pool, applied
+        // should be zero.
+        $pool1->set($myaddr, 'myvalue');
+        $this->assertEquals(0, $pool1->synchronize());
+        $this->assertEquals($current_event_id + 1, $pool1->getLastAppliedEventID());
+
+        // Add a new pool. Sync should return NULL applied changes but should
+        // bump the last applied event ID.
+        $pool2 = $this->createPool($l1Name, $l2Name);
+        $this->assertNull($pool2->synchronize());
+        $this->assertEquals($pool1->getLastAppliedEventID(), $pool2->getLastAppliedEventID());
+    }
 }

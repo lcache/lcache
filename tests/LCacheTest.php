@@ -79,35 +79,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals('myvalue', $l2->get($myaddr));
     }
 
-    public function testNewPoolSynchronization()
-    {
-        $central = new StaticL2();
-        $pool1 = new Integrated($this->l1Factory()->create('static'), $central);
-
-        $myaddr = new Address('mybin', 'mykey');
-
-        // Initialize sync for Pool 1.
-        $applied = $pool1->synchronize();
-        $this->assertNull($applied);
-        $current_event_id = $pool1->getLastAppliedEventID();
-        $this->assertEquals(0, $current_event_id);
-
-        // Add a new entry to Pool 1. The last applied event should be our
-        // change. However, because the event is from the same pool, applied
-        // should be zero.
-        $pool1->set($myaddr, 'myvalue');
-        $applied = $pool1->synchronize();
-        $this->assertEquals(0, $applied);
-        $this->assertEquals($current_event_id + 1, $pool1->getLastAppliedEventID());
-
-        // Add a new pool. Sync should return NULL applied changes but should
-        // bump the last applied event ID.
-        $pool2 = new Integrated($this->l1Factory()->create('static'), $central);
-        $applied = $pool2->synchronize();
-        $this->assertNull($applied);
-        $this->assertEquals($pool1->getLastAppliedEventID(), $pool2->getLastAppliedEventID());
-    }
-
     protected function performTombstoneTest($l1)
     {
         // This test is not for L1 - this tests integratino logick.
