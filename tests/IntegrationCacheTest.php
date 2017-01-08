@@ -454,4 +454,24 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         $pool = $this->createPool($l1, $l2, ['l1-pool' => $poolName]);
         $this->assertEquals($poolName, $pool->getPool());
     }
+
+    /**
+     * @group integration
+     * @dataProvider poolProvider
+     */
+    public function testExpiration($l1, $l2)
+    {
+        $pool = $this->createPool($l1, $l2);
+        $myaddr = new Address('mybin', 'mykey');
+
+        $this->assertNotNull($pool->set($myaddr, 'value', 1));
+        $this->assertEquals('value', $pool->get($myaddr));
+        $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $pool->getEntry($myaddr)->expiration);
+
+        // Setting an TTL/expiration more than request time should be treated
+        // as an expiration.
+        $this->assertNotNull($pool->set($myaddr, 'value', $_SERVER['REQUEST_TIME'] + 1));
+        $this->assertEquals('value', $pool->get($myaddr));
+        $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $pool->getEntry($myaddr)->expiration);
+    }
 }

@@ -160,7 +160,7 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $l1 = $this->createL1($state);
         $myaddr = new Address('mybin', 'mykey');
 
-        // Set and get an entry.
+        // Setting expired item does nothing.
         $l1->set($event_id++, $myaddr, 'myvalue', -1);
         $this->assertNull($l1->get($myaddr));
         $this->assertEquals(0, $l1->getHits());
