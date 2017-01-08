@@ -51,14 +51,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(get_class($staticL1), get_class($invalidL1));
     }
 
-    public function testStaticL2Expiration()
-    {
-        $l2 = new StaticL2();
-        $myaddr = new Address('mybin', 'mykey');
-        $l2->set('mypool', $myaddr, 'myvalue', -1);
-        $this->assertNull($l2->get($myaddr));
-    }
-
     public function testStaticL2Reread()
     {
         $l2 = new StaticL2();
