@@ -112,36 +112,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->performCaughtUnserializationOnGetTest($l2);
     }
 
-    // Callers should expect an UnserializationException.
-    protected function performFailedUnserializationOnGetTest($l2)
-    {
-        $l1 = $this->l1Factory()->create('static');
-        $pool = new Integrated($l1, $l2);
-        $invalid_object = 'O:10:"HelloWorl":0:{}';
-        $myaddr = new Address('mybin', 'performFailedUnserializationOnGetTest');
-        $l2->set('anypool', $myaddr, $invalid_object, null, [], true);
-        $pool->get($myaddr);
-    }
-
-    /**
-     * @expectedException LCache\UnserializationException
-     */
-    public function testDatabaseL2FailedUnserializationOnGet()
-    {
-        $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh);
-        $this->performFailedUnserializationOnGetTest($l2);
-    }
-
-    /**
-     * @expectedException LCache\UnserializationException
-     */
-    public function testStaticL2FailedUnserializationOnGet()
-    {
-        $l2 = new StaticL2();
-        $this->performFailedUnserializationOnGetTest($l2);
-    }
-
     public function performGarbageCollectionTest($l2)
     {
         $pool = new Integrated($this->l1Factory()->create('static'), $l2);

@@ -7,7 +7,7 @@
 
 namespace Lcache\Pool;
 
-use \LCache\Integrated;
+use \LCache\Utils\IntegratedMock as Integrated;
 use \LCache\L1;
 use \LCache\L2;
 

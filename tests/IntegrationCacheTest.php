@@ -541,4 +541,19 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         $this->assertNull($pool->get($myaddr2));
         $this->assertEquals(-1, $l1Driver->getKeyOverhead($myaddr2));
     }
+
+    /**
+     * @group integration
+     * @dataProvider poolProvider
+     * @expectedException LCache\UnserializationException
+     */
+    public function testFailedUnserializationOnGet($l1, $l2)
+    {
+        $pool = $this->createPool($l1, $l2);
+        $invalid_object = 'O:10:"HelloWorl":0:{}';
+        $myaddr = new Address('mybin', 'performFailedUnserializationOnGetTest');
+
+        $pool->getL2()->set('anypool', $myaddr, $invalid_object, null, [], true);
+        $pool->get($myaddr);
+    }
 }

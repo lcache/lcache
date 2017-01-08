@@ -2,7 +2,7 @@
 
 namespace LCache;
 
-final class Integrated
+class Integrated
 {
     /** @var L1 Managed L1 instance. */
     protected $l1;
@@ -165,16 +165,6 @@ final class Integrated
     public function getLastAppliedEventID()
     {
         return $this->l1->getLastAppliedEventID();
-    }
-
-    /**
-     * Accessor needed for tests.
-     *
-     * @return L1
-     */
-    public function getL1()
-    {
-        return $this->l1;
     }
 
     public function getPool()
