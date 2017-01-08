@@ -142,6 +142,11 @@ final class Integrated
         return $this->l2->getHits();
     }
 
+    public function getMisses()
+    {
+        return $this->l2->getMisses();
+    }
+
     public function getMissesL1()
     {
         return $this->l1->getMisses();
@@ -149,7 +154,7 @@ final class Integrated
 
     public function getMissesL2()
     {
-        return $this->l2->getMisses();
+        return $this->getMisses();
     }
 
     public function getLastAppliedEventID()

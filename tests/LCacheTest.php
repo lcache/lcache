@@ -92,13 +92,13 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals('myvalue', $pool1->get($myaddr));
         $this->assertEquals(1, $pool1->getHitsL1());
         $this->assertEquals(0, $pool1->getHitsL2());
-        $this->assertEquals(0, $pool1->getMissesL2());
+        $this->assertEquals(0, $pool1->getMisses());
 
         // Read the entry in Pool 2.
         $this->assertEquals('myvalue', $pool2->get($myaddr));
         $this->assertEquals(0, $pool2->getHitsL1());
         $this->assertEquals(1, $pool2->getHitsL2());
-        $this->assertEquals(0, $pool2->getMissesL2());
+        $this->assertEquals(0, $pool2->getMisses());
 
         // Initialize Pool 2 synchronization.
         $changes = $pool2->synchronize();
@@ -185,13 +185,13 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals('myvalue', $pool1->get($myaddr));
         $this->assertEquals(1, $pool1->getHitsL1());
         $this->assertEquals(0, $pool1->getHitsL2());
-        $this->assertEquals(0, $pool1->getMissesL2());
+        $this->assertEquals(0, $pool1->getMisses());
 
         // Read the entry in Pool 2.
         $this->assertEquals('myvalue', $pool2->get($myaddr));
         $this->assertEquals(0, $pool2->getHitsL1());
         $this->assertEquals(1, $pool2->getHitsL2());
-        $this->assertEquals(0, $pool2->getMissesL2());
+        $this->assertEquals(0, $pool2->getMisses());
 
 
         // Initialize Pool 2 synchronization.
