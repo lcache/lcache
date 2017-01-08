@@ -152,16 +152,6 @@ class Integrated
         return $this->l2->getMisses();
     }
 
-    public function getMissesL1()
-    {
-        return $this->l1->getMisses();
-    }
-
-    public function getMissesL2()
-    {
-        return $this->getMisses();
-    }
-
     public function getLastAppliedEventID()
     {
         return $this->l1->getLastAppliedEventID();
@@ -175,15 +165,5 @@ class Integrated
     public function collectGarbage($item_limit = null)
     {
         return $this->l2->collectGarbage($item_limit);
-    }
-
-    public function collectGarbageL1($item_limit = null)
-    {
-        return $this->l1->collectGarbage($item_limit);
-    }
-
-    public function collectGarbageL2($item_limit = null)
-    {
-        return $this->collectGarbage($item_limit);
     }
 }

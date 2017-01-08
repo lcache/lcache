@@ -43,4 +43,34 @@ class IntegratedMock extends Integrated
     {
         return $this->l2;
     }
+
+    /**
+     * Utility accessor.
+     *
+     * @return int
+     */
+    public function getMissesL1()
+    {
+        return $this->l1->getMisses();
+    }
+
+    /**
+     * Utility accessor.
+     *
+     * @return int
+     */
+    public function getMissesL2()
+    {
+        return $this->getMisses();
+    }
+
+    public function collectGarbageL1($item_limit = null)
+    {
+        return $this->l1->collectGarbage($item_limit);
+    }
+
+    public function collectGarbageL2($item_limit = null)
+    {
+        return $this->collectGarbage($item_limit);
+    }
 }
