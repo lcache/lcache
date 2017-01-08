@@ -51,19 +51,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(get_class($staticL1), get_class($invalidL1));
     }
 
-    public function testExistsIntegrated()
-    {
-        $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh);
-        $l1 = $this->l1Factory()->create('apcu', 'first');
-        $pool = new Integrated($l1, $l2);
-        $myaddr = new Address('mybin', 'mykey');
-        $pool->set($myaddr, 'myvalue');
-        $this->assertTrue($pool->exists($myaddr));
-        $pool->delete($myaddr);
-        $this->assertFalse($pool->exists($myaddr));
-    }
-
     public function testPoolIntegrated()
     {
         $l2 = new StaticL2();

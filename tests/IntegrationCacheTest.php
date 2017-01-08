@@ -424,4 +424,19 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         $this->dbErrorsLog = true;
         $this->assertNull($this->createPool($l1, $l2)->synchronize());
     }
+
+    /**
+     * @group integration
+     * @dataProvider poolProvider
+     */
+    public function testExists($l1, $l2)
+    {
+        $pool = $this->createPool($l1, $l2);
+        $myaddr = new Address('mybin', 'mykey');
+
+        $this->assertNotNull($pool->set($myaddr, 'myvalue'));
+        $this->assertTrue($pool->exists($myaddr));
+        $this->assertNotNull($pool->delete($myaddr));
+        $this->assertFalse($pool->exists($myaddr));
+    }
 }
