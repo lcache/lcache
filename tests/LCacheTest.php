@@ -51,15 +51,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(get_class($staticL1), get_class($invalidL1));
     }
 
-    public function testDatabaseL2SyncWithNoWrites()
-    {
-        $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh, '', true);
-        $l1 = $this->l1Factory()->create('static', 'first');
-        $pool = new Integrated($l1, $l2);
-        $pool->synchronize();
-    }
-
     public function testExistsIntegrated()
     {
         $this->createSchema();

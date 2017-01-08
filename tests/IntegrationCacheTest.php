@@ -414,4 +414,14 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         // Try garbage collection routines.
         $this->assertEquals(0, $pool->collectGarbage());
     }
+
+    /**
+     * @group integration
+     * @dataProvider poolProvider
+     */
+    public function testSyncWithNoWrites($l1, $l2)
+    {
+        $this->dbErrorsLog = true;
+        $this->assertNull($this->createPool($l1, $l2)->synchronize());
+    }
 }
