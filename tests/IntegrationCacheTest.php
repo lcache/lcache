@@ -276,4 +276,30 @@ abstract class IntegrationCacheTest extends \PHPUnit_Framework_TestCase
         $this->assertNull($pool2->get($mybin1_mykey));
         $this->assertEquals('myvalue2', $pool2->get($mybin2_mykey));
     }
+
+    /**
+     * @group integration
+     * @dataProvider twoPoolsProvider
+     */
+    public function testClearSynchronization($central, $first_l1, $second_l1)
+    {
+        // Create two integrated pools with independent L1s.
+        $pool1 = $this->createPool($first_l1, $central);
+        $pool2 = $this->createPool($second_l1, $central);
+
+        $myaddr = new Address('mybin', 'mykey');
+
+        // Create an item, synchronize, and then do a complete clear.
+        $pool1->set($myaddr, 'mynewvalue');
+        $this->assertEquals('mynewvalue', $pool1->get($myaddr));
+        $pool2->synchronize();
+        $this->assertEquals('mynewvalue', $pool2->get($myaddr));
+        $pool1->delete(new Address());
+        $this->assertNull($pool1->get($myaddr));
+
+        // Pool 2 should lag until it synchronizes.
+        $this->assertEquals('mynewvalue', $pool2->get($myaddr));
+        $pool2->synchronize();
+        $this->assertNull($pool2->get($myaddr));
+    }
 }

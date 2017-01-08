@@ -51,28 +51,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(get_class($staticL1), get_class($invalidL1));
     }
 
-    protected function performClearSynchronizationTest($central, $first_l1, $second_l1)
-    {
-        // Create two integrated pools with independent L1s.
-        $pool1 = new Integrated($first_l1, $central);
-        $pool2 = new Integrated($second_l1, $central);
-
-        $myaddr = new Address('mybin', 'mykey');
-
-        // Create an item, synchronize, and then do a complete clear.
-        $pool1->set($myaddr, 'mynewvalue');
-        $this->assertEquals('mynewvalue', $pool1->get($myaddr));
-        $pool2->synchronize();
-        $this->assertEquals('mynewvalue', $pool2->get($myaddr));
-        $pool1->delete(new Address());
-        $this->assertNull($pool1->get($myaddr));
-
-        // Pool 2 should lag until it synchronizes.
-        $this->assertEquals('mynewvalue', $pool2->get($myaddr));
-        $pool2->synchronize();
-        $this->assertNull($pool2->get($myaddr));
-    }
-
     protected function performTaggedSynchronizationTest($central, $first_l1, $second_l1)
     {
         // Create two integrated pools with independent L1s.
@@ -146,72 +124,6 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     {
         $central = new StaticL2();
         $this->performTaggedSynchronizationTest($central, $this->l1Factory()->create('static'), $this->l1Factory()->create('static'));
-    }
-
-    public function testSynchronizationAPCu()
-    {
-        // Warning: As long as LCache\APCuL1 flushes all of APCu on a wildcard
-        // deletion, it is not possible to test such functionality in a
-        // single process.
-
-        $run_test = false;
-        if (function_exists('apcu_store')) {
-            apcu_store('test_key', 'test_value');
-            $value = apcu_fetch('test_key');
-            if ($value === 'test_value') {
-                $run_test = true;
-            }
-        }
-
-        if ($run_test) {
-            $central = new StaticL2();
-
-            // Because of how APCu only offers full cache clears, we test against a static cache for the other L1.
-            $this->performClearSynchronizationTest(
-                $central,
-                $this->l1Factory()->create('apcu', 'testSynchronizationAPCu1b'),
-                $this->l1Factory()->create('static')
-            );
-            $this->performClearSynchronizationTest(
-                $central,
-                $this->l1Factory()->create('static'),
-                $this->l1Factory()->create('apcu', 'testSynchronizationAPCu1c')
-            );
-        } else {
-            $this->markTestSkipped('The APCu extension is not installed, enabled (for the CLI), or functional.');
-        }
-    }
-
-    public function testSynchronizationSQLiteL1()
-    {
-        $central = new StaticL2();
-
-        $this->performClearSynchronizationTest(
-            $central,
-            $this->l1Factory()->create('sqlite'),
-            $this->l1Factory()->create('static')
-        );
-        $this->performClearSynchronizationTest(
-            $central,
-            $this->l1Factory()->create('static'),
-            $this->l1Factory()->create('sqlite')
-        );
-        $this->performClearSynchronizationTest(
-            $central,
-            $this->l1Factory()->create('sqlite'),
-            $this->l1Factory()->create('sqlite')
-        );
-    }
-
-    public function testSynchronizationDatabase()
-    {
-        $this->createSchema();
-        $central = new DatabaseL2($this->dbh);
-        $this->performClearSynchronizationTest(
-            $central,
-            $this->l1Factory()->create('static', 'testSynchronizationDatabase1a'),
-            $this->l1Factory()->create('static', 'testSynchronizationDatabase2a')
-        );
     }
 
     public function testTaggedSynchronizationDatabase()
