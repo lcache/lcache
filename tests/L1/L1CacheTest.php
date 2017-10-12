@@ -5,7 +5,9 @@
  * File containing pure L1 test methods.
  */
 
-namespace LCache;
+namespace LCache\l1;
+
+use LCache\Address;
 
 /**
  * L1CacheTest this is the utility base class to be used for all L1 driver
@@ -153,10 +155,8 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         // Test unique ID generation.
         $this->assertNotNull($this->createL1()->getPool());
 
-        // Test host-based generation.
-        $_SERVER['SERVER_ADDR'] = 'localhost';
-        $_SERVER['SERVER_PORT'] = '80';
-        $this->assertEquals('localhost-80', $this->createL1()->getPool());
+        $pool = 'localhost-80';
+        $this->assertEquals($pool, $this->createL1($pool)->getPool());
     }
 
     public function testPoolSharing()
@@ -207,5 +207,12 @@ abstract class L1CacheTest extends \PHPUnit_Framework_TestCase
         $myaddr2 = new Address('mybin', 'mykey2');
         $l1->get($myaddr2);
         $this->assertEquals(-1, $l1->getKeyOverhead($myaddr2));
+    }
+
+    public function testL1Factory()
+    {
+        $staticL1 = (new L1CacheFactory())->create('static');
+        $invalidL1 = (new L1CacheFactory())->create('invalid_cache_driver');
+        $this->assertEquals(get_class($staticL1), get_class($invalidL1));
     }
 }

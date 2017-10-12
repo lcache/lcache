@@ -12,7 +12,7 @@ namespace LCache\L1;
  *
  * @author ndobromirov
  */
-class SQLiteTest extends \LCache\L1CacheTest
+class SQLiteTest extends L1CacheTest
 {
     /**
      * {@inheritDoc}

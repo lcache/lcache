@@ -5,7 +5,7 @@
  * L1 state manager interface.
  */
 
-namespace LCache;
+namespace LCache\state;
 
 /**
  * Interface for the state manager drivers used in L1 driver implementations.

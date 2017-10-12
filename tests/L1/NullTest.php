@@ -15,7 +15,7 @@ use LCache\Address;
  *
  * @author ndobromirov
  */
-class NullTest extends \LCache\L1CacheTest
+class NullTest extends L1CacheTest
 {
 
     protected function driverName()

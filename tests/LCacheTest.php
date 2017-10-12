@@ -2,7 +2,11 @@
 
 namespace LCache;
 
-//use phpunit\framework\TestCase;
+use LCache\l2\Redis;
+use Redis as PHPRedis;
+use LCache\l1\L1CacheFactory;
+use LCache\l2\Database;
+use LCache\l2\StaticL2;
 
 class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 {
@@ -176,6 +180,9 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $changes = $pool2->synchronize();
         $this->assertNull($changes);
         $this->assertEquals(1, $second_l1->getLastAppliedEventID());
+
+        // Set a value that will not be synchronized on pool2 for coverage
+        $pool2->set(new Address(uniqid(), uniqid()), uniqid());
 
         // Alter the item in Pool 1. Pool 2 should hit its L1 again
         // with the out-of-date item. Synchronizing should fix it.
@@ -389,7 +396,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     public function testSynchronizationDatabase()
     {
         $this->createSchema();
-        $central = new DatabaseL2($this->dbh);
+        $central = new Database($this->dbh);
         $this->performSynchronizationTest(
             $central,
             $this->l1Factory()->create('static', 'testSynchronizationDatabase1'),
@@ -405,7 +412,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     public function testTaggedSynchronizationDatabase()
     {
         $this->createSchema();
-        $central = new DatabaseL2($this->dbh);
+        $central = new Database($this->dbh);
         $this->performTaggedSynchronizationTest(
             $central,
             $this->l1Factory()->create('static', 'testTaggedSynchronizationDatabase1'),
@@ -416,7 +423,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     public function testBrokenDatabaseFallback()
     {
         $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh, '', true);
+        $l2 = new Database($this->dbh, '', true);
         $l1 = $this->l1Factory()->create('static', 'first');
         $pool = new Integrated($l1, $l2);
 
@@ -449,19 +456,19 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertNull($count);
     }
 
-    public function testDatabaseL2SyncWithNoWrites()
+    public function testDatabaseSyncWithNoWrites()
     {
         $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh, '', true);
+        $l2 = new Database($this->dbh, '', true);
         $l1 = $this->l1Factory()->create('static', 'first');
         $pool = new Integrated($l1, $l2);
         $pool->synchronize();
     }
 
-    public function testExistsDatabaseL2()
+    public function testExistsDatabase()
     {
         $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh);
+        $l2 = new Database($this->dbh);
         $myaddr = new Address('mybin', 'mykey');
         $l2->set('mypool', $myaddr, 'myvalue');
         $this->assertTrue($l2->exists($myaddr));
@@ -469,16 +476,10 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertFalse($l2->exists($myaddr));
     }
 
-    public function testEmptyCleanUpDatabaseL2()
-    {
-        $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh);
-    }
-
     public function testExistsIntegrated()
     {
         $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh);
+        $l2 = new Database($this->dbh);
         $l1 = $this->l1Factory()->create('apcu', 'first');
         $pool = new Integrated($l1, $l2);
         $myaddr = new Address('mybin', 'mykey');
@@ -488,10 +489,10 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertFalse($pool->exists($myaddr));
     }
 
-    public function testDatabaseL2Prefix()
+    public function testDatabasePrefix()
     {
         $this->createSchema('myprefix_');
-        $l2 = new DatabaseL2($this->dbh, 'myprefix_');
+        $l2 = new Database($this->dbh, 'myprefix_');
         $myaddr = new Address('mybin', 'mykey');
         $l2->set('mypool', $myaddr, 'myvalue', null, ['mytag']);
         $this->assertEquals('myvalue', $l2->get($myaddr));
@@ -551,10 +552,10 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         }
     }
 
-    public function testDatabaseL2FailedUnserialization()
+    public function testDatabaseFailedUnserialization()
     {
         $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh);
+        $l2 = new Database($this->dbh);
         $this->performFailedUnserializationTest($l2);
         $this->performCaughtUnserializationOnGetTest($l2);
     }
@@ -580,10 +581,10 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
     /**
      * @expectedException LCache\UnserializationException
      */
-    public function testDatabaseL2FailedUnserializationOnGet()
+    public function testDatabaseFailedUnserializationOnGet()
     {
         $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh);
+        $l2 = new Database($this->dbh);
         $this->performFailedUnserializationOnGetTest($l2);
     }
 
@@ -607,10 +608,10 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertEquals(0, $l2->countGarbage());
     }
 
-    public function testDatabaseL2GarbageCollection()
+    public function testDatabaseGarbageCollection()
     {
         $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh);
+        $l2 = new Database($this->dbh);
         $this->performGarbageCollectionTest($l2);
     }
 
@@ -742,29 +743,30 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function performIntegratedExpiration($l1)
     {
-
+        $current = time();
         $pool = new Integrated($l1, new StaticL2());
         $myaddr = new Address('mybin', 'mykey');
+
         $pool->set($myaddr, 'value', 1);
         $this->assertEquals('value', $pool->get($myaddr));
-        $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $l1->getEntry($myaddr)->expiration);
+        $this->assertEquals($current + 1, $l1->getEntry($myaddr)->expiration);
 
         // Setting items with past expirations should result in a nothing stored.
         $myaddr2 = new Address('mybin', 'mykey2');
-        $l1->set(0, $myaddr2, 'value', $_SERVER['REQUEST_TIME'] - 1);
+        $l1->set(0, $myaddr2, 'value', $current - 1);
         $this->assertNull($l1->get($myaddr2));
 
         // Setting an TTL/expiration more than request time should be treated
         // as an expiration.
-        $pool->set($myaddr, 'value', $_SERVER['REQUEST_TIME'] + 1);
+        $pool->set($myaddr, 'value', $current + 1);
         $this->assertEquals('value', $pool->get($myaddr));
-        $this->assertEquals($_SERVER['REQUEST_TIME'] + 1, $l1->getEntry($myaddr)->expiration);
+        $this->assertEquals($current + 1, $l1->getEntry($myaddr)->expiration);
     }
 
-    public function testDatabaseL2BatchDeletion()
+    public function testDatabaseBatchDeletion()
     {
         $this->createSchema();
-        $l2 = new DatabaseL2($this->dbh);
+        $l2 = new Database($this->dbh);
         $myaddr = new Address('mybin', 'mykey');
         $l2->set('mypool', $myaddr, 'myvalue');
 
@@ -774,13 +776,13 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertNull($l2->get($myaddr));
     }
 
-    public function testDatabaseL2CleanupAfterWrite()
+    public function testDatabaseCleanupAfterWrite()
     {
         $this->createSchema();
         $myaddr = new Address('mybin', 'mykey');
 
         // Write to the key with the first client.
-        $l2_client_a = new DatabaseL2($this->dbh);
+        $l2_client_a = new Database($this->dbh);
         $event_id_a = $l2_client_a->set('mypool', $myaddr, 'myvalue');
 
         // Verify that the first event exists and has the right value.
@@ -789,7 +791,7 @@ class LCacheTest extends \PHPUnit_Extensions_Database_TestCase
 
         // Use a second client. This gives us a fresh event_id_low_water,
         // just like a new PHP request.
-        $l2_client_b = new DatabaseL2($this->dbh);
+        $l2_client_b = new Database($this->dbh);
 
         // Write to the same key with the second client.
         $event_id_b = $l2_client_b->set('mypool', $myaddr, 'myvalue2');

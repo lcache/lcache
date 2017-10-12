@@ -5,7 +5,11 @@
  * Contains the factory class implementation for the L1 cache drivers.
  */
 
-namespace LCache;
+namespace LCache\l1;
+
+use LCache\state\StateL1APCu;
+use LCache\state\StateL1Interface;
+use LCache\state\StateL1Static;
 
 /**
  * Class encapsulating the creation logic for all L1 cache driver instances.
@@ -48,18 +52,18 @@ class L1CacheFactory
      * Factory method for the L1 APCu driver.
      *
      * @param string $pool
-     * @return \LCache\APCuL1
+     * @return APCu
      */
     protected function createAPCu($pool)
     {
-        return new APCuL1($pool, new StateL1APCu($pool));
+        return new APCu($pool, new StateL1APCu($pool));
     }
 
     /**
      * Factory method for the L1 NULL driver.
      *
      * @param string $pool
-     * @return \LCache\NullL1
+     * @return NullL1
      */
     protected function createNull($pool)
     {
@@ -70,7 +74,7 @@ class L1CacheFactory
      * Factory method for the L1 static driver.
      *
      * @param string $pool
-     * @return \LCache\StaticL1
+     * @return StaticL1
      */
     protected function createStatic($pool)
     {
@@ -81,14 +85,14 @@ class L1CacheFactory
      * Factory method for the L1 SQLite driver.
      *
      * @param string $pool
-     * @return \LCache\SQLiteL1
+     * @return SQLite
      */
     protected function createSQLite($pool)
     {
         $hasApcu = function_exists('apcu_fetch');
         // TODO: Maybe implement StateL1SQLite class instead of NULL one.
         $state = $hasApcu ? new StateL1APCu("sqlite-$pool") : new StateL1Static();
-        $cache = new SQLiteL1($pool, $state);
+        $cache = new SQLite($pool, $state);
         return $cache;
     }
 
@@ -105,13 +109,10 @@ class L1CacheFactory
     protected function getPool($pool = null)
     {
         if (!is_null($pool)) {
-            $result = (string) $pool;
-        } elseif (isset($_SERVER['SERVER_ADDR']) && isset($_SERVER['SERVER_PORT'])) {
-            $result = $_SERVER['SERVER_ADDR'] . '-' . $_SERVER['SERVER_PORT'];
+            return (string) $pool;
         } else {
-            $result = $this->generateUniqueID();
+            return $this->generateUniqueID();
         }
-        return $result;
     }
 
     /**

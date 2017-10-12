@@ -5,7 +5,7 @@
  * In-memory implementation of statistics storage for L1 drivers.
  */
 
-namespace LCache;
+namespace LCache\state;
 
 /**
  * Description of StateL1Static

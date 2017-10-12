@@ -1,6 +1,10 @@
 <?php
 
-namespace LCache;
+namespace LCache\l1;
+
+use LCache\Address;
+use LCache\LX;
+use LCache\state\StateL1Interface;
 
 abstract class L1 extends LX
 {
@@ -41,10 +45,15 @@ abstract class L1 extends LX
 
     public function set($event_id, Address $address, $value = null, $expiration = null)
     {
-        return $this->setWithExpiration($event_id, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
+        return $this->setWithExpiration($event_id, $address, $value, time(), $expiration);
     }
 
+    /**
+     * @param Address $address
+     * @return bool
+     */
     abstract public function isNegativeCache(Address $address);
+
     abstract public function getKeyOverhead(Address $address);
     abstract public function setWithExpiration($event_id, Address $address, $value, $created, $expiration = null);
     abstract public function delete($event_id, Address $address);

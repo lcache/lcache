@@ -1,6 +1,11 @@
 <?php
 
-namespace LCache;
+namespace LCache\l2;
+
+use LCache\Address;
+use LCache\Entry;
+use LCache\UnserializationException;
+use LCache\l1\L1;
 
 class StaticL2 extends L2
 {
@@ -22,8 +27,10 @@ class StaticL2 extends L2
     public function countGarbage()
     {
         $garbage = 0;
+        $current = time();
+
         foreach ($this->events as $event_id => $entry) {
-            if ($entry->expiration < $_SERVER['REQUEST_TIME']) {
+            if ($entry->expiration < $current) {
                 $garbage++;
             }
         }
@@ -33,8 +40,10 @@ class StaticL2 extends L2
     public function collectGarbage($item_limit = null)
     {
         $deleted = 0;
+        $current = time();
+
         foreach ($this->events as $event_id => $entry) {
-            if ($entry->expiration < $_SERVER['REQUEST_TIME']) {
+            if ($entry->expiration < $current) {
                 unset($this->events[$event_id]);
                 $deleted++;
             }
@@ -47,14 +56,19 @@ class StaticL2 extends L2
     // Returns an LCache\Entry
     public function getEntry(Address $address)
     {
-        $events = array_filter($this->events, function (Entry $entry) use ($address) {
-            return $entry->getAddress()->isMatch($address);
-        });
+        $events = array_filter(
+            $this->events,
+            function (Entry $entry) use ($address) {
+                return $entry->getAddress()->isMatch($address);
+            }
+        );
         $last_matching_entry = null;
+        $current = time();
+
         foreach ($events as $entry) {
             if ($entry->getAddress()->isEntireCache() || $entry->getAddress()->isEntireBin()) {
                 $last_matching_entry = null;
-            } elseif (!is_null($entry->expiration) && $entry->expiration < $_SERVER['REQUEST_TIME']) {
+            } elseif (!is_null($entry->expiration) && $entry->expiration <= $current) {
                 $last_matching_entry = null;
             } else {
                 $last_matching_entry = clone $entry;
@@ -88,7 +102,7 @@ class StaticL2 extends L2
         if (!$value_is_serialized) {
             $value = serialize($value);
         }
-        $this->events[$this->current_event_id] = new Entry($this->current_event_id, $pool, $address, $value, $_SERVER['REQUEST_TIME'], $expiration);
+        $this->events[$this->current_event_id] = new Entry($this->current_event_id, $pool, $address, $value, time(), $expiration, $tags);
 
         // Clear existing tags linked to the item. This is much more
         // efficient with database-style indexes.
