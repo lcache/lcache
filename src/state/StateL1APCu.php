@@ -5,7 +5,7 @@
  * L1 state manager implementation.
  */
 
-namespace LCache;
+namespace LCache\state;
 
 /**
  * L1 statistics manager storing in APCu.

@@ -1,8 +1,12 @@
 <?php
 
-namespace LCache;
+namespace LCache\l1;
 
-class APCuL1 extends L1
+use LCache\Address;
+use LCache\Entry;
+use LCache\state\StateL1Interface;
+
+class APCu extends L1
 {
     /** @var string */
     private $localKeyPrefix;
@@ -94,7 +98,7 @@ class APCuL1 extends L1
         $success = null;
         $entry = apcu_fetch($apcu_key, $success);
         // Handle failed reads.
-        if (false === $success) {
+        if ($entry === false && false == $success || $entry->getTTL() === 0) {
             $this->recordMiss();
             return null;
         }

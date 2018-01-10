@@ -1,6 +1,8 @@
 <?php
 
-namespace LCache;
+namespace LCache\l1;
+
+use LCache\Address;
 
 class NullL1 extends StaticL1
 {

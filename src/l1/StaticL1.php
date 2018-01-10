@@ -1,6 +1,10 @@
 <?php
 
-namespace LCache;
+namespace LCache\l1;
+
+use LCache\Address;
+use LCache\Entry;
+use LCache\state\StateL1Interface;
 
 class StaticL1 extends L1
 {
@@ -49,7 +53,7 @@ class StaticL1 extends L1
         if (isset($this->storage[$local_key]) && $this->storage[$local_key]->event_id >= $event_id) {
             return true;
         }
-        $this->storage[$local_key] = new Entry($event_id, $this->getPool(), $address, $value, $created, $expiration);
+        $this->storage[$local_key] = new Entry($event_id, $this->getPool(), $address, is_object($value) ? clone $value : $value, $created, $expiration);
 
         return true;
     }
@@ -76,7 +80,7 @@ class StaticL1 extends L1
             return null;
         }
         $entry = $this->storage[$local_key];
-        if (!is_null($entry->expiration) && $entry->expiration < $_SERVER['REQUEST_TIME']) {
+        if ($entry->getTTL() === 0) {
             unset($this->storage[$local_key]);
             $this->recordMiss();
             return null;

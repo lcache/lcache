@@ -1,6 +1,10 @@
 <?php
 
-namespace LCache;
+namespace LCache\l2;
+
+use LCache\Address;
+use LCache\LX;
+use LCache\l1\L1;
 
 abstract class L2 extends LX
 {

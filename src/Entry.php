@@ -41,8 +41,10 @@ final class Entry
         if (is_null($this->expiration)) {
             return null;
         }
-        if ($this->expiration > $_SERVER['REQUEST_TIME']) {
-            return $this->expiration - $_SERVER['REQUEST_TIME'];
+        $current = time();
+
+        if ($this->expiration > $current) {
+            return $this->expiration - $current;
         }
         return 0;
     }

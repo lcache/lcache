@@ -12,7 +12,7 @@ namespace LCache\L1;
  *
  * @author ndobromirov
  */
-class StaticTest extends \LCache\L1CacheTest
+class StaticTest extends L1CacheTest
 {
     /**
      * {@inheritDoc}

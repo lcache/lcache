@@ -12,7 +12,7 @@ namespace LCache\L1;
  *
  * @author ndobromirov
  */
-class APCuTest extends \LCache\L1CacheTest
+class APCuTest extends L1CacheTest
 {
 
     protected function setUp()
